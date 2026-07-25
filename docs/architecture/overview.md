@@ -1,0 +1,171 @@
+# Architecture Overview
+
+## Status
+
+This document records the intended architecture for the experimental pre-alpha implementation. The boundaries are deliberate; concrete TypeScript interfaces remain internal until validated by working software.
+
+## System goal
+
+Tsumugu turns ordinary documentation files into a fast, navigable, accessible documentation experience while preserving those files as the durable source of truth.
+
+The first supported source formats are Markdown and HTML. Future formats must enter through renderer packages rather than by expanding core with format-specific behavior.
+
+## Processing pipeline
+
+```text
+File system
+    ↓
+Scanner
+    ↓
+Document
+    ↓
+Renderer
+    ↓
+Semantic AST
+    ↓
+Transformer[]
+    ↓
+Theme
+    ↓
+Virtual Tree
+    ↓
+Serializer
+    ↓
+Server response
+```
+
+## Component responsibilities
+
+### Scanner
+
+The scanner discovers supported files and emits file-added, file-changed, and file-removed events. It does not build navigation, render pages, update search indexes, or understand themes.
+
+Change detection should use an inexpensive `mtime + size` fast path and compute content hashes only when required.
+
+### Document
+
+The Document is the normalized unit shared by downstream systems. It contains source identity, route, format, metadata, content, semantic representation, diagnostics, and cache information.
+
+Consumers should not independently re-read and reinterpret the same file.
+
+### Renderer
+
+A renderer converts one supported source format into the shared Semantic AST.
+
+```text
+source document → Semantic AST
+```
+
+A renderer does not produce the final page HTML and does not own application layout.
+
+Renderer registration is explicit. Selection is capability-based. Ambiguous matches must produce a diagnostic rather than silently selecting an arbitrary implementation.
+
+### Semantic AST
+
+The Semantic AST represents documentation meaning rather than browser DOM structure or parser-specific syntax. It is shared by rendering, table-of-contents generation, search, link analysis, and future AI-oriented exports.
+
+The initial AST should remain intentionally small. HTML that cannot be represented without data loss may use an explicit preserved-HTML escape hatch, with rendering governed by the security policy.
+
+### Transformer
+
+A transformer performs a deterministic AST-to-AST operation.
+
+```text
+Semantic AST → Semantic AST
+```
+
+Examples include heading identifiers, link normalization, syntax metadata, and semantic annotations. Transformers run in explicit order and may return diagnostics.
+
+Tsumugu does not provide unrestricted lifecycle hooks.
+
+### Theme
+
+A theme maps semantic document nodes to a lightweight, framework-independent Virtual Tree. It controls document-node presentation, not source parsing or server routing.
+
+Core owns the application shell, navigation placement, search integration points, and page-level layout. The theme owns headings, paragraphs, lists, code, tables, links, images, and related document presentation.
+
+### Virtual Tree
+
+The Virtual Tree is a small serializable representation sufficient for HTML output. It is not a React-compatible runtime, browser DOM implementation, reactive system, or general UI framework.
+
+### Serializer
+
+The serializer converts the Virtual Tree into HTML and owns escaping, attributes, void elements, and explicit handling of preserved raw HTML.
+
+### Server
+
+The server maps requests to normalized routes, serves rendered documents and assets, provides generated landing and error pages, and enforces server-side security boundaries.
+
+The development server binds to localhost by default.
+
+## Incremental update flow
+
+```text
+File event
+    ↓
+Scanner classification
+    ↓
+Previous Document vs current Document
+    ↓
+DocumentChange
+    ├── route changed
+    ├── metadata changed
+    └── content changed
+    ↓
+Targeted cache invalidation
+    ↓
+Affected pipeline stages
+    ↓
+Browser notification
+```
+
+The initial change model should be coarse and useful. Fine-grained tree diffs are not required for v1.
+
+## Extension model
+
+The extension vocabulary is intentionally limited:
+
+- renderer: source → Semantic AST;
+- transformer: Semantic AST → Semantic AST;
+- theme: semantic nodes → Virtual Tree;
+- serializer: Virtual Tree → output;
+- plugin: explicit composition of existing extension types.
+
+A plugin does not receive unrestricted access to core internals and does not introduce an independent lifecycle.
+
+## Package boundaries
+
+Initial public package candidates:
+
+```text
+@tsumugu/core
+@tsumugu/cli
+@tsumugu/renderer-markdown
+@tsumugu/renderer-html
+@tsumugu/theme-default
+```
+
+Internal workspace modules may separate scanner, document, AST, pipeline, server, serializer, and Virtual Tree responsibilities. Internal packages must not be published or re-exported.
+
+Dependency direction is one-way: official packages may depend on core contracts, while core must not depend on build, search, AI, OpenAPI, Mermaid, or other higher-level packages.
+
+## Server first, build second
+
+Tsumugu is a documentation server first. Static generation is a future adapter consuming pipeline output. Build-specific concerns must not shape the core configuration or runtime model.
+
+## Public API maturity
+
+Internal interfaces may change freely during pre-alpha development. A public API must be validated by implementation and official package usage, then reviewed through an RFC before it is declared stable.
+
+## Known architectural tensions
+
+The implementation must continue to pressure-test:
+
+- HTML preservation versus safe rendering;
+- zero-config CLI defaults versus explicit library composition;
+- a small core versus the server capabilities required for the primary product;
+- internal package separation versus early development speed;
+- accessible beauty versus minimal client-side JavaScript;
+- early iteration speed versus durable public API commitments.
+
+These tensions should be resolved through working vertical slices and recorded decisions, not speculative abstraction.

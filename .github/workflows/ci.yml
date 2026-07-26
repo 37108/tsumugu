@@ -56,8 +56,16 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # Each gate is its own step so a failed run names the command that failed.
-      # Locally the same gates run as a single `pnpm check`.
+      # Build first. Type-aware linting resolves a package's imports through
+      # the declarations its dependencies emit, so linting a package that
+      # imports another one fails with "a type that cannot be resolved" until
+      # those exist. This is invisible locally, where dist/ is usually already
+      # there from a previous run.
+      - name: Build
+        run: pnpm run build
+
+      # Each remaining gate is its own step so a failed run names the command
+      # that failed. Locally the same gates run as a single `pnpm check`.
       - name: Check formatting
         run: pnpm run format:check
 
@@ -66,9 +74,6 @@ jobs:
 
       - name: Type-check
         run: pnpm run typecheck
-
-      - name: Build
-        run: pnpm run build
 
       # Run before the full suite so an architecture violation is reported as
       # itself rather than as one failure among many.

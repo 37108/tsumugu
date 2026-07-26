@@ -181,3 +181,23 @@ describe("commands", () => {
     }
   });
 });
+
+describe("step order", () => {
+  it("builds before linting", () => {
+    // Type-aware linting resolves a package's imports through the declarations
+    // its dependencies emit. Linting first fails with "a type that cannot be
+    // resolved" for every cross-package import - and it fails only in CI,
+    // because a developer's dist/ is usually already there from a previous run.
+    for (const workflow of workflows) {
+      const build = workflow.text.indexOf("pnpm run build");
+      const lint = workflow.text.indexOf("pnpm run lint");
+      if (build === -1 || lint === -1) {
+        continue;
+      }
+      expect(
+        build,
+        `${workflow.name} lints before it builds; cross-package types will not resolve`,
+      ).toBeLessThan(lint);
+    }
+  });
+});

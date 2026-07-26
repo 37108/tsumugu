@@ -123,6 +123,14 @@ Every code in the implementation appears here.
 | ------------------------- | -------- | ------------------------------------------------------------------------------------------------- |
 | `serializer/invalid-node` | error    | a virtual node could not be serialized safely; it is skipped rather than emitted as broken markup |
 
+### `theme/`
+
+| Code                     | Severity | When                                                                                   |
+| ------------------------ | -------- | -------------------------------------------------------------------------------------- |
+| `theme/missing-renderer` | warning  | the theme has no renderer for a node type; its content is shown without presentation   |
+| `theme/renderer-threw`   | error    | a node renderer threw; that node loses its presentation, the rest of the page survives |
+| `theme/unsupported-node` | warning  | a renderer could not represent some source; it is shown as preformatted text           |
+
 ## Formatting
 
 `formatDiagnostic` produces plain text in the compiler convention that editors

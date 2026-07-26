@@ -50,6 +50,11 @@ export type {
 export type { RenderResult, Renderer } from "./renderer/contract.js";
 
 // Diagnostics: how any stage reports a problem.
+export {
+  formatDiagnostic,
+  formatDiagnostics,
+  summarizeDiagnostics,
+} from "./document/diagnostics.js";
 export type {
   DiagnosticSeverity,
   DocumentDiagnostic,
@@ -66,3 +71,33 @@ export type {
 
 // Metadata values a renderer may hand back for the shared precedence rules.
 export type { MetadataValue } from "./document/metadata.js";
+export type { ResolvedMetadata, TitleSource } from "./metadata/resolve.js";
+
+// The theme contract, and the Virtual Tree builders a theme cannot be written
+// without. `trustedHtml` is exported alongside the safe constructors on
+// purpose: hiding it would not stop a theme emitting raw markup, it would only
+// stop the deliberate, reviewable way of doing so.
+export type {
+  NodeRenderer,
+  RenderContext,
+  Theme,
+  ThemeRenderInput,
+  ThemeRenderResult,
+} from "./theme/contract.js";
+export { renderUnsupported } from "./theme/contract.js";
+export type {
+  AttributeValue,
+  TrustedHtml,
+  VirtualChild,
+  VirtualElement,
+  VirtualFragment,
+  VirtualNode,
+  VirtualText,
+} from "./theme/virtual-tree.js";
+export { element, fragment, text, trustedHtml } from "./theme/virtual-tree.js";
+
+// The pipeline and the development server: what an entry point composes.
+export type { BuildOptions, BuildResult, Page } from "./pipeline/build.js";
+export { buildSite } from "./pipeline/build.js";
+export type { RunningServer, ServeOptions } from "./server/serve.js";
+export { serve } from "./server/serve.js";

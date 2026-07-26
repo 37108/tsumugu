@@ -1,0 +1,200 @@
+import { createServer, type Server } from "node:http";
+import type { AddressInfo } from "node:net";
+
+import type { RoutePath } from "../document/paths.js";
+import type { Page } from "../pipeline/build.js";
+import { decodeRequestPath } from "../routing/routes.js";
+import { escapeText } from "../theme/serialize.js";
+
+/**
+ * The development HTTP server.
+ *
+ * Small on purpose. It maps a request path to a route, returns the page or an
+ * explanation, and stops cleanly. Everything about what a page *is* was decided
+ * before it got here.
+ */
+
+export interface ServeOptions {
+  readonly pages: ReadonlyMap<RoutePath, Page>;
+  /**
+   * Interface to bind. Defaults to loopback.
+   *
+   * A documentation server started in a coffee shop should not be reachable by
+   * the coffee shop. Exposure to a network has to be asked for.
+   */
+  readonly host?: string;
+  /** Port, or 0 to let the operating system choose a free one. */
+  readonly port?: number;
+}
+
+export interface RunningServer {
+  readonly url: string;
+  readonly host: string;
+  readonly port: number;
+  /** Stops accepting connections and resolves once the port is released. */
+  close(): Promise<void>;
+}
+
+/**
+ * Headers sent with every response.
+ *
+ * The policy forbids scripts outright, which is the security model stated as
+ * something a browser enforces rather than something Tsumugu promises.
+ * Documentation is content; content does not execute. Inline styles are
+ * permitted because a theme's styling has nowhere else to live yet.
+ */
+const securityHeaders: Readonly<Record<string, string>> = {
+  "content-security-policy":
+    "default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; font-src 'self'; base-uri 'none'; form-action 'none'",
+  "x-content-type-options": "nosniff",
+  "referrer-policy": "no-referrer",
+};
+
+function page(status: number, title: string, body: string): string {
+  return [
+    "<!doctype html>",
+    '<html lang="en">',
+    "<head>",
+    '<meta charset="utf-8">',
+    '<meta name="viewport" content="width=device-width, initial-scale=1">',
+    `<title>${escapeText(title)}</title>`,
+    "</head>",
+    `<body><h1>${escapeText(String(status))} ${escapeText(title)}</h1>${body}</body>`,
+    "</html>",
+  ].join("");
+}
+
+function notFound(route: string, pages: ReadonlyMap<RoutePath, Page>): string {
+  // Listing what does exist turns "not found" into something a user can act
+  // on, which is the difference between a 404 and a dead end.
+  const available = [...pages.keys()]
+    .sort()
+    .map(
+      (known) =>
+        `<li><a href="${escapeText(known)}">${escapeText(known)}</a></li>`,
+    )
+    .join("");
+
+  return page(
+    404,
+    "Not found",
+    `<p>No document is served at <code>${escapeText(route)}</code>.</p>` +
+      (available === ""
+        ? "<p>This project has no documents yet.</p>"
+        : `<p>These routes exist:</p><ul>${available}</ul>`),
+  );
+}
+
+/**
+ * Starts the server.
+ *
+ * Resolves once the port is actually bound, so a caller can print a URL that
+ * works rather than one that will work shortly.
+ */
+export function serve(options: ServeOptions): Promise<RunningServer> {
+  const host = options.host ?? "127.0.0.1";
+  const requestedPort = options.port ?? 0;
+
+  const server: Server = createServer((request, response) => {
+    const target = request.url ?? "/";
+    const withoutQuery = target.split(/[?#]/)[0] ?? "/";
+    const route = decodeRequestPath(withoutQuery);
+
+    const send = (status: number, html: string): void => {
+      response.writeHead(status, {
+        "content-type": "text/html; charset=utf-8",
+        ...securityHeaders,
+      });
+      response.end(html);
+    };
+
+    if (route === undefined) {
+      // A path that cannot be decoded, or that contains traversal, is
+      // something a client sent. It is a bad request, not a crash.
+      send(
+        400,
+        page(400, "Bad request", "<p>That request path is not valid.</p>"),
+      );
+      return;
+    }
+
+    const found = options.pages.get(route);
+    if (found === undefined) {
+      send(404, notFound(route, options.pages));
+      return;
+    }
+
+    send(200, found.html);
+  });
+
+  return new Promise((resolve, reject) => {
+    const onError = (cause: Error): void => {
+      server.removeListener("listening", onListening);
+      reject(describeBindFailure(cause, host, requestedPort));
+    };
+
+    const onListening = (): void => {
+      server.removeListener("error", onError);
+      const address: AddressInfo | string | null = server.address();
+      const port =
+        address !== null && typeof address === "object"
+          ? address.port
+          : requestedPort;
+
+      resolve({
+        url: `http://${host}:${String(port)}/`,
+        host,
+        port,
+        close: () =>
+          new Promise<void>((done, fail) => {
+            // closeAllConnections, then close: without it a keep-alive
+            // connection holds the process open and a test hangs rather than
+            // failing.
+            server.closeAllConnections();
+            server.close((error) => {
+              if (error === undefined) {
+                done();
+              } else {
+                fail(error);
+              }
+            });
+          }),
+      });
+    };
+
+    server.once("error", onError);
+    server.once("listening", onListening);
+    server.listen(requestedPort, host);
+  });
+}
+
+/**
+ * Turns a bind failure into something a user can act on.
+ *
+ * "EADDRINUSE" is not a sentence. The original is kept as the cause so a stack
+ * trace is still reachable.
+ */
+function describeBindFailure(cause: Error, host: string, port: number): Error {
+  const code = "code" in cause ? String(cause.code) : "";
+
+  if (code === "EADDRINUSE") {
+    return new Error(
+      `Port ${String(port)} on ${host} is already in use. Stop whatever is using it, or start Tsumugu on a different port.`,
+      { cause },
+    );
+  }
+  if (code === "EACCES") {
+    return new Error(
+      `Not allowed to bind port ${String(port)} on ${host}. Ports below 1024 usually need elevated privileges; pick a higher one.`,
+      { cause },
+    );
+  }
+  if (code === "EADDRNOTAVAIL") {
+    return new Error(`The address ${host} does not exist on this machine.`, {
+      cause,
+    });
+  }
+  return new Error(`Could not start the server on ${host}:${String(port)}.`, {
+    cause,
+  });
+}

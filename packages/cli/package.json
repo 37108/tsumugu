@@ -32,7 +32,9 @@
     "clean": "tsc --build --clean"
   },
   "dependencies": {
-    "@tsumugu/core": "workspace:*"
+    "@tsumugu/core": "workspace:*",
+    "@tsumugu/renderer-html": "workspace:*",
+    "@tsumugu/renderer-markdown": "workspace:*"
   },
   "devDependencies": {
     "@tsumugu/internal-tsconfig": "workspace:*"

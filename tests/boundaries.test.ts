@@ -221,11 +221,31 @@ describe("public export surface", () => {
    * convenience becomes a compatibility commitment the moment it is published.
    */
   const expectedExports: Readonly<Record<string, readonly string[]>> = {
-    // Core's surface is almost entirely types, which cost nothing at runtime.
-    // The Markdown renderer - core's first real consumer - needed no runtime
-    // export at all, which is the cheapest kind of contract to keep.
-    "@tsumugu/core": ["version"],
-    "@tsumugu/cli": ["run"],
+    // Core's surface stayed types-only until a theme and an entry point
+    // existed outside it. A theme cannot be written without the Virtual Tree
+    // builders, and an entry point cannot compose a pipeline it cannot call —
+    // so each of these was added because something real could not exist
+    // otherwise, which is what "earned" means in docs/principles.md.
+    "@tsumugu/core": [
+      "buildSite",
+      "element",
+      "formatDiagnostic",
+      "formatDiagnostics",
+      "fragment",
+      "renderUnsupported",
+      "serve",
+      "summarizeDiagnostics",
+      "text",
+      "trustedHtml",
+      "version",
+    ],
+    "@tsumugu/cli": [
+      "describeStartup",
+      "minimalTheme",
+      "parseDevOptions",
+      "run",
+      "startDev",
+    ],
     "@tsumugu/renderer-markdown": ["createMarkdownRenderer"],
     "@tsumugu/renderer-html": ["createHtmlRenderer", "isFullDocument"],
   };

@@ -12,9 +12,11 @@ export interface CliResult {
   readonly exitCode: number;
 }
 
-const usage = `Usage: tsumugu --version
+const usage = `Usage:
+  tsumugu dev [--root <dir>] [--host <host>] [--port <port>]
+  tsumugu --version
 
-No documentation commands are implemented yet.
+  dev   Serve the documentation in <dir> (default: ./docs) on localhost.
 `;
 
 /**
@@ -32,3 +34,12 @@ export function run(argv: readonly string[]): CliResult {
 
   return { stdout: "", stderr: usage, exitCode: 1 };
 }
+
+export {
+  describeStartup,
+  parseDevOptions,
+  startDev,
+  type DevOptions,
+  type DevResult,
+} from "./dev.js";
+export { minimalTheme } from "./minimal-theme.js";

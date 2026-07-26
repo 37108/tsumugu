@@ -94,7 +94,7 @@ describe("tsumugu binary", () => {
 
     expect(outcome.exitCode).toBe(1);
     expect(outcome.stdout).toBe("");
-    expect(outcome.stderr).toContain("Usage: tsumugu --version");
+    expect(outcome.stderr).toContain("tsumugu dev");
   });
 
   it("rejects unknown arguments without writing to stdout", async () => {
@@ -102,7 +102,7 @@ describe("tsumugu binary", () => {
 
     expect(outcome.exitCode).toBe(1);
     expect(outcome.stdout).toBe("");
-    expect(outcome.stderr).toContain("Usage: tsumugu --version");
+    expect(outcome.stderr).toContain("tsumugu dev");
   });
 
   it("rejects --version combined with other arguments", async () => {

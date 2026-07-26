@@ -55,6 +55,12 @@ importers:
       '@tsumugu/core':
         specifier: workspace:*
         version: link:../core
+      '@tsumugu/renderer-html':
+        specifier: workspace:*
+        version: link:../renderer-html
+      '@tsumugu/renderer-markdown':
+        specifier: workspace:*
+        version: link:../renderer-markdown
     devDependencies:
       '@tsumugu/internal-tsconfig':
         specifier: workspace:*

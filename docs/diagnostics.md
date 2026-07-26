@@ -95,9 +95,10 @@ Every code in the implementation appears here.
 
 ### `routing/`
 
-| Code                | Severity | When                                    |
-| ------------------- | -------- | --------------------------------------- |
-| `routing/collision` | error    | two or more files map to the same route |
+| Code                 | Severity | When                                                           |
+| -------------------- | -------- | -------------------------------------------------------------- |
+| `routing/collision`  | error    | two or more files map to the same route                        |
+| `routing/unroutable` | error    | a source path could not be mapped to a route and is not served |
 
 ### `metadata/`
 

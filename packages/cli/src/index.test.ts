@@ -30,7 +30,7 @@ describe("run", () => {
 
     expect(result.exitCode).toBe(1);
     expect(result.stdout).toBe("");
-    expect(result.stderr).toContain("Usage: tsumugu --version");
+    expect(result.stderr).toContain("tsumugu dev");
   });
 
   it.each([
@@ -46,7 +46,7 @@ describe("run", () => {
     // Nothing is written to stdout on failure, so a caller can pipe stdout
     // without capturing diagnostics.
     expect(result.stdout).toBe("");
-    expect(result.stderr).toContain("Usage: tsumugu --version");
+    expect(result.stderr).toContain("tsumugu dev");
   });
 
   it("does not treat the version flag as a prefix match", () => {

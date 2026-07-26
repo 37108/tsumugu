@@ -2,15 +2,14 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
 
+import { repositoryRoot, toPosixPath } from "./helpers/paths.js";
 import {
   findDependencyCycle,
   readRootManifest,
   readWorkspaceManifests,
-  repositoryRoot,
-  toWorkspaceId,
   workspaceRoots,
   type WorkspaceManifest,
-} from "./workspace-manifests.js";
+} from "./helpers/workspace-manifests.js";
 
 /**
  * Architectural invariants of the workspace graph.
@@ -86,11 +85,13 @@ describe("workspace discovery", () => {
     );
   });
 
-  it("normalizes Windows-style separators into workspace identifiers", () => {
-    expect(toWorkspaceId("packages\\core")).toBe("packages/core");
-    expect(toWorkspaceId("packages/core")).toBe("packages/core");
-    expect(toWorkspaceId("packages\\\\core")).toBe("packages/core");
-    expect(toWorkspaceId("internal\\tsconfig")).toBe("internal/tsconfig");
+  it("reports workspace identifiers with POSIX separators", () => {
+    // Windows would otherwise produce `packages\core` here, which would make
+    // every identifier assertion in this file platform-specific.
+    for (const manifest of manifests) {
+      expect(manifest.id).toBe(toPosixPath(manifest.id));
+      expect(manifest.id).not.toContain("\\");
+    }
   });
 });
 

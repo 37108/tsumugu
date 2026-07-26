@@ -1,13 +1,7 @@
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 
-/** Absolute path to the repository root. */
-export const repositoryRoot = path.resolve(
-  fileURLToPath(import.meta.url),
-  "..",
-  "..",
-);
+import { repositoryRoot, toPosixPath } from "./paths.js";
 
 /**
  * Directories that contain workspaces, matching the globs in
@@ -30,20 +24,6 @@ export interface WorkspaceManifest {
   readonly devDependencies: ReadonlyMap<string, string>;
   /** Top-level manifest fields, for presence checks that need no parsing. */
   readonly fields: ReadonlyMap<string, unknown>;
-}
-
-/**
- * Normalizes a repository-relative path into a workspace identifier.
- *
- * Windows produces `packages\core` where POSIX produces `packages/core`.
- * Workspace identifiers are compared and reported in test output, so they are
- * normalized to a single separator regardless of the host platform.
- */
-export function toWorkspaceId(relativePath: string): string {
-  return relativePath
-    .split(/[\\/]+/)
-    .filter((segment) => segment !== "")
-    .join("/");
 }
 
 function isJsonObject(value: unknown): value is Record<string, unknown> {
@@ -123,7 +103,7 @@ async function readWorkspaceDirectory(
     const manifest = await readJsonObject(file);
 
     manifests.push({
-      id: toWorkspaceId(path.relative(repositoryRoot, directory)),
+      id: toPosixPath(path.relative(repositoryRoot, directory)),
       root,
       directory,
       name: requireString(manifest, "name", file),

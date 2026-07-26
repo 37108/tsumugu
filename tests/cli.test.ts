@@ -3,10 +3,8 @@ import { access, readFile } from "node:fs/promises";
 import path from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
 
-import {
-  readWorkspaceManifests,
-  repositoryRoot,
-} from "./workspace-manifests.js";
+import { repositoryRoot } from "./helpers/paths.js";
+import { readWorkspaceManifests } from "./helpers/workspace-manifests.js";
 
 /**
  * End-to-end check of the compiled toolchain.

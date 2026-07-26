@@ -27,10 +27,14 @@ export default tseslint.config(
   {
     languageOptions: {
       parserOptions: {
-        // The project service resolves each file through the tsconfig that owns
-        // it, so packages and tests do not have to be enumerated here and
-        // cannot drift out of sync with the TypeScript project references.
-        projectService: true,
+        // The projects are listed explicitly rather than using the project
+        // service. The service resolves each file through the *nearest*
+        // tsconfig.json, which cannot work here: test files are deliberately
+        // excluded from the package build projects so they never reach `dist/`,
+        // and are type-checked by tsconfig.test.json instead. The service would
+        // therefore refuse to parse every test file. Listing the projects
+        // assigns each file to the configuration that actually type-checks it.
+        project: ["./tsconfig.test.json", "./packages/*/tsconfig.json"],
         tsconfigRootDir: import.meta.dirname,
       },
     },

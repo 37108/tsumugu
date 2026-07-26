@@ -13,6 +13,7 @@ Please read:
 - `docs/architecture/overview.md`
 - `docs/architecture/workspaces.md`
 - `docs/compatibility.md`
+- `docs/testing.md`
 - the relevant Architecture Decision Records in `docs/decisions/`
 
 ## Development status
@@ -30,17 +31,19 @@ pnpm install
 pnpm check
 ```
 
-| Command             | Behaviour                                             |
-| ------------------- | ----------------------------------------------------- |
-| `pnpm format`       | formats every supported file with Prettier            |
-| `pnpm format:check` | reports unformatted files without changing them       |
-| `pnpm lint`         | runs type-aware ESLint over the workspace             |
-| `pnpm lint:fix`     | applies the fixes ESLint can make safely              |
-| `pnpm build`        | compiles every package to `dist/`                     |
-| `pnpm typecheck`    | builds the packages, then type-checks `tests/`        |
-| `pnpm test`         | builds, then runs the test suite                      |
-| `pnpm check`        | formatting, linting, types and tests — the local gate |
-| `pnpm clean`        | removes build output                                  |
+| Command              | Behaviour                                             |
+| -------------------- | ----------------------------------------------------- |
+| `pnpm format`        | formats every supported file with Prettier            |
+| `pnpm format:check`  | reports unformatted files without changing them       |
+| `pnpm lint`          | runs type-aware ESLint over the workspace             |
+| `pnpm lint:fix`      | applies the fixes ESLint can make safely              |
+| `pnpm build`         | compiles every package to `dist/`                     |
+| `pnpm typecheck`     | builds the packages, then type-checks `tests/`        |
+| `pnpm test`          | builds, then runs the test suite                      |
+| `pnpm test:watch`    | re-runs affected tests as files change                |
+| `pnpm test:coverage` | builds, then runs the suite with coverage             |
+| `pnpm check`         | formatting, linting, types and tests — the local gate |
+| `pnpm clean`         | removes build output                                  |
 
 `pnpm check` never modifies files: it uses `format:check` rather than `format`,
 so it can be run safely before committing and in CI. Use `pnpm format` and
@@ -54,7 +57,8 @@ Individual packages expose `build`, `typecheck` and `lint`, so a single package
 can be checked with `pnpm --filter @tsumugu/core run lint`.
 
 `docs/architecture/workspaces.md` describes the workspace layout, the allowed
-dependency direction, and the toolchain versions.
+dependency direction, and the toolchain versions. `docs/testing.md` describes
+the test layers, where each kind of test belongs, and the file-system helpers.
 
 ## Contribution workflow
 

@@ -61,14 +61,56 @@ vertical slice in Milestone 1 requires them.
 
 ## What enforces these rules
 
-[`tests/workspace.test.ts`](../../tests/workspace.test.ts) reads every package
-manifest and fails with the offending workspace and the violated rule. It checks
-the manifest level, which is where a mistake becomes permanent: once a package
-is published, a dependency edge cannot be withdrawn without a breaking change.
+```bash
+pnpm check:boundaries
+```
 
-Import-level enforcement inside source files — deep imports into another
-package's private source tree, and re-export of internal-only symbols — is not
-implemented yet and is tracked in issue #6.
+Two layers, because a boundary can be broken in two different places.
+
+**The manifests.** [`tests/workspace.test.ts`](../../tests/workspace.test.ts)
+reads every `package.json` and checks the declared graph: privacy, explicit
+`exports`, the `workspace:` protocol, the absence of cycles, and core's
+forbidden targets. This is where a mistake becomes permanent — once a package is
+published, a dependency edge cannot be withdrawn without a breaking change.
+
+**The imports.** [`tests/boundaries.test.ts`](../../tests/boundaries.test.ts)
+reads every source file, because an import can bypass the manifest entirely.
+Five rules, each reported separately with the file, the line, the source and
+target packages, and what was violated:
+
+| Rule                       | Catches                                                             |
+| -------------------------- | ------------------------------------------------------------------- |
+| `deep-import`              | `@tsumugu/core/src/…`, a path that does not exist after publication |
+| `escaping-relative-import` | `../../core/src/…`, the same thing spelled relatively               |
+| `internal-dependency`      | a publishable package importing an `internal/` workspace            |
+| `forbidden-edge`           | core importing the CLI, a theme, a renderer, build, search or AI    |
+| `undeclared-dependency`    | an import that resolves only because pnpm installed it nearby       |
+
+Specifiers are extracted with TypeScript's own `preProcessFile` rather than a
+regular expression, so `import type`, `export … from` and dynamic `import()` are
+all covered while an import-shaped string inside a comment is not.
+
+The same file also pins the **public export surface** of each publishable
+package. Adding a runtime export fails the test until the new name is listed
+deliberately, which is what [`docs/principles.md`](../principles.md) means by a
+public API being earned rather than accumulated.
+
+### Type-only dependencies
+
+A type-only import is still a dependency. `import type { Foo } from "@tsumugu/x"`
+must be declared exactly like a value import, and the boundary rules treat the
+two identically.
+
+Where it may be declared depends on whether the type escapes:
+
+- If the type appears in the package's emitted `.d.ts`, it belongs in
+  `dependencies`. A consumer cannot type-check against a package it was not
+  given.
+- If it is used only internally and never appears in the emitted declarations,
+  `devDependencies` is enough.
+
+An `internal/` workspace may never be imported from a publishable package, not
+even type-only. Its declarations do not exist for consumers at all.
 
 ## Publication policy
 
@@ -145,20 +187,21 @@ test is the package build project that deliberately excludes it.
 
 All commands run from the repository root.
 
-| Command              | Behaviour                                             |
-| -------------------- | ----------------------------------------------------- |
-| `pnpm install`       | installs the workspace, using the committed lockfile  |
-| `pnpm format`        | formats every supported file with Prettier            |
-| `pnpm format:check`  | reports unformatted files without changing them       |
-| `pnpm lint`          | runs type-aware ESLint over the workspace             |
-| `pnpm lint:fix`      | applies the fixes ESLint can make safely              |
-| `pnpm build`         | `tsc --build`, emits `dist/` for each package         |
-| `pnpm typecheck`     | builds the packages, then type-checks `tests/`        |
-| `pnpm test`          | builds, then runs Vitest                              |
-| `pnpm test:watch`    | re-runs affected tests as files change                |
-| `pnpm test:coverage` | builds, then runs the suite with coverage             |
-| `pnpm check`         | formatting, linting, types and tests — the local gate |
-| `pnpm clean`         | removes build output and TypeScript build info        |
+| Command                 | Behaviour                                             |
+| ----------------------- | ----------------------------------------------------- |
+| `pnpm install`          | installs the workspace, using the committed lockfile  |
+| `pnpm format`           | formats every supported file with Prettier            |
+| `pnpm format:check`     | reports unformatted files without changing them       |
+| `pnpm lint`             | runs type-aware ESLint over the workspace             |
+| `pnpm lint:fix`         | applies the fixes ESLint can make safely              |
+| `pnpm build`            | `tsc --build`, emits `dist/` for each package         |
+| `pnpm typecheck`        | builds the packages, then type-checks `tests/`        |
+| `pnpm test`             | builds, then runs Vitest                              |
+| `pnpm test:watch`       | re-runs affected tests as files change                |
+| `pnpm test:coverage`    | builds, then runs the suite with coverage             |
+| `pnpm check:boundaries` | builds, then checks the dependency and export rules   |
+| `pnpm check`            | formatting, linting, types and tests — the local gate |
+| `pnpm clean`            | removes build output and TypeScript build info        |
 
 `pnpm test` builds first on purpose. `tests/cli.test.ts` executes the emitted
 `packages/cli/dist/bin.js` in a child process, so it can only pass against real

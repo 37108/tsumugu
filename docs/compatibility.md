@@ -69,8 +69,9 @@ Instead, pnpm manages itself: pnpm 10 and later read `packageManager` and switch
 to the pinned version automatically. Verified in this repository — pnpm 10.33.0
 switched to 11.10.0 on the first install without Corepack present.
 
-Continuous integration must therefore install pnpm explicitly rather than
-relying on a bundled Corepack. That is tracked in issue #5.
+Continuous integration therefore installs pnpm explicitly with
+`pnpm/action-setup`, which reads the same `packageManager` field, rather than
+relying on a bundled Corepack.
 
 Upgrading the pinned version is a deliberate change to the root manifest. Any
 new version must also satisfy the `minimumReleaseAge` constraint described in
@@ -78,20 +79,22 @@ new version must also satisfy the `minimumReleaseAge` constraint described in
 
 ## Operating systems
 
-| Platform      | Status                                           |
-| ------------- | ------------------------------------------------ |
-| Linux (x64)   | supported, to be covered by CI                   |
-| macOS (arm64) | supported, currently the only platform validated |
-| Windows (x64) | supported, to be covered by CI                   |
+| Platform      | Status                              | Covered by CI                    |
+| ------------- | ----------------------------------- | -------------------------------- |
+| Linux (x64)   | supported, primary development host | every gate, on every push and PR |
+| macOS (arm64) | supported                           | build and tests                  |
+| Windows (x64) | supported                           | build and tests                  |
 
 Tsumugu is a documentation server: it touches path normalization, file watching,
 and process signals, all of which differ across these platforms. They are
 treated as first-class targets rather than as ports.
 
-**This is a commitment, not a measurement.** No continuous integration exists
-yet, so all three are currently validated only by code that was written to be
-portable and by unit tests covering separator handling. Cross-platform CI is
-issue #5 and Windows-specific hardening is issue #72.
+Formatting, linting and type checking run only on Linux. They cannot produce a
+different answer per platform, so running them three times would buy nothing.
+The suites that _can_ differ — temporary directories, path separators, spawning
+the built binary — run on all three.
+
+Windows-specific hardening beyond this baseline is issue #72.
 
 Behaviour is **not** guaranteed on network file systems, mobile environments, or
 embedded runtimes.
@@ -141,5 +144,8 @@ A policy that only exists in prose drifts. These are the mechanisms:
 | ESM-only                   | `tests/compatibility.test.ts`            | fails if a package is not `"type": "module"` or exposes a CommonJS entry point |
 | Metadata matches this page | `tests/compatibility.test.ts`            | fails if the manifests and this document disagree                              |
 
-The CI matrix that the operating-system section describes does not exist yet.
-Issue #5 must match this page when it is implemented.
+The operating-system matrix is implemented in `.github/workflows/ci.yml`, and
+`tests/workflows.test.ts` asserts the workflow's own invariants: every
+third-party action pinned to a commit, `--frozen-lockfile` on every install,
+read-only permissions, no repository secret, and no step calling a script the
+root manifest does not define.

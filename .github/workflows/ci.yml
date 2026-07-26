@@ -1,0 +1,109 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Nothing in this workflow writes to the repository, so it asks for nothing but
+# read access to the contents. No secret is referenced anywhere, which is what
+# lets pull requests from forks run the full workflow.
+permissions:
+  contents: read
+
+# A newer commit on the same ref makes an in-flight run obsolete. Cancelling it
+# frees a runner instead of reporting a result nobody will read.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # The minimum supported runtime from docs/compatibility.md. CI validates the
+  # baseline, because code that only works on a newer Node.js would otherwise
+  # pass here and fail for users.
+  NODE_VERSION: "24"
+
+# Third-party actions are pinned to an immutable commit rather than a tag. A tag
+# can be moved to point at different code; a commit cannot. The version chosen
+# for each is also at least 21 days old, matching the minimumReleaseAge policy
+# applied to npm dependencies in pnpm-workspace.yaml.
+#
+# tests/workflows.test.ts fails if any of these constraints is dropped.
+
+jobs:
+  check:
+    name: Check (ubuntu, Node 24)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      # Must run before setup-node, which needs pnpm on PATH to resolve the
+      # store location for its cache. The version comes from the packageManager
+      # field, so it cannot drift from what contributors run locally.
+      - name: Install pnpm
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+
+      - name: Install Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      # The lockfile is authoritative. Without this flag pnpm would silently
+      # resolve new versions and CI would test something the repository does not
+      # describe.
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Each gate is its own step so a failed run names the command that failed.
+      # Locally the same gates run as a single `pnpm check`.
+      - name: Check formatting
+        run: pnpm run format:check
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Type-check
+        run: pnpm run typecheck
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Test with coverage
+        run: pnpm run test:coverage
+
+  platform:
+    name: Tests (${{ matrix.os }}, Node 24)
+    # Runs only once the fast Linux job is green. A formatting or type error
+    # fails identically on every platform, so paying for three runners to learn
+    # it three times is waste.
+    needs: check
+    strategy:
+      # One platform failing should not hide the result of the other.
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+
+      - name: Install Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Only the suites that can behave differently per platform: path
+      # separators, temporary directories, and spawning the built binary.
+      # Formatting, linting and type checking are platform-independent and are
+      # already covered by the ubuntu job.
+      - name: Test
+        run: pnpm run test

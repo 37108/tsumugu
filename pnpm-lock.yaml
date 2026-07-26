@@ -11,6 +11,12 @@ importers:
       '@eslint/js':
         specifier: ^9.39.4
         version: 9.39.4
+      '@tsumugu/cli':
+        specifier: workspace:*
+        version: link:packages/cli
+      '@tsumugu/core':
+        specifier: workspace:*
+        version: link:packages/core
       '@tsumugu/internal-tsconfig':
         specifier: workspace:*
         version: link:internal/tsconfig

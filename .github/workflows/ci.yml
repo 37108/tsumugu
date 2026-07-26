@@ -70,6 +70,11 @@ jobs:
       - name: Build
         run: pnpm run build
 
+      # Run before the full suite so an architecture violation is reported as
+      # itself rather than as one failure among many.
+      - name: Check dependency boundaries
+        run: pnpm run check:boundaries
+
       - name: Test with coverage
         run: pnpm run test:coverage
 

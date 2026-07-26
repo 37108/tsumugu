@@ -19,15 +19,17 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
     "typecheck": "tsc --build && tsc --noEmit --project tsconfig.test.json",
     "test": "pnpm run build && vitest run",
     "test:watch": "pnpm run build && vitest",
     "test:coverage": "pnpm run build && vitest run --coverage",
+    "check:boundaries": "pnpm run build && vitest run tests/boundaries.test.ts tests/workspace.test.ts",
     "check": "pnpm run format:check && pnpm run lint && pnpm run typecheck && vitest run"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
+    "@tsumugu/cli": "workspace:*",
+    "@tsumugu/core": "workspace:*",
     "@tsumugu/internal-tsconfig": "workspace:*",
     "@types/node": "^24.13.2",
     "@vitest/coverage-v8": "^4.1.9",

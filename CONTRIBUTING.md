@@ -31,19 +31,20 @@ pnpm install
 pnpm check
 ```
 
-| Command              | Behaviour                                             |
-| -------------------- | ----------------------------------------------------- |
-| `pnpm format`        | formats every supported file with Prettier            |
-| `pnpm format:check`  | reports unformatted files without changing them       |
-| `pnpm lint`          | runs type-aware ESLint over the workspace             |
-| `pnpm lint:fix`      | applies the fixes ESLint can make safely              |
-| `pnpm build`         | compiles every package to `dist/`                     |
-| `pnpm typecheck`     | builds the packages, then type-checks `tests/`        |
-| `pnpm test`          | builds, then runs the test suite                      |
-| `pnpm test:watch`    | re-runs affected tests as files change                |
-| `pnpm test:coverage` | builds, then runs the suite with coverage             |
-| `pnpm check`         | formatting, linting, types and tests — the local gate |
-| `pnpm clean`         | removes build output                                  |
+| Command                 | Behaviour                                             |
+| ----------------------- | ----------------------------------------------------- |
+| `pnpm format`           | formats every supported file with Prettier            |
+| `pnpm format:check`     | reports unformatted files without changing them       |
+| `pnpm lint`             | runs type-aware ESLint over the workspace             |
+| `pnpm lint:fix`         | applies the fixes ESLint can make safely              |
+| `pnpm build`            | compiles every package to `dist/`                     |
+| `pnpm typecheck`        | builds the packages, then type-checks `tests/`        |
+| `pnpm test`             | builds, then runs the test suite                      |
+| `pnpm test:watch`       | re-runs affected tests as files change                |
+| `pnpm test:coverage`    | builds, then runs the suite with coverage             |
+| `pnpm check:boundaries` | checks the dependency direction and export surface    |
+| `pnpm check`            | formatting, linting, types and tests — the local gate |
+| `pnpm clean`            | removes build output                                  |
 
 `pnpm check` never modifies files: it uses `format:check` rather than `format`,
 so it can be run safely before committing and in CI. Use `pnpm format` and

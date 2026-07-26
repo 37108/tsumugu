@@ -1,0 +1,39 @@
+{
+  "name": "@tsumugu/renderer-html",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "HTML renderer for Tsumugu. Converts complete HTML documents and fragments into the Semantic Document AST.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/37108/tsumugu.git",
+    "directory": "packages/renderer-html"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc --build",
+    "typecheck": "tsc --build",
+    "lint": "eslint src",
+    "clean": "tsc --build --clean"
+  },
+  "dependencies": {
+    "@tsumugu/core": "workspace:*",
+    "hast-util-from-html": "^2.0.3"
+  },
+  "devDependencies": {
+    "@tsumugu/internal-tsconfig": "workspace:*",
+    "@types/hast": "^3.0.4"
+  }
+}

@@ -227,6 +227,7 @@ describe("public export surface", () => {
     "@tsumugu/core": ["version"],
     "@tsumugu/cli": ["run"],
     "@tsumugu/renderer-markdown": ["createMarkdownRenderer"],
+    "@tsumugu/renderer-html": ["createHtmlRenderer", "isFullDocument"],
   };
 
   /**

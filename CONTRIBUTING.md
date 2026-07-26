@@ -30,18 +30,31 @@ pnpm install
 pnpm check
 ```
 
-| Command | Behaviour |
-| --- | --- |
-| `pnpm build` | compiles every package to `dist/` |
-| `pnpm typecheck` | builds the packages, then type-checks `tests/` |
-| `pnpm test` | builds, then runs the test suite |
-| `pnpm check` | type-checks and tests, the full local gate |
-| `pnpm clean` | removes build output |
+| Command             | Behaviour                                             |
+| ------------------- | ----------------------------------------------------- |
+| `pnpm format`       | formats every supported file with Prettier            |
+| `pnpm format:check` | reports unformatted files without changing them       |
+| `pnpm lint`         | runs type-aware ESLint over the workspace             |
+| `pnpm lint:fix`     | applies the fixes ESLint can make safely              |
+| `pnpm build`        | compiles every package to `dist/`                     |
+| `pnpm typecheck`    | builds the packages, then type-checks `tests/`        |
+| `pnpm test`         | builds, then runs the test suite                      |
+| `pnpm check`        | formatting, linting, types and tests — the local gate |
+| `pnpm clean`        | removes build output                                  |
+
+`pnpm check` never modifies files: it uses `format:check` rather than `format`,
+so it can be run safely before committing and in CI. Use `pnpm format` and
+`pnpm lint:fix` to apply changes.
+
+Prettier owns formatting and ESLint owns correctness. There is deliberately no
+overlap between them, so no rule needs to be disabled to keep the peace. Do not
+add stylistic lint rules.
+
+Individual packages expose `build`, `typecheck` and `lint`, so a single package
+can be checked with `pnpm --filter @tsumugu/core run lint`.
 
 `docs/architecture/workspaces.md` describes the workspace layout, the allowed
 dependency direction, and the toolchain versions.
-
-Formatting and linting are not configured yet; they are tracked in issue #3.
 
 ## Contribution workflow
 

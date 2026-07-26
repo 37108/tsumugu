@@ -60,6 +60,17 @@ can be checked with `pnpm --filter @tsumugu/core run lint`.
 dependency direction, and the toolchain versions. `docs/testing.md` describes
 the test layers, where each kind of test belongs, and the file-system helpers.
 
+## Continuous integration
+
+`.github/workflows/ci.yml` runs on every pull request and every push to `main`.
+It runs the same commands documented above, one per step, so a failed run names
+the command that failed. Linux runs every gate; macOS and Windows run the build
+and tests, which are the parts that can behave differently per platform.
+
+If `pnpm check` passes locally, CI should agree. When it does not, the
+difference is almost always a path assumption or a line ending — see
+`docs/testing.md`.
+
 ## Contribution workflow
 
 1. Search existing issues and discussions before proposing new work.

@@ -10,4 +10,15 @@ Tsumugu is a documentation server first. It treats the file system as the source
 
 > Small core. Strong boundaries. Composable extensions.
 
-The repository is currently being bootstrapped. Architecture documents, governance policies, contribution guidance, and the initial implementation roadmap will be added before the first public pre-alpha release.
+The repository is currently being bootstrapped. The workspace, build, and test foundation is in place; the document pipeline described in [the architecture overview](docs/architecture/overview.md) is not implemented yet.
+
+## Development
+
+Requires Node.js 24 or newer. pnpm is pinned through the `packageManager` field.
+
+```bash
+pnpm install
+pnpm check
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full command list and [docs/architecture/workspaces.md](docs/architecture/workspaces.md) for the workspace layout and dependency rules.

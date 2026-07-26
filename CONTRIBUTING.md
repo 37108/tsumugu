@@ -12,6 +12,7 @@ Please read:
 - `docs/principles.md`
 - `docs/architecture/overview.md`
 - `docs/architecture/workspaces.md`
+- `docs/compatibility.md`
 - the relevant Architecture Decision Records in `docs/decisions/`
 
 ## Development status

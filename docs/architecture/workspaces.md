@@ -90,10 +90,11 @@ test, so an internal workspace cannot quietly become publishable.
 | TypeScript | `^6.0.3` | ESM-only, strict, project references |
 | Vitest | `^4.1.9` | no configuration file; the defaults are sufficient |
 
-These are the versions the repository requires today. The formal compatibility
-policy — the supported OS matrix, the upgrade and deprecation process, and the
-position on Bun and Deno — is tracked in issue #2 and will be recorded in
-`docs/compatibility.md` with an ADR.
+These are the versions the repository requires today. The full compatibility
+policy — the supported operating systems, the module-format decision, the
+upgrade and deprecation process, and the position on Bun and Deno — is in
+[`docs/compatibility.md`](../compatibility.md), with the reasoning recorded in
+[ADR 0001](../decisions/0001-runtime-and-package-compatibility.md).
 
 TypeScript 7, the native compiler, was evaluated and not adopted for this
 foundation: at the time of writing its first stable release was eighteen days

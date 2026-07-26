@@ -20,7 +20,8 @@ tsumugu/
 ├── packages/                  publishable-intent packages
 │   ├── core/                  @tsumugu/core
 │   ├── cli/                   @tsumugu/cli
-│   └── renderer-markdown/     @tsumugu/renderer-markdown
+│   ├── renderer-markdown/     @tsumugu/renderer-markdown
+│   └── renderer-html/         @tsumugu/renderer-html
 ├── internal/          internal-only workspaces, never published
 │   └── tsconfig/      @tsumugu/internal-tsconfig
 └── tests/             repository-level tests
@@ -38,17 +39,18 @@ Unit tests are colocated with the code they cover, under
 Dependencies point towards core. Core never points back.
 
 ```text
-@tsumugu/cli      @tsumugu/renderer-markdown
-     │                        │
-     └────────┬───────────────┘
-              ▼
-        @tsumugu/core
+@tsumugu/cli   @tsumugu/renderer-markdown   @tsumugu/renderer-html
+     │                     │                          │
+     └─────────────────────┼──────────────────────────┘
+                           ▼
+                     @tsumugu/core
 ```
 
-`@tsumugu/renderer-markdown` holds every Markdown-parser type in the
-repository. Core and themes see only the Semantic AST, so the parser can be
-replaced without either of them changing — which is what makes HTML a
-first-class input rather than a second format bolted on.
+Each renderer holds every type of its own parser: mdast never leaves
+`@tsumugu/renderer-markdown`, hast never leaves `@tsumugu/renderer-html`. Core
+and themes see only the Semantic AST, so either parser can be replaced without
+either of them changing — which is what makes HTML a first-class input rather
+than a second format bolted on.
 
 The rules the repository commits to, taken from
 [`docs/architecture/overview.md`](./overview.md) and

@@ -139,6 +139,13 @@ Every code in the implementation appears here.
 | `renderer-markdown/invalid-front-matter`       | warning  | the front matter is not valid YAML, or is not a mapping; the document still renders |
 | `renderer-markdown/unsupported-metadata-value` | warning  | a front-matter value has no metadata representation, such as a date or nested map   |
 
+### `renderer-html/`
+
+| Code                                | Severity | When                                                                                |
+| ----------------------------------- | -------- | ----------------------------------------------------------------------------------- |
+| `renderer-html/script-removed`      | warning  | script content was removed; documentation JavaScript is disabled by default         |
+| `renderer-html/unsupported-element` | warning  | an element has no semantic equivalent; its markup is preserved as untrusted content |
+
 ## Formatting
 
 `formatDiagnostic` produces plain text in the compiler convention that editors

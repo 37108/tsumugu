@@ -117,6 +117,12 @@ Every code in the implementation appears here.
 | `renderer/duplicate-id` | error    | two renderers share an id                         |
 | `renderer/threw`        | error    | a renderer threw; the original is kept as `cause` |
 
+### `serializer/`
+
+| Code                      | Severity | When                                                                                              |
+| ------------------------- | -------- | ------------------------------------------------------------------------------------------------- |
+| `serializer/invalid-node` | error    | a virtual node could not be serialized safely; it is skipped rather than emitted as broken markup |
+
 ## Formatting
 
 `formatDiagnostic` produces plain text in the compiler convention that editors

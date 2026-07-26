@@ -2,12 +2,12 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
 
+import { repositoryRoot } from "./helpers/paths.js";
 import {
   readRootManifest,
   readWorkspaceManifests,
-  repositoryRoot,
   type WorkspaceManifest,
-} from "./workspace-manifests.js";
+} from "./helpers/workspace-manifests.js";
 
 /**
  * Enforcement for the compatibility policy in `docs/compatibility.md`.

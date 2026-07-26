@@ -23,7 +23,11 @@ tsumugu/
 ├── internal/          internal-only workspaces, never published
 │   └── tsconfig/      @tsumugu/internal-tsconfig
 └── tests/             repository-level tests
+    └── helpers/       shared test support code, not collected as suites
 ```
+
+Unit tests are colocated with the code they cover, under
+`packages/*/src/**/*.test.ts`. See [`docs/testing.md`](../testing.md).
 
 `pnpm-workspace.yaml` maps exactly to those two roots: `packages/*` and
 `internal/*`.
@@ -83,12 +87,12 @@ test, so an internal workspace cannot quietly become publishable.
 
 ## Toolchain
 
-| Tool       | Version    | Note                                               |
-| ---------- | ---------- | -------------------------------------------------- |
-| Node.js    | `>=24.0.0` | Node.js 24 "Krypton" is the Active LTS line        |
-| pnpm       | `11.10.0`  | pinned through `packageManager`                    |
-| TypeScript | `^6.0.3`   | ESM-only, strict, project references               |
-| Vitest     | `^4.1.9`   | no configuration file; the defaults are sufficient |
+| Tool       | Version    | Note                                        |
+| ---------- | ---------- | ------------------------------------------- |
+| Node.js    | `>=24.0.0` | Node.js 24 "Krypton" is the Active LTS line |
+| pnpm       | `11.10.0`  | pinned through `packageManager`             |
+| TypeScript | `^6.0.3`   | ESM-only, strict, project references        |
+| Vitest     | `^4.1.9`   | `vitest.config.ts`; see `docs/testing.md`   |
 
 These are the versions the repository requires today. The full compatibility
 policy — the supported operating systems, the module-format decision, the
@@ -125,27 +129,36 @@ dependency edge it would add configuration and a dependency without improving
 build correctness or speed. This should be revisited if the graph grows enough
 that build ordering or caching becomes a real cost.
 
-Repository-level tests under `tests/` are type-checked through
-`tests/tsconfig.json`, which opts out of the composite and declaration settings
-in the shared base configuration because those tests must never emit build
-output.
+Test files are excluded from the package build projects so they cannot reach
+`dist/`. They are type-checked instead by `tsconfig.test.json`, a single
+non-composite project covering `tests/`, the colocated tests under
+`packages/*/src`, and `vitest.config.ts`. One project for all tests is simpler
+than a parallel test project per package, and it cannot drift out of step with
+the build projects.
+
+That layout is also why `eslint.config.js` lists its TypeScript projects
+explicitly instead of using typescript-eslint's project service: the service
+resolves each file through the _nearest_ `tsconfig.json`, which for a colocated
+test is the package build project that deliberately excludes it.
 
 ## Commands
 
 All commands run from the repository root.
 
-| Command             | Behaviour                                             |
-| ------------------- | ----------------------------------------------------- |
-| `pnpm install`      | installs the workspace, using the committed lockfile  |
-| `pnpm format`       | formats every supported file with Prettier            |
-| `pnpm format:check` | reports unformatted files without changing them       |
-| `pnpm lint`         | runs type-aware ESLint over the workspace             |
-| `pnpm lint:fix`     | applies the fixes ESLint can make safely              |
-| `pnpm build`        | `tsc --build`, emits `dist/` for each package         |
-| `pnpm typecheck`    | builds the packages, then type-checks `tests/`        |
-| `pnpm test`         | builds, then runs Vitest                              |
-| `pnpm check`        | formatting, linting, types and tests — the local gate |
-| `pnpm clean`        | removes build output and TypeScript build info        |
+| Command              | Behaviour                                             |
+| -------------------- | ----------------------------------------------------- |
+| `pnpm install`       | installs the workspace, using the committed lockfile  |
+| `pnpm format`        | formats every supported file with Prettier            |
+| `pnpm format:check`  | reports unformatted files without changing them       |
+| `pnpm lint`          | runs type-aware ESLint over the workspace             |
+| `pnpm lint:fix`      | applies the fixes ESLint can make safely              |
+| `pnpm build`         | `tsc --build`, emits `dist/` for each package         |
+| `pnpm typecheck`     | builds the packages, then type-checks `tests/`        |
+| `pnpm test`          | builds, then runs Vitest                              |
+| `pnpm test:watch`    | re-runs affected tests as files change                |
+| `pnpm test:coverage` | builds, then runs the suite with coverage             |
+| `pnpm check`         | formatting, linting, types and tests — the local gate |
+| `pnpm clean`         | removes build output and TypeScript build info        |
 
 `pnpm test` builds first on purpose. `tests/cli.test.ts` executes the emitted
 `packages/cli/dist/bin.js` in a child process, so it can only pass against real

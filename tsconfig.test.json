@@ -1,0 +1,21 @@
+{
+  // Every test file in the repository, type-checked in one pass and never
+  // emitted.
+  //
+  // Test files are excluded from the package build projects so they cannot end
+  // up in `dist/`. They still have to be type-checked, and a single project is
+  // simpler than a parallel test project per package.
+  "extends": "@tsumugu/internal-tsconfig/base.json",
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "noEmit": true
+  },
+  "include": [
+    "tests/**/*.ts",
+    "packages/*/src/**/*.test.ts",
+    "vitest.config.ts"
+  ]
+}

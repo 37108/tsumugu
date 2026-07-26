@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    // Node.js 24 (Active LTS) is the baseline runtime, so the full ES2024
+    // library is available without downlevelling.
+    "target": "es2024",
+    "lib": ["es2024"],
+
+    // ESM-only. "nodenext" makes TypeScript apply the same resolution rules
+    // Node.js applies at runtime, including mandatory file extensions in
+    // relative import specifiers.
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+
+    // Only ambient types that are explicitly depended on are visible. Without
+    // this, any transitively installed @types package silently widens the
+    // global scope.
+    "types": ["node"],
+
+    "strict": true,
+    // Indexing returns `T | undefined`, which is what actually happens at
+    // runtime. Important for the path and route handling planned for later
+    // milestones.
+    "noUncheckedIndexedAccess": true,
+    // Distinguishes "property absent" from "property present and undefined",
+    // so optional fields cannot be silently written as undefined.
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+
+    // Each file must be transpilable on its own, and type-only syntax must be
+    // written explicitly. Together these keep the sources compatible with
+    // single-file transpilers such as the one Vitest uses.
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    // Rejects syntax that cannot be erased by a type-stripping transform
+    // (enums, namespaces, parameter properties), keeping sources runnable by
+    // Node.js's native TypeScript support.
+    "erasableSyntaxOnly": true,
+
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    // Required for project references, which give `tsc --build` the correct
+    // build order and cross-package type resolution.
+    "composite": true,
+
+    // Case-sensitivity differs between Linux and macOS/Windows; enforcing
+    // consistent casing keeps imports portable across all three.
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true
+  }
+}

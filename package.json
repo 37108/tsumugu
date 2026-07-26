@@ -1,0 +1,29 @@
+{
+  "name": "tsumugu",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A zero-config documentation server that turns plain HTML and Markdown files into a beautiful documentation experience for humans and AI.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/37108/tsumugu.git"
+  },
+  "packageManager": "pnpm@11.10.0",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "clean": "tsc --build --clean",
+    "typecheck": "tsc --build && tsc --noEmit --project tests/tsconfig.json",
+    "test": "pnpm run build && vitest run",
+    "check": "pnpm run typecheck && vitest run"
+  },
+  "devDependencies": {
+    "@tsumugu/internal-tsconfig": "workspace:*",
+    "@types/node": "^24.13.2",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.9"
+  }
+}

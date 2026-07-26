@@ -1,0 +1,36 @@
+{
+  "name": "@tsumugu/cli",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Tsumugu command-line interface. Composes public packages and is never depended on by them.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/37108/tsumugu.git",
+    "directory": "packages/cli"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "bin": {
+    "tsumugu": "./dist/bin.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc --build",
+    "clean": "tsc --build --clean"
+  },
+  "dependencies": {
+    "@tsumugu/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@tsumugu/internal-tsconfig": "workspace:*"
+  }
+}

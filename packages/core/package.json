@@ -1,0 +1,30 @@
+{
+  "name": "@tsumugu/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Tsumugu core. Owns the document pipeline composition and must not depend on the CLI, themes, renderers, or build adapters.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/37108/tsumugu.git",
+    "directory": "packages/core"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc --build",
+    "clean": "tsc --build --clean"
+  },
+  "devDependencies": {
+    "@tsumugu/internal-tsconfig": "workspace:*"
+  }
+}

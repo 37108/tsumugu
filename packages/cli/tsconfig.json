@@ -10,5 +10,5 @@
       "path": "../core"
     }
   ],
-  "exclude": ["**/*.test.ts"]
+  "exclude": ["**/*.test.ts", "**/*.suite.ts"]
 }

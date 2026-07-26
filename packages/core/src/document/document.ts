@@ -1,5 +1,7 @@
 import { createHash } from "node:crypto";
 
+import type { DocumentNode } from "../ast/nodes.js";
+
 import { dedupeDiagnostics, type DocumentDiagnostic } from "./diagnostics.js";
 import { emptyMetadata, type DocumentMetadata } from "./metadata.js";
 import {
@@ -69,8 +71,20 @@ export interface LoadedDocument {
   readonly diagnostics: readonly DocumentDiagnostic[];
 }
 
+/**
+ * A document that has been parsed into the Semantic AST.
+ *
+ * Reaching this stage means a renderer succeeded. A document whose rendering
+ * failed stays at the loaded stage carrying an error diagnostic, so the failure
+ * is attached to a record the server can still describe rather than to nothing.
+ */
+export interface RenderedDocument extends Omit<LoadedDocument, "stage"> {
+  readonly stage: "rendered";
+  readonly root: DocumentNode;
+}
+
 /** Any stage of a document. Narrow on `stage` to reach the fields it has. */
-export type Document = DiscoveredDocument | LoadedDocument;
+export type Document = DiscoveredDocument | LoadedDocument | RenderedDocument;
 
 export type DocumentResult<T> =
   | { readonly ok: true; readonly value: T }

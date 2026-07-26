@@ -1,17 +1,68 @@
 /**
  * The public surface of `@tsumugu/core`.
  *
- * The document pipeline described in `docs/architecture/overview.md` is not
- * implemented yet. Until it is, this module deliberately exports one value, so
- * that the package boundary, the build output, and the export map are all
- * exercised by real code rather than by a placeholder that nothing consumes.
+ * Almost everything here is a **type**. That is the point: the first real
+ * consumer — the Markdown renderer — needs to describe the shape of what it
+ * produces, and needs nothing from core at runtime. A contract that costs no
+ * runtime coupling is the cheapest kind to keep.
+ *
+ * `docs/principles.md` says public APIs are earned. Each export below exists
+ * because a package outside core could not be written without it, not because
+ * it might be useful. The document model, the scanner, routing, the serializer
+ * and the theme runtime all remain internal until something outside core needs
+ * them.
  */
 
-/**
- * Version of the Tsumugu core package.
- *
- * `@tsumugu/cli` reports this as the version of the Tsumugu toolchain it
- * composes. `tests/workspace.test.ts` asserts that it stays in sync with
- * `packages/core/package.json`.
- */
-export const version = "0.0.0";
+/** Version of the Tsumugu core package. */
+export { version } from "./version.js";
+
+// The Semantic AST: what a renderer produces and a theme consumes.
+export type {
+  BlockNode,
+  BlockquoteNode,
+  CodeBlockNode,
+  DocumentNode,
+  EmphasisNode,
+  HeadingNode,
+  ImageNode,
+  InlineCodeNode,
+  InlineNode,
+  LinkNode,
+  ListItemNode,
+  ListNode,
+  ParagraphNode,
+  RawHtmlNode,
+  SemanticNode,
+  SemanticNodeType,
+  SourcePoint,
+  SourceRange,
+  StrongNode,
+  TableAlignment,
+  TableCellNode,
+  TableNode,
+  TableRowNode,
+  TextNode,
+  ThematicBreakNode,
+  UnsupportedNode,
+} from "./ast/nodes.js";
+
+// The renderer contract: what a renderer package implements.
+export type { RenderResult, Renderer } from "./renderer/contract.js";
+
+// Diagnostics: how any stage reports a problem.
+export type {
+  DiagnosticSeverity,
+  DocumentDiagnostic,
+  PipelineStage,
+  RelatedLocation,
+} from "./document/diagnostics.js";
+
+// Document identity, as a renderer sees it.
+export type {
+  LoadedDocument,
+  SourceFormat,
+  SourcePath,
+} from "./document/document.js";
+
+// Metadata values a renderer may hand back for the shared precedence rules.
+export type { MetadataValue } from "./document/metadata.js";

@@ -5,5 +5,9 @@
   // Repository-level tests are type-checked separately through
   // tests/tsconfig.json because they must not emit build output.
   "files": [],
-  "references": [{ "path": "./packages/core" }, { "path": "./packages/cli" }]
+  "references": [
+    { "path": "./packages/core" },
+    { "path": "./packages/cli" },
+    { "path": "./packages/renderer-markdown" }
+  ]
 }

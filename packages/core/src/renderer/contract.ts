@@ -1,5 +1,6 @@
 import type { DocumentNode } from "../ast/nodes.js";
 import type { DocumentDiagnostic } from "../document/diagnostics.js";
+import type { MetadataValue } from "../document/metadata.js";
 import {
   withDiagnostics,
   type LoadedDocument,
@@ -64,6 +65,22 @@ export interface RenderResult {
    * a page with one unsupported construct is still a page worth serving.
    */
   readonly diagnostics?: readonly DocumentDiagnostic[];
+  /**
+   * Metadata the source declared, as raw entries.
+   *
+   * Raw rather than resolved, because deciding what a title *is* — which of
+   * front matter, an HTML title, a heading or the file name wins — is a shared
+   * rule that must not be reimplemented per format. A renderer reports what it
+   * found; the precedence rules decide what it means.
+   */
+  readonly metadata?: readonly (readonly [string, MetadataValue])[];
+  /**
+   * The document title a full HTML document declared, if the format has one.
+   *
+   * Its own field rather than a metadata entry because it sits at a different
+   * level of the shared title precedence.
+   */
+  readonly htmlTitle?: string;
 }
 
 export const rendererCodes = {

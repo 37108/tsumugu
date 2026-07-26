@@ -17,9 +17,10 @@ not yet validated.
 
 ```text
 tsumugu/
-├── packages/          publishable-intent packages
-│   ├── core/          @tsumugu/core
-│   └── cli/           @tsumugu/cli
+├── packages/                  publishable-intent packages
+│   ├── core/                  @tsumugu/core
+│   ├── cli/                   @tsumugu/cli
+│   └── renderer-markdown/     @tsumugu/renderer-markdown
 ├── internal/          internal-only workspaces, never published
 │   └── tsconfig/      @tsumugu/internal-tsconfig
 └── tests/             repository-level tests
@@ -37,11 +38,17 @@ Unit tests are colocated with the code they cover, under
 Dependencies point towards core. Core never points back.
 
 ```text
-@tsumugu/cli
-     │
-     ▼
-@tsumugu/core
+@tsumugu/cli      @tsumugu/renderer-markdown
+     │                        │
+     └────────┬───────────────┘
+              ▼
+        @tsumugu/core
 ```
+
+`@tsumugu/renderer-markdown` holds every Markdown-parser type in the
+repository. Core and themes see only the Semantic AST, so the parser can be
+replaced without either of them changing — which is what makes HTML a
+first-class input rather than a second format bolted on.
 
 The rules the repository commits to, taken from
 [`docs/architecture/overview.md`](./overview.md) and
@@ -56,8 +63,8 @@ The rules the repository commits to, taken from
   published, so a runtime dependency on it would break every consumer.
 - Workspace-to-workspace dependencies use the `workspace:` protocol.
 
-Future renderer and theme packages will be added under `packages/` when the
-vertical slice in Milestone 1 requires them.
+Further renderer and theme packages join `packages/` as the vertical slice in
+Milestone 1 requires them.
 
 ## What enforces these rules
 

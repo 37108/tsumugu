@@ -4,6 +4,8 @@ import type { DocumentNode } from "../ast/nodes.js";
 
 import { dedupeDiagnostics, type DocumentDiagnostic } from "./diagnostics.js";
 import { emptyMetadata, type DocumentMetadata } from "./metadata.js";
+export type { RoutePath, SourceFormat, SourcePath } from "./paths.js";
+
 import {
   detectSourceFormat,
   documentIdOf,

@@ -11,11 +11,36 @@ Please read:
 - `README.md`
 - `docs/principles.md`
 - `docs/architecture/overview.md`
+- `docs/architecture/workspaces.md`
 - the relevant Architecture Decision Records in `docs/decisions/`
 
 ## Development status
 
 Tsumugu is currently experimental and pre-alpha. Internal APIs may change freely. No API should be treated as stable unless it is explicitly documented as public and stable.
+
+## Local development
+
+Tsumugu is a pnpm workspace. Node.js 24 or newer is required; pnpm is pinned
+through the `packageManager` field, so a recent pnpm will switch to the correct
+version automatically.
+
+```bash
+pnpm install
+pnpm check
+```
+
+| Command | Behaviour |
+| --- | --- |
+| `pnpm build` | compiles every package to `dist/` |
+| `pnpm typecheck` | builds the packages, then type-checks `tests/` |
+| `pnpm test` | builds, then runs the test suite |
+| `pnpm check` | type-checks and tests, the full local gate |
+| `pnpm clean` | removes build output |
+
+`docs/architecture/workspaces.md` describes the workspace layout, the allowed
+dependency direction, and the toolchain versions.
+
+Formatting and linting are not configured yet; they are tracked in issue #3.
 
 ## Contribution workflow
 

@@ -1,0 +1,9 @@
+# Generated or vendored content is never formatted.
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Written by pnpm. Reformatting it would produce lockfile churn and the file is
+# not edited by hand.
+pnpm-lock.yaml

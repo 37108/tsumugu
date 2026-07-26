@@ -26,11 +26,23 @@ import {
  * `docs/architecture/overview.md`: dependencies point towards core, never away
  * from it.
  */
-const forbiddenCoreDependencies: readonly { readonly pattern: RegExp; readonly reason: string }[] = [
-  { pattern: /^@tsumugu\/cli$/, reason: "the CLI composes core, not the reverse" },
+const forbiddenCoreDependencies: readonly {
+  readonly pattern: RegExp;
+  readonly reason: string;
+}[] = [
+  {
+    pattern: /^@tsumugu\/cli$/,
+    reason: "the CLI composes core, not the reverse",
+  },
   { pattern: /^@tsumugu\/theme-/, reason: "themes consume core contracts" },
-  { pattern: /^@tsumugu\/renderer-/, reason: "renderers are format-specific and register into core" },
-  { pattern: /^@tsumugu\/build$/, reason: "the build adapter is a consumer of pipeline output" },
+  {
+    pattern: /^@tsumugu\/renderer-/,
+    reason: "renderers are format-specific and register into core",
+  },
+  {
+    pattern: /^@tsumugu\/build$/,
+    reason: "the build adapter is a consumer of pipeline output",
+  },
   { pattern: /^@tsumugu\/search$/, reason: "search is a higher-level package" },
   { pattern: /^@tsumugu\/ai$/, reason: "AI export is a higher-level package" },
 ];
@@ -41,8 +53,12 @@ let internalWorkspaces: readonly WorkspaceManifest[];
 
 beforeAll(async () => {
   manifests = await readWorkspaceManifests();
-  publishableIntent = manifests.filter((manifest) => manifest.root === "packages");
-  internalWorkspaces = manifests.filter((manifest) => manifest.root === "internal");
+  publishableIntent = manifests.filter(
+    (manifest) => manifest.root === "packages",
+  );
+  internalWorkspaces = manifests.filter(
+    (manifest) => manifest.root === "internal",
+  );
 });
 
 describe("workspace discovery", () => {
@@ -101,10 +117,9 @@ describe("publication safety", () => {
         manifest.name,
         `${manifest.id} must use the @tsumugu/internal- prefix`,
       ).toMatch(/^@tsumugu\/internal-/);
-      expect(
-        manifest.isPrivate,
-        `${manifest.id} must never be published`,
-      ).toBe(true);
+      expect(manifest.isPrivate, `${manifest.id} must never be published`).toBe(
+        true,
+      );
     }
   });
 
@@ -130,7 +145,13 @@ describe("package metadata", () => {
     expect(publishableIntent.length).toBeGreaterThan(0);
 
     for (const manifest of publishableIntent) {
-      for (const field of ["exports", "files", "license", "repository", "engines"]) {
+      for (const field of [
+        "exports",
+        "files",
+        "license",
+        "repository",
+        "engines",
+      ]) {
         expect(
           manifest.fields.has(field),
           `${manifest.id} must declare "${field}"`,
@@ -174,7 +195,9 @@ describe("dependency direction", () => {
   });
 
   it("keeps core free of dependencies on higher-level packages", () => {
-    const core = manifests.find((manifest) => manifest.name === "@tsumugu/core");
+    const core = manifests.find(
+      (manifest) => manifest.name === "@tsumugu/core",
+    );
     expect(core, "@tsumugu/core workspace is missing").toBeDefined();
     if (core === undefined) {
       return;
@@ -185,7 +208,9 @@ describe("dependency direction", () => {
       ...core.devDependencies.keys(),
     ];
     for (const { pattern, reason } of forbiddenCoreDependencies) {
-      const violations = declared.filter((dependency) => pattern.test(dependency));
+      const violations = declared.filter((dependency) =>
+        pattern.test(dependency),
+      );
       expect(
         violations,
         `@tsumugu/core must not depend on ${pattern.source}: ${reason}`,

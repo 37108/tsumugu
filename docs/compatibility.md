@@ -13,12 +13,12 @@ The decision and its alternatives are recorded in
 
 ## Node.js
 
-| | |
-| --- | --- |
-| Minimum | **24.0.0** |
-| Supported line | 24.x "Krypton" — the Active LTS line |
-| Active LTS until | 2026-10-20 |
-| End of life | 2028-04-30 |
+|                  |                                      |
+| ---------------- | ------------------------------------ |
+| Minimum          | **24.0.0**                           |
+| Supported line   | 24.x "Krypton" — the Active LTS line |
+| Active LTS until | 2026-10-20                           |
+| End of life      | 2028-04-30                           |
 
 Node.js 24 is the Active LTS line. Node.js 26 is Current and does not become LTS
 until 2026-10-28, so it is not the baseline.
@@ -78,11 +78,11 @@ new version must also satisfy the `minimumReleaseAge` constraint described in
 
 ## Operating systems
 
-| Platform | Status |
-| --- | --- |
-| Linux (x64) | supported, to be covered by CI |
+| Platform      | Status                                           |
+| ------------- | ------------------------------------------------ |
+| Linux (x64)   | supported, to be covered by CI                   |
 | macOS (arm64) | supported, currently the only platform validated |
-| Windows (x64) | supported, to be covered by CI |
+| Windows (x64) | supported, to be covered by CI                   |
 
 Tsumugu is a documentation server: it touches path normalization, file watching,
 and process signals, all of which differ across these platforms. They are
@@ -98,10 +98,10 @@ embedded runtimes.
 
 ## Other JavaScript runtimes
 
-| Runtime | Status |
-| --- | --- |
-| Bun | **not supported** |
-| Deno | **not supported** |
+| Runtime | Status            |
+| ------- | ----------------- |
+| Bun     | **not supported** |
+| Deno    | **not supported** |
 
 These are not "experimental" and not "planned". They are outside the supported
 set. Supporting a second runtime means independently testing file-system
@@ -134,12 +134,12 @@ compatibility guarantee is offered. Changes are recorded in the release notes.
 
 A policy that only exists in prose drifts. These are the mechanisms:
 
-| Rule | Mechanism | Effect |
-| --- | --- | --- |
-| Minimum Node.js version | `engines.node` plus `engineStrict: true` | `pnpm install` exits 1 on an older runtime |
-| Pinned package manager | `packageManager` | pnpm switches to the pinned version |
-| ESM-only | `tests/compatibility.test.ts` | fails if a package is not `"type": "module"` or exposes a CommonJS entry point |
-| Metadata matches this page | `tests/compatibility.test.ts` | fails if the manifests and this document disagree |
+| Rule                       | Mechanism                                | Effect                                                                         |
+| -------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------ |
+| Minimum Node.js version    | `engines.node` plus `engineStrict: true` | `pnpm install` exits 1 on an older runtime                                     |
+| Pinned package manager     | `packageManager`                         | pnpm switches to the pinned version                                            |
+| ESM-only                   | `tests/compatibility.test.ts`            | fails if a package is not `"type": "module"` or exposes a CommonJS entry point |
+| Metadata matches this page | `tests/compatibility.test.ts`            | fails if the manifests and this document disagree                              |
 
 The CI matrix that the operating-system section describes does not exist yet.
 Issue #5 must match this page when it is implemented.

@@ -16,6 +16,9 @@
   "include": [
     "tests/**/*.ts",
     "packages/*/src/**/*.test.ts",
+    // Reusable contract suites: test support that must be type-checked but
+    // must not be compiled into a package's dist/.
+    "packages/*/src/**/*.suite.ts",
     "vitest.config.ts"
   ]
 }

@@ -1,0 +1,9 @@
+{
+  // Solution-style root project: it contains no files of its own and only
+  // orders the referenced projects for `tsc --build`.
+  //
+  // Repository-level tests are type-checked separately through
+  // tests/tsconfig.json because they must not emit build output.
+  "files": [],
+  "references": [{ "path": "./packages/core" }, { "path": "./packages/cli" }]
+}

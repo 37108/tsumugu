@@ -1,0 +1,14 @@
+{
+  // Repository-level tests are type-checked but never emitted, so this project
+  // deliberately opts out of the composite/declaration settings inherited from
+  // the shared base configuration.
+  "extends": "@tsumugu/internal-tsconfig/base.json",
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "noEmit": true
+  },
+  "include": ["**/*.ts"]
+}

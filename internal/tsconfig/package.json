@@ -1,0 +1,11 @@
+{
+  "name": "@tsumugu/internal-tsconfig",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared TypeScript compiler options. Internal workspace: never published, never re-exported.",
+  "license": "MIT",
+  "exports": {
+    "./base.json": "./base.json"
+  }
+}

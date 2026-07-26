@@ -1,0 +1,19 @@
+# Workspace layout. See docs/architecture/workspaces.md for the dependency rules.
+#
+# - packages/*  publishable-intent packages (still private during pre-alpha)
+# - internal/*  internal-only workspaces that must never be published
+packages:
+  - packages/*
+  - internal/*
+
+# Supply-chain hardening.
+#
+# minimumReleaseAge delays adoption of freshly published versions so that a
+# compromised release has a window to be detected and unpublished before it can
+# enter the lockfile. 30240 minutes is 21 days.
+minimumReleaseAge: 30240
+
+# No dependency is allowed to run install scripts. pnpm blocks them by default;
+# stating the empty allowlist explicitly makes the decision reviewable and makes
+# any future exception show up in a diff.
+onlyBuiltDependencies: []

@@ -14,6 +14,7 @@ Please read:
 - `docs/architecture/workspaces.md`
 - `docs/compatibility.md`
 - `docs/testing.md`
+- `docs/diagnostics.md`
 - the relevant Architecture Decision Records in `docs/decisions/`
 
 ## Development status

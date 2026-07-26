@@ -141,7 +141,9 @@ export async function reconcile(
       diagnostics.push({
         code: reconcileCodes.unreadable,
         severity: "error",
-        message: `Could not read "${event.document.sourcePath}". Its previous contents, if any, are kept until it can be read again.`,
+        stage: "document",
+        message: `Could not read "${event.document.sourcePath}".`,
+        hint: "Its previous contents, if any, are served until it can be read again. Check the file's permissions.",
         sourcePath: event.document.sourcePath,
         cause,
       });

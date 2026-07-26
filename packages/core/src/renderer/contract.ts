@@ -100,6 +100,7 @@ export function selectRenderer(
       diagnostic: {
         code: rendererCodes.duplicateId,
         severity: "error",
+        stage: "renderer",
         message: `Two renderers are registered with the id "${duplicate}". Renderer ids identify them in diagnostics and must be unique.`,
         sourcePath: document.sourcePath,
       },
@@ -115,6 +116,7 @@ export function selectRenderer(
       diagnostic: {
         code: rendererCodes.noRenderer,
         severity: "error",
+        stage: "renderer",
         message: `No registered renderer handles "${document.sourcePath}" (format "${document.format}"). Registered: ${describeIds(renderers)}.`,
         sourcePath: document.sourcePath,
       },
@@ -127,6 +129,7 @@ export function selectRenderer(
       diagnostic: {
         code: rendererCodes.ambiguous,
         severity: "error",
+        stage: "renderer",
         message: `${matches.length} renderers claim "${document.sourcePath}": ${describeIds(matches)}. Register only one renderer per format; choosing between them silently would produce output that is wrong in a way nobody can trace.`,
         sourcePath: document.sourcePath,
       },
@@ -182,6 +185,7 @@ export async function renderDocument(
       {
         code: rendererCodes.threw,
         severity: "error",
+        stage: "renderer",
         message: `Renderer "${selection.renderer.id}" failed on "${document.sourcePath}": ${messageOf(cause)}`,
         sourcePath: document.sourcePath,
         cause,

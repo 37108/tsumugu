@@ -128,7 +128,10 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
           directory === options.root
             ? scannerCodes.rootUnreadable
             : scannerCodes.unreadable,
-        severity: directory === options.root ? "error" : "warning",
+        // An unreadable root leaves nothing to serve at all; an unreadable
+        // subdirectory costs only its own contents.
+        severity: directory === options.root ? "fatal" : "warning",
+        stage: "scanner",
         message: `Could not read "${relative}" (${errorCode(cause) ?? "unknown error"}). ${
           directory === options.root
             ? "The documentation root must be a readable directory."
@@ -156,7 +159,9 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
         diagnostics.push({
           code: scannerCodes.symlinkSkipped,
           severity: "warning",
-          message: `Skipped the symbolic link "${toRelative(options.root, absolute)}". Links are not followed, because one can point outside the documentation root.`,
+          stage: "scanner",
+          message: `Skipped the symbolic link "${toRelative(options.root, absolute)}".`,
+          hint: "Links are not followed, because one can point outside the documentation root. Copy the file into the project, or move the real directory here.",
         });
         continue;
       }

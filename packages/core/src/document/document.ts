@@ -133,6 +133,7 @@ export function discoverDocument(
       diagnostic: {
         code: documentCodes.invalidSourcePath,
         severity: "error",
+        stage: "document",
         message: path.error.message,
       },
     };
@@ -145,7 +146,9 @@ export function discoverDocument(
       diagnostic: {
         code: documentCodes.unsupportedFormat,
         severity: "warning",
-        message: `No renderer handles "${path.value}". Supported extensions are .md, .markdown, .html and .htm.`,
+        stage: "document",
+        message: `No renderer handles "${path.value}".`,
+        hint: "Supported extensions are .md, .markdown, .html and .htm. Files with any other extension are ignored, which is usually what you want.",
         sourcePath: path.value,
       },
     };

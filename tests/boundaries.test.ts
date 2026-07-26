@@ -221,8 +221,12 @@ describe("public export surface", () => {
    * convenience becomes a compatibility commitment the moment it is published.
    */
   const expectedExports: Readonly<Record<string, readonly string[]>> = {
+    // Core's surface is almost entirely types, which cost nothing at runtime.
+    // The Markdown renderer - core's first real consumer - needed no runtime
+    // export at all, which is the cheapest kind of contract to keep.
     "@tsumugu/core": ["version"],
     "@tsumugu/cli": ["run"],
+    "@tsumugu/renderer-markdown": ["createMarkdownRenderer"],
   };
 
   /**

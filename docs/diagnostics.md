@@ -131,6 +131,14 @@ Every code in the implementation appears here.
 | `theme/renderer-threw`   | error    | a node renderer threw; that node loses its presentation, the rest of the page survives |
 | `theme/unsupported-node` | warning  | a renderer could not represent some source; it is shown as preformatted text           |
 
+### `renderer-markdown/`
+
+| Code                                           | Severity | When                                                                                |
+| ---------------------------------------------- | -------- | ----------------------------------------------------------------------------------- |
+| `renderer-markdown/unsupported-construct`      | warning  | Markdown the Semantic AST cannot represent yet; the source is kept and shown        |
+| `renderer-markdown/invalid-front-matter`       | warning  | the front matter is not valid YAML, or is not a mapping; the document still renders |
+| `renderer-markdown/unsupported-metadata-value` | warning  | a front-matter value has no metadata representation, such as a date or nested map   |
+
 ## Formatting
 
 `formatDiagnostic` produces plain text in the compiler convention that editors

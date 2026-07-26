@@ -83,12 +83,12 @@ test, so an internal workspace cannot quietly become publishable.
 
 ## Toolchain
 
-| Tool | Version | Note |
-| --- | --- | --- |
-| Node.js | `>=24.0.0` | Node.js 24 "Krypton" is the Active LTS line |
-| pnpm | `11.10.0` | pinned through `packageManager` |
-| TypeScript | `^6.0.3` | ESM-only, strict, project references |
-| Vitest | `^4.1.9` | no configuration file; the defaults are sufficient |
+| Tool       | Version    | Note                                               |
+| ---------- | ---------- | -------------------------------------------------- |
+| Node.js    | `>=24.0.0` | Node.js 24 "Krypton" is the Active LTS line        |
+| pnpm       | `11.10.0`  | pinned through `packageManager`                    |
+| TypeScript | `^6.0.3`   | ESM-only, strict, project references               |
+| Vitest     | `^4.1.9`   | no configuration file; the defaults are sufficient |
 
 These are the versions the repository requires today. The full compatibility
 policy — the supported operating systems, the module-format decision, the
@@ -134,18 +134,60 @@ output.
 
 All commands run from the repository root.
 
-| Command | Behaviour |
-| --- | --- |
-| `pnpm install` | installs the workspace, using the committed lockfile |
-| `pnpm build` | `tsc --build`, emits `dist/` for each package |
-| `pnpm typecheck` | builds the packages, then type-checks `tests/` |
-| `pnpm test` | builds, then runs Vitest |
-| `pnpm check` | type-checks and tests, the full local gate |
-| `pnpm clean` | removes build output and TypeScript build info |
+| Command             | Behaviour                                             |
+| ------------------- | ----------------------------------------------------- |
+| `pnpm install`      | installs the workspace, using the committed lockfile  |
+| `pnpm format`       | formats every supported file with Prettier            |
+| `pnpm format:check` | reports unformatted files without changing them       |
+| `pnpm lint`         | runs type-aware ESLint over the workspace             |
+| `pnpm lint:fix`     | applies the fixes ESLint can make safely              |
+| `pnpm build`        | `tsc --build`, emits `dist/` for each package         |
+| `pnpm typecheck`    | builds the packages, then type-checks `tests/`        |
+| `pnpm test`         | builds, then runs Vitest                              |
+| `pnpm check`        | formatting, linting, types and tests — the local gate |
+| `pnpm clean`        | removes build output and TypeScript build info        |
 
 `pnpm test` builds first on purpose. `tests/cli.test.ts` executes the emitted
 `packages/cli/dist/bin.js` in a child process, so it can only pass against real
 build output. `tsc --build` is incremental, so repeat runs are cheap.
 
-Formatting and linting commands are not part of this foundation; they are
-tracked in issue #3.
+`pnpm check` composes only non-mutating steps, so it is safe to run before
+committing and is the command CI should use.
+
+Each package also exposes `build`, `typecheck` and `lint`. At package level
+`typecheck` runs `tsc --build`, which is the same command as `build`: with
+project references, type checking and emit are a single pass, and
+`tsc --build --noEmit` is rejected outright because a referenced project may not
+disable emit.
+
+## Code quality tooling
+
+Prettier formats. ESLint checks correctness. The split is strict, and it is what
+keeps the two tools from fighting.
+
+| Tool         | Owns                                                         | Configuration                           |
+| ------------ | ------------------------------------------------------------ | --------------------------------------- |
+| Prettier     | all formatting: TypeScript, JavaScript, JSON, Markdown, YAML | `prettier.config.js`, `.prettierignore` |
+| ESLint       | correctness only, with type information                      | `eslint.config.js`                      |
+| EditorConfig | editor defaults before any tool runs                         | `.editorconfig`                         |
+
+`eslint-config-prettier` is deliberately **not** a dependency. ESLint's
+formatting rules are no longer part of the recommended sets, and no stylistic
+rule is enabled here, so there is no overlap to disable.
+
+ESLint uses `recommendedTypeChecked` from typescript-eslint. The problems worth
+catching in this codebase — floating promises, misused promises, unsafe `any`
+flow — are invisible without type information, so the non-type-checked preset
+would not be enough. Import ordering is **not** enforced: it is a stylistic
+concern that Prettier does not touch, and adding a plugin for it would spend a
+dependency on diff aesthetics rather than correctness. Unused code is caught
+twice over, by `noUnusedLocals`/`noUnusedParameters` in TypeScript and by
+`@typescript-eslint/no-unused-vars`.
+
+Biome was evaluated as a single-tool replacement for both. It was rejected on a
+measured fact rather than a preference: version 2.5.2 does not format Markdown
+or YAML, reporting "No files were processed" for both. Tsumugu is a
+documentation project whose repository is mostly Markdown, so a formatter that
+cannot format Markdown does not cover the repository. Its `noFloatingPromises`
+rule is also still in the nursery group. Pairing Biome with Prettier would mean
+running two formatting systems, which is worse than running one.

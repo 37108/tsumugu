@@ -50,9 +50,7 @@ function isJsonObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-async function readJsonObject(
-  file: string,
-): Promise<Record<string, unknown>> {
+async function readJsonObject(file: string): Promise<Record<string, unknown>> {
   const text = await readFile(file, "utf8");
 
   let parsed: unknown;

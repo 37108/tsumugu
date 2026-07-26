@@ -55,7 +55,9 @@ let rootManifest: Record<string, unknown>;
 
 beforeAll(async () => {
   manifests = await readWorkspaceManifests();
-  publishableIntent = manifests.filter((manifest) => manifest.root === "packages");
+  publishableIntent = manifests.filter(
+    (manifest) => manifest.root === "packages",
+  );
   rootManifest = await readRootManifest();
 });
 

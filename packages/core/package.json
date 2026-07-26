@@ -19,9 +19,13 @@
       "default": "./dist/index.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc --build",
+    "typecheck": "tsc --build",
+    "lint": "eslint src",
     "clean": "tsc --build --clean"
   },
   "devDependencies": {

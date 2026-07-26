@@ -16,14 +16,22 @@
   "scripts": {
     "build": "tsc --build",
     "clean": "tsc --build --clean",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "typecheck": "tsc --build && tsc --noEmit --project tests/tsconfig.json",
     "test": "pnpm run build && vitest run",
-    "check": "pnpm run typecheck && vitest run"
+    "check": "pnpm run format:check && pnpm run lint && pnpm run typecheck && vitest run"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.4",
     "@tsumugu/internal-tsconfig": "workspace:*",
     "@types/node": "^24.13.2",
+    "eslint": "^10.6.0",
+    "prettier": "^3.9.4",
     "typescript": "^6.0.3",
+    "typescript-eslint": "^8.62.1",
     "vitest": "^4.1.9"
   }
 }

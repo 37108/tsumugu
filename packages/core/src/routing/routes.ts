@@ -178,8 +178,16 @@ export function findRouteCollisions(
       diagnostics.push({
         code: routingCodes.collision,
         severity: "error",
-        message: `"${sourcePath}" and ${paths.length - 1} other file(s) all map to "${route}": ${paths.join(", ")}. Rename or move one of them; which page is served would otherwise depend on the order the files were scanned.`,
+        stage: "routing",
+        message: `"${sourcePath}" maps to "${route}", and so do ${paths.length - 1} other file(s).`,
+        hint: "Rename or move one of them. Which page is served would otherwise depend on the order the files happened to be scanned.",
         sourcePath,
+        related: paths
+          .filter((other) => other !== sourcePath)
+          .map((other) => ({
+            message: `also maps to "${route}"`,
+            sourcePath: other,
+          })),
       });
     }
   }

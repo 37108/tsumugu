@@ -233,9 +233,11 @@ describe("findRouteCollisions", () => {
     expect(diagnostics[0]?.code).toBe(routingCodes.collision);
     expect(diagnostics[0]?.severity).toBe("error");
     expect(diagnostics[0]?.message).toContain("/guide");
-    // Names every file involved, so the author can choose which to rename.
-    expect(diagnostics[0]?.message).toContain("guide.md");
-    expect(diagnostics[0]?.message).toContain("guide/index.md");
+    // The competing file is a related location rather than prose in the
+    // message, so a presentation can link to it.
+    expect(diagnostics[0]?.related?.[0]?.sourcePath).toBe("guide/index.md");
+    expect(diagnostics[1]?.related?.[0]?.sourcePath).toBe("guide.md");
+    expect(diagnostics[0]?.hint).toContain("Rename or move");
   });
 
   it("detects the same page written in two formats", () => {
@@ -253,6 +255,7 @@ describe("findRouteCollisions", () => {
 
     expect(diagnostics).toHaveLength(3);
     expect(diagnostics[0]?.message).toContain("2 other file(s)");
+    expect(diagnostics[0]?.related).toHaveLength(2);
   });
 
   it("is deterministic regardless of input order", () => {

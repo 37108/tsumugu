@@ -86,7 +86,7 @@ function invalid(
 ): DocumentDiagnostic {
   // Bad metadata is a warning, not an error: the page is still readable, and
   // refusing to serve it would punish a reader for an author's typo.
-  return { code, severity: "warning", message, sourcePath };
+  return { code, severity: "warning", stage: "metadata", message, sourcePath };
 }
 
 function describeValue(value: unknown): string {

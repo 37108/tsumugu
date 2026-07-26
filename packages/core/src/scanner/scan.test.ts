@@ -166,14 +166,15 @@ describe("scan", () => {
     });
   });
 
-  it("reports an unreadable root as an error", async () => {
+  it("reports an unreadable root as fatal", async () => {
     const result = await scan({
       root: path.join(os.tmpdir(), "tsumugu-missing-root"),
     });
 
     expect(result.snapshot.size).toBe(0);
     expect(result.diagnostics[0]?.code).toBe(scannerCodes.rootUnreadable);
-    expect(result.diagnostics[0]?.severity).toBe("error");
+    // Nothing can be served at all, so this is not scoped to one document.
+    expect(result.diagnostics[0]?.severity).toBe("fatal");
     // The underlying error stays reachable for debugging.
     expect(result.diagnostics[0]?.cause).toBeDefined();
   });

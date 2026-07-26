@@ -17,3 +17,8 @@ minimumReleaseAge: 30240
 # stating the empty allowlist explicitly makes the decision reviewable and makes
 # any future exception show up in a diff.
 onlyBuiltDependencies: []
+
+# Enforce engines.node at install time. Without this the minimum supported
+# runtime in docs/compatibility.md is advisory, and an unsupported runtime
+# surfaces later as an unrelated error instead of a clear install failure.
+engineStrict: true

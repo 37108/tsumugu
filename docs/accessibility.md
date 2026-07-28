@@ -99,6 +99,10 @@ Run these before a release, and after any change to the shell or the theme:
   becomes visible on focus, announces "Copy code", and announces "Copied" after
   activation. It only exists when the script runs, because a button that does
   nothing is worse than no button.
+- **The table of contents follows the reading position.** As the page scrolls,
+  the section under the reading line carries `aria-current="location"` and the
+  indigo thread. Without the script the list is still a working set of links —
+  the marker is enhancement, not navigation.
 - **Search by keyboard.** Tab to the field, type, walk the results with the
   arrow keys, follow one with Enter, dismiss with Escape. Focus stays in the
   field throughout, and the result count is announced.

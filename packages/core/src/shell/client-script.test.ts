@@ -94,6 +94,16 @@ describe("the embedded script", () => {
     expect(clientScriptHash).toMatch(/^'sha256-[A-Za-z0-9+/=]+'$/u);
   });
 
+  it("marks the section being read with the accessible you-are-here", () => {
+    // aria-current="location" is what a screen reader announces; the colour is
+    // the stylesheet's translation of it.
+    expect(clientScript).toContain('"aria-current","location"');
+    // One frame at most, reads before the single write: not a per-pixel
+    // scroll handler.
+    expect(clientScript).toContain("requestAnimationFrame");
+    expect(clientScript).toContain("{passive:true}");
+  });
+
   it("creates the copy control rather than expecting it in the markup", () => {
     // A server-rendered button would be a control that does nothing without
     // the script; the script makes what only it can operate.

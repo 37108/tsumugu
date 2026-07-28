@@ -4,6 +4,8 @@ import type { AddressInfo } from "node:net";
 import type { RoutePath } from "../document/paths.js";
 import type { Page } from "../pipeline/build.js";
 import { decodeRequestPath } from "../routing/routes.js";
+
+import { readAsset } from "./assets.js";
 import { escapeText } from "../theme/serialize.js";
 
 /**
@@ -35,6 +37,13 @@ export interface ServeOptions {
   readonly renderNotFound?: (requestedPath: string) => string;
   /** Renders the page for a request path that could not be read at all. */
   readonly renderBadRequest?: () => string;
+  /**
+   * Absolute path to the documentation root, enabling static assets.
+   *
+   * Without it no file is ever read in response to a request, which is the
+   * right default for a server composed without a project behind it.
+   */
+  readonly assetRoot?: string;
 }
 
 export interface RunningServer {
@@ -103,11 +112,15 @@ function notFound(route: string, pages: ReadonlyMap<RoutePath, Page>): string {
  * what makes it testable and what makes two identical requests two identical
  * responses.
  */
-function handle(
+async function handle(
   target: string,
   options: ServeOptions,
-  send: (status: number, html: string) => void,
-): void {
+  send: (
+    status: number,
+    body: string | Uint8Array,
+    contentType?: string,
+  ) => void,
+): Promise<void> {
   const withoutQuery = target.split(/[?#]/)[0] ?? "/";
   const route = decodeRequestPath(withoutQuery);
 
@@ -123,15 +136,22 @@ function handle(
   }
 
   const found = options.pages.get(route);
-  if (found === undefined) {
-    send(
-      404,
-      options.renderNotFound?.(route) ?? notFound(route, options.pages),
-    );
+  if (found !== undefined) {
+    send(200, found.html);
     return;
   }
 
-  send(200, found.html);
+  // A document wins over a file with the same route. A page is what a reader
+  // asked for; the asset is a fallback, checked only once no page answered.
+  if (options.assetRoot !== undefined) {
+    const asset = await readAsset(options.assetRoot, route);
+    if (asset.ok) {
+      send(200, asset.bytes, asset.contentType);
+      return;
+    }
+  }
+
+  send(404, options.renderNotFound?.(route) ?? notFound(route, options.pages));
 }
 
 /**
@@ -154,17 +174,22 @@ export function serve(options: ServeOptions): Promise<RunningServer> {
   const requestedPort = options.port ?? 0;
 
   const server: Server = createServer((request, response) => {
-    const send = (status: number, html: string): void => {
+    const send = (
+      status: number,
+      body: string | Uint8Array,
+      contentType = "text/html; charset=utf-8",
+    ): void => {
       response.writeHead(status, {
-        "content-type": "text/html; charset=utf-8",
+        "content-type": contentType,
+        // Development, not production: an edited file must show up on reload
+        // rather than being explained away as a cache.
+        "cache-control": "no-store",
         ...securityHeaders,
       });
-      response.end(html);
+      response.end(body);
     };
 
-    try {
-      handle(request.url ?? "/", options, send);
-    } catch (cause) {
+    handle(request.url ?? "/", options, send).catch((cause: unknown) => {
       // Reaching here is a bug in Tsumugu rather than a problem with the
       // project, so the reader gets a page that says so and nothing else. A
       // stack trace in a response would name absolute paths on the machine
@@ -178,7 +203,7 @@ export function serve(options: ServeOptions): Promise<RunningServer> {
           "<p>Tsumugu failed to produce this page. The error was written to the terminal running the server.</p>",
         ),
       );
-    }
+    });
   });
 
   return new Promise((resolve, reject) => {

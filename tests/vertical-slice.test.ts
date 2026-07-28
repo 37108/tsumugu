@@ -206,6 +206,32 @@ describe("problems a user will actually hit", () => {
     });
   });
 
+  it("serves an image next to the document that references it", async () => {
+    await serveFixture(
+      {
+        "index.md": "# With a picture\n\n![A diagram](/images/diagram.png)\n",
+        "images/diagram.png": "pretend this is a png",
+      },
+      async ({ server }) => {
+        const response = await fetch(`${server.url}images/diagram.png`);
+
+        expect(response.status).toBe(200);
+        expect(response.headers.get("content-type")).toBe("image/png");
+        // Development: an edited file shows up on reload rather than being
+        // explained away as a cache.
+        expect(response.headers.get("cache-control")).toBe("no-store");
+      },
+    );
+  });
+
+  it("does not serve a document's own source as a file", async () => {
+    await serveFixture({ "index.md": page }, async ({ server }) => {
+      const response = await fetch(`${server.url}index.md`);
+
+      expect(response.status).toBe(404);
+    });
+  });
+
   it("rejects a traversal attempt as a bad request", async () => {
     await serveFixture({ "index.md": page }, async ({ server }) => {
       const response = await fetch(`${server.url}%2e%2e%2fetc%2fpasswd`, {

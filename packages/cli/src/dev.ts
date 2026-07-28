@@ -233,6 +233,7 @@ export async function startDev(options: DevOptions = {}): Promise<DevResult> {
 
   const server = await serve({
     pages: built.pages,
+    assetRoot: root,
     renderNotFound: built.renderNotFound,
     renderBadRequest: built.renderBadRequest,
     ...(options.host === undefined ? {} : { host: options.host }),

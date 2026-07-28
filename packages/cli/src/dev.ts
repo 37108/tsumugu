@@ -326,7 +326,9 @@ export function describeUpdate(
   const removed =
     summary.removed === 0 ? "" : `, ${String(summary.removed)} removed`;
 
-  return `${style.bold("rebuilt")}  ${documents}${removed}`;
+  return `${style.bold("rebuilt")}  ${documents}${removed} ${style.dim(
+    `in ${String(Math.round(summary.durationMs))} ms`,
+  )}`;
 }
 
 /** Pages an author wrote, which is what "how many pages" means to them. */

@@ -1,0 +1,19 @@
+name: Documentation problem
+description: A page under docs/ is wrong, unclear, or missing.
+labels: ["type: docs", "status: triage"]
+body:
+  - type: input
+    id: where
+    attributes:
+      label: Which page
+      description: The file under docs/, or the URL on the served site.
+      placeholder: docs/composition.md
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What is wrong
+      description: What the page says, and what it should say. If it is missing entirely, what question did you arrive with?
+    validations:
+      required: true

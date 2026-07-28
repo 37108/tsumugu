@@ -1,0 +1,8 @@
+# Review routing, not gatekeeping: a match here requests a review, and the
+# branch protection settings decide what blocks a merge.
+#
+# One maintainer today, so one line. When a second maintainer takes ownership
+# of an area, the area gets a line — packages/theme-default/ or docs/ are the
+# likely first splits — rather than everyone owning everything.
+
+* @37108

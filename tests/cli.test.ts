@@ -5,6 +5,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 
 import { repositoryRoot } from "./helpers/paths.js";
 import {
+  listFiles,
   withTemporaryDirectory,
   writeFiles,
 } from "./helpers/temporary-directory.js";
@@ -170,6 +171,47 @@ describe("tsumugu binary", () => {
     expect(outcome.exitCode).toBe(1);
     expect(outcome.stdout).toBe("");
     expect(outcome.stderr).toContain("not a directory");
+  });
+
+  it("builds a site with the same binary that serves one", async () => {
+    await withTemporaryDirectory(async (directory) => {
+      await writeFiles(directory, {
+        "docs/index.md": "# Built\n",
+        "docs/guide/setup.md": "# Setup\n",
+      });
+
+      const outcome = await runCli(
+        ["build", "docs", "--out", "out", "--origin", "https://example.com"],
+        directory,
+      );
+
+      expect(outcome.exitCode).toBe(0);
+      // Two documents plus the generated /search page.
+      expect(outcome.stdout).toContain("built 3 pages");
+
+      // Clean URLs on disk, exactly as the issue and the docs promise.
+      const written = await listFiles(path.join(directory, "out"));
+      expect(written).toContain("index.html");
+      expect(written).toContain("guide/setup/index.html");
+      expect(written).toContain("sitemap.xml");
+    });
+  });
+
+  it("refuses to build into a directory it does not own", async () => {
+    await withTemporaryDirectory(async (directory) => {
+      await writeFiles(directory, {
+        "docs/index.md": "# Built\n",
+        "out/precious.txt": "not yours",
+      });
+
+      const outcome = await runCli(
+        ["build", "docs", "--out", "out"],
+        directory,
+      );
+
+      expect(outcome.exitCode).toBe(2);
+      expect(outcome.stderr).toContain("not empty");
+    });
   });
 
   it("says what to do when there is no documentation to find", async () => {

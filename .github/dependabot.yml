@@ -1,0 +1,30 @@
+# Low noise on purpose: one weekly pass, grouped, so updates arrive as a few
+# reviewable pull requests rather than a queue of twenty.
+#
+# minimumReleaseAge in pnpm-workspace.yaml keeps day-old releases out of local
+# installs; the cooldown below is the same policy applied to update PRs.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    cooldown:
+      default-days: 21
+    groups:
+      development:
+        dependency-type: development
+        update-types: [minor, patch]
+      production:
+        dependency-type: production
+        update-types: [minor, patch]
+    # Majors stay individual: each one carries its own breaking changes and
+    # deserves its own review and its own revert.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    cooldown:
+      default-days: 21

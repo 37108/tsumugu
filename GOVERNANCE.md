@@ -73,3 +73,24 @@ Maintainers should disclose material conflicts that could affect technical or go
 ## Amendments
 
 This governance model may be changed through an RFC. Changes should remain proportionate to the project's size and avoid process for its own sake.
+
+## Labels and triage
+
+Two axes, so a label answers a question rather than decorating:
+
+- **`type:`** — what kind of work: `type: bug`, `type: feature`, `type: docs`,
+  `type: process`.
+- **`status:`** — where it stands: `status: triage` (nobody has read it yet),
+  `status: accepted` (would merge a good implementation), `status: needs-info`
+  (blocked on the reporter), `status: blocked` (blocked on other work, named in
+  a comment).
+
+Plus `good first issue` for issues a newcomer can land without holding the
+architecture in their head — each names the files involved and what done looks
+like.
+
+Triage means: reproduce or ask (`status: needs-info`), then accept or close
+with the reason. An issue that would not merge as a pull request should not
+stay open as an issue; a polite close with "why not" respects the reporter more
+than eternal silence. Issue forms apply `type:` and `status: triage`
+automatically, so untriaged work is always findable as `label:"status: triage"`.

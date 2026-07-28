@@ -1,0 +1,23 @@
+name: Feature request
+description: Something Tsumugu should do that it does not.
+labels: ["type: feature", "status: triage"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What you are trying to do, and what you do today instead. A feature request that starts from a workaround is easy to evaluate; one that starts from a solution is not.
+    validations:
+      required: true
+  - type: textarea
+    id: shape
+    attributes:
+      label: What a solution could look like
+      description: Optional. If you have a shape in mind, sketch it — and note that docs/principles.md rules some shapes out (configuration for what convention can do, plugin auto-loading, documentation JavaScript).
+  - type: checkboxes
+    id: principles
+    attributes:
+      label: Before submitting
+      options:
+        - label: I checked docs/roadmap.md and this is not already planned or deliberately deferred.
+          required: true

@@ -149,3 +149,31 @@ The operating-system matrix is implemented in `.github/workflows/ci.yml`, and
 third-party action pinned to a commit, `--frozen-lockfile` on every install,
 read-only permissions, no repository secret, and no step calling a script the
 root manifest does not define.
+
+## Browsers
+
+The pages Tsumugu produces target **the current and previous major release of
+each evergreen browser**: Chrome and Edge, Firefox, and Safari. There is no
+pinned version list to go stale; "two majors back" is the policy, evaluated
+when a feature is chosen.
+
+What the output actually requires, and where it degrades:
+
+| Feature                                          | Used for                                             | Without it                                                                   |
+| ------------------------------------------------ | ---------------------------------------------------- | ---------------------------------------------------------------------------- |
+| CSS grid, custom properties, `:focus-visible`    | the shell's layout and focus styling                 | the page is unreadable below this floor — all are years past universal       |
+| `prefers-color-scheme`, `prefers-reduced-motion` | dark mode, motion removal                            | light mode, default motion                                                   |
+| `color-mix()`, `text-wrap: balance`, `dvh`       | link underlines, heading wrap, sticky sidebar height | slightly plainer rendering; nothing breaks                                   |
+| `EventSource`, `fetch`, `navigator.clipboard`    | live reload, search, the copy control                | the page still reads; search falls back to `/search`; no copy button appears |
+
+The split is deliberate: everything above the first row is decoration or
+enhancement, so an older browser gets a plainer page rather than a broken one.
+JavaScript features stay behind the same line — the scripts are progressive
+enhancement everywhere they run (ADRs 3 and 4).
+
+**Automated cross-browser tests do not exist yet.** The suite drives real HTTP
+and a DOM (jsdom), which catches markup and protocol regressions but proves
+nothing about rendering engines. Running Playwright across three engines is
+deferred until the UI stops changing weekly; until then, the manual review in
+`docs/accessibility.md` is the cross-browser check, and this table is the
+contract a report can cite.

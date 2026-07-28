@@ -37,6 +37,27 @@ A minor bump (`0.1.0` → `0.2.0`) is used for anything a consumer would notice;
 patch for fixes that do not change behaviour they could depend on. Neither is a
 compatibility promise until the version reaches `1.0.0`.
 
+## Breaking things on purpose
+
+Pre-alpha earns the right to break, not the right to surprise. When a release
+changes behaviour a consumer could have depended on:
+
+- the changeset says **what breaks and what to do instead**, in the imperative
+  ("rename `buildSite` to `createSite().result`"), because the changelog is the
+  only migration guide a 0.x release gets;
+- the bump is **minor**, never patch — `0.x` patches are safe by convention
+  even where semver does not require it;
+- diagnostic **codes** are part of the surface: a removed or renamed code is a
+  breaking change, wording is not (`docs/diagnostics.md` states this contract);
+- where the old and new shape can coexist for one release, they do, and the old
+  one says so in its documentation comment — but pre-alpha does not promise
+  deprecation windows, and pretending otherwise would be a stability claim the
+  version number contradicts.
+
+There is no other announcement channel yet. The changelog is the communication,
+which is one more reason changesets are written for the person upgrading rather
+than the person who made the change.
+
 ## Making a change
 
 ```bash

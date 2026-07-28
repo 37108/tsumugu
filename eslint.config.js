@@ -41,9 +41,23 @@ export default tseslint.config(
   },
 
   {
-    // The configuration files are plain JavaScript and belong to no TypeScript
-    // project, so type-aware rules cannot run on them.
-    files: ["**/*.js"],
+    // Configuration files and the benchmark script are plain JavaScript and
+    // belong to no TypeScript project, so type-aware rules cannot run on them.
+    files: ["**/*.js", "**/*.mjs"],
     extends: [tseslint.configs.disableTypeChecked],
+  },
+
+  {
+    // Scripts run on Node.js, where `process`, `console` and `performance` are
+    // globals. Everywhere else they are imported, which is why this is scoped
+    // rather than declared for the whole repository.
+    files: ["scripts/**/*.mjs"],
+    languageOptions: {
+      globals: {
+        console: "readonly",
+        performance: "readonly",
+        process: "readonly",
+      },
+    },
   },
 );

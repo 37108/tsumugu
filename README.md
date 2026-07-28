@@ -47,6 +47,8 @@ pnpm install
 pnpm check
 ```
 
+Two example projects live in [`examples/`](examples/): `minimal/` is one file, `handbook/` has sections, an HTML page, front matter and a hidden document.
+
 To compose Tsumugu yourself — a different theme, no highlighting, an extra transformer — see [docs/composition.md](docs/composition.md).
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the full command list, [docs/architecture/overview.md](docs/architecture/overview.md) for the pipeline, and [docs/architecture/workspaces.md](docs/architecture/workspaces.md) for the workspace layout and dependency rules.

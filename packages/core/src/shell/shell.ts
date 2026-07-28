@@ -45,6 +45,15 @@ export interface ShellInput {
    * that finds nothing is worse than no search box.
    */
   readonly search?: boolean;
+  /**
+   * Path prefix the site is published under, such as `/tsumugu` on a GitHub
+   * Pages project site. Empty for the root, which is every other case.
+   *
+   * Applied where URLs are *written*, never where routes are compared: routes
+   * stay `/guide/setup` internally, and the prefix is a serialization concern
+   * exactly like percent-encoding.
+   */
+  readonly basePath?: string;
   /** The theme's own stylesheet, placed after the shell's. */
   readonly themeStylesheet?: string;
   /**
@@ -94,7 +103,7 @@ const faviconHref = `data:image/svg+xml,${encodeURIComponent(faviconSvg)}`;
  * highlighted option is named by `aria-activedescendant` — which the script
  * sets, because it is the only thing that knows which option that is.
  */
-function searchField(): VirtualNode {
+function searchField(basePath: string): VirtualNode {
   const inputId = "tsumugu-search-input";
   const listId = "tsumugu-search-results";
   const statusId = "tsumugu-search-status";
@@ -105,7 +114,7 @@ function searchField(): VirtualNode {
       class: "tsumugu-search",
       "data-tsumugu-search": "true",
       role: "search",
-      action: "/search",
+      action: `${basePath}/search`,
       method: "get",
     },
     element(
@@ -141,6 +150,7 @@ function navigationList(
   items: readonly NavigationItem[],
   active: ReadonlySet<NavigationItem>,
   currentRoute: RoutePath,
+  basePath: string,
 ): VirtualNode {
   return element(
     "ul",
@@ -157,7 +167,7 @@ function navigationList(
           : element(
               "a",
               {
-                href: encodeRoutePath(item.route),
+                href: `${basePath}${encodeRoutePath(item.route)}`,
                 // `aria-current` is how a screen reader is told which entry is
                 // the page being read. A colour alone says it only to people
                 // who can see it.
@@ -174,7 +184,7 @@ function navigationList(
         label,
         ...(item.children.length === 0
           ? []
-          : [navigationList(item.children, active, currentRoute)]),
+          : [navigationList(item.children, active, currentRoute, basePath)]),
       );
     }),
   );
@@ -271,6 +281,7 @@ function diagnosticsPanel(
  * contents.
  */
 export function renderShell(input: ShellInput): ShellResult {
+  const basePath = input.basePath ?? "";
   const trail = new Set(navigationTrail(input.navigation, input.currentRoute));
   const hasNavigation = input.navigation.length > 0;
   const hasContents = input.tableOfContents.length > 0;
@@ -294,10 +305,10 @@ export function renderShell(input: ShellInput): ShellResult {
         { class: "tsumugu-header" },
         element(
           "a",
-          { class: "tsumugu-brand", href: "/" },
+          { class: "tsumugu-brand", href: basePath === "" ? "/" : basePath },
           text(input.siteName),
         ),
-        ...(input.search === true ? [searchField()] : []),
+        ...(input.search === true ? [searchField(basePath)] : []),
       ),
       ...(hasNavigation
         ? [
@@ -313,7 +324,12 @@ export function renderShell(input: ShellInput): ShellResult {
                 "details",
                 { class: "tsumugu-disclosure" },
                 element("summary", {}, text("Documentation")),
-                navigationList(input.navigation, trail, input.currentRoute),
+                navigationList(
+                  input.navigation,
+                  trail,
+                  input.currentRoute,
+                  basePath,
+                ),
               ),
             ),
           ]
@@ -367,6 +383,12 @@ export function renderShell(input: ShellInput): ShellResult {
   );
 
   const head = fragment(
+    // Where the site lives, for the page client: fetches and form fallbacks
+    // resolve against this, so one static script — one hash — serves the root
+    // and any base path alike.
+    ...(basePath === ""
+      ? []
+      : [element("meta", { name: "tsumugu-base", content: basePath })]),
     // The mark — つ, the first syllable of 紡ぐ, drawn as one stroke of
     // thread — as a data URI, so a project gets a tab icon without shipping a
     // file. A favicon.svg or favicon.ico in the documentation root wins,

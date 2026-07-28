@@ -139,6 +139,7 @@ pre.append(button);
 // frame, rather than an IntersectionObserver: a fast scroll can jump a heading
 // clean over any observation band without ever intersecting it, and an
 // observer that missed the jump leaves the wrong section marked.
+const base=document.querySelector('meta[name="tsumugu-base"]')?.getAttribute("content")??"";
 const toc=document.querySelector(".tsumugu-toc");
 if(toc){
 const links=new Map();
@@ -182,7 +183,7 @@ let entries=null,loading=false,active=-1;
 const load=async()=>{
 if(entries||loading)return;
 loading=true;
-try{const r=await fetch("/search.json");entries=(await r.json()).entries||[]}
+try{const r=await fetch(base+"/search.json");entries=(await r.json()).entries||[]}
 catch{entries=[];status.textContent="Search is unavailable. Reload the page to try again."}
 loading=false;render(input.value)};
 const rank=(query)=>{

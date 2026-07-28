@@ -69,6 +69,8 @@ export interface DocumentRecord {
 
 export interface RecordInput {
   readonly route: RoutePath;
+  /** Path prefix the site is published under. Empty for the root. */
+  readonly basePath?: string;
   readonly sourcePath?: SourcePath;
   readonly title: string;
   readonly description?: string;
@@ -144,7 +146,7 @@ export function toRecord(input: RecordInput): DocumentRecord {
   const root = input.renderable ? input.root : undefined;
 
   return {
-    url: encodeRoutePath(input.route),
+    url: `${input.basePath ?? ""}${encodeRoutePath(input.route)}`,
     route: input.route,
     ...(input.sourcePath === undefined ? {} : { sourcePath: input.sourcePath }),
     title: input.title,

@@ -14,6 +14,7 @@ The project is **experimental and pre-alpha**. Nothing here is a stable API.
 
 ## Start here
 
+- [Using Tsumugu](usage.md) — install, write, serve, ship: the workflow on one page. [日本語版](ja/usage.md)もあります。
 - [Design principles](principles.md) — the constraints every decision is measured against.
 - [Architecture overview](architecture/overview.md) — the pipeline, stage by stage.
 - [Composition](composition.md) — what zero configuration includes, and how to change it.

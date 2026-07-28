@@ -52,6 +52,8 @@ Options for build
   --root <directory>   directory to build, the same as the positional argument
   --out <directory>    where to write (default: ./dist)
   --origin <url>       where the site will be published, for sitemap.xml
+  --base <path>        path prefix the site is served under, e.g. /my-repo
+                       on a GitHub Pages project site
   --clean              remove the output directory even if tsumugu did not write it
 
 Without a directory, tsumugu serves ./docs, or the current directory when it

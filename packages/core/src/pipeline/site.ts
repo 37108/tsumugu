@@ -1,4 +1,4 @@
-import type { DocumentNode } from "../ast/nodes.js";
+import type { DocumentNode, SemanticNode } from "../ast/nodes.js";
 import {
   dedupeDiagnostics,
   type DocumentDiagnostic,
@@ -88,6 +88,15 @@ export interface BuildOptions {
   readonly lang?: string;
   /** Name shown in the header and in the browser title. */
   readonly siteName?: string;
+  /**
+   * Path prefix the site is published under — `/tsumugu` on a GitHub Pages
+   * project site, empty everywhere else.
+   *
+   * Routes stay unprefixed internally; the prefix is applied where URLs are
+   * written into pages and exports, and to root-relative links the authors
+   * wrote, so a document saying `/guide/setup` keeps meaning its own site.
+   */
+  readonly basePath?: string;
   /**
    * A script to place in every page, for a development server's live reload.
    *
@@ -237,8 +246,31 @@ const unrenderable: DocumentNode = {
  * read, a document no renderer claims, a theme that fails on one node: each
  * becomes a diagnostic, and every other page is still produced.
  */
+/** Rewrites root-relative link and image URLs under the base path. */
+function withBasePath<T extends SemanticNode>(node: T, basePath: string): T {
+  if (
+    (node.type === "link" || node.type === "image") &&
+    node.url.startsWith("/") &&
+    !node.url.startsWith("//")
+  ) {
+    return { ...node, url: `${basePath}${node.url}` };
+  }
+  if (!("children" in node)) {
+    return node;
+  }
+
+  const children = node.children.map((child: SemanticNode) =>
+    withBasePath(child, basePath),
+  );
+  const changed = children.some(
+    (child: SemanticNode, index: number) => child !== node.children[index],
+  );
+  return changed ? { ...node, children } : node;
+}
+
 export async function createSite(options: BuildOptions): Promise<Site> {
   const rootRoute = "/" as RoutePath;
+  const basePath = options.basePath ?? "";
 
   /**
    * What the site is called.
@@ -302,8 +334,12 @@ export async function createSite(options: BuildOptions): Promise<Site> {
     diagnostics.push(...metadata.diagnostics);
 
     const root = transformed?.root ?? unrenderable;
+    // Presentation sees the base-prefixed URLs; validation and the exports
+    // keep the unprefixed tree, because a link is checked against routes and
+    // routes never carry the prefix.
+    const presented = basePath === "" ? root : withBasePath(root, basePath);
     const themed = renderWithTheme(options.theme, {
-      root,
+      root: presented,
       metadata,
       sourcePath: document.sourcePath,
     });
@@ -338,6 +374,7 @@ export async function createSite(options: BuildOptions): Promise<Site> {
   }): { readonly html: string; readonly diagnostics: DocumentDiagnostic[] } {
     const shell = renderShell({
       siteName,
+      ...(basePath === "" ? {} : { basePath }),
       title: input.title,
       ...(input.description === undefined
         ? {}
@@ -525,6 +562,7 @@ export async function createSite(options: BuildOptions): Promise<Site> {
       ...entries.map((entry) =>
         toRecord({
           route: entry.route,
+          ...(basePath === "" ? {} : { basePath }),
           sourcePath: entry.sourcePath,
           format: entry.format,
           title: entry.metadata.title,
@@ -600,11 +638,13 @@ export async function createSite(options: BuildOptions): Promise<Site> {
       const generatedHome = generateHomeDocument({
         siteName,
         navigation: navigation.items,
+        ...(basePath === "" ? {} : { basePath }),
       });
 
       generatedRecords.push(
         toRecord({
           route: rootRoute,
+          ...(basePath === "" ? {} : { basePath }),
           title: siteName,
           hidden: false,
           generated: true,
@@ -637,7 +677,10 @@ export async function createSite(options: BuildOptions): Promise<Site> {
         route: searchRoute,
         title: "Search",
         html: renderGenerated(
-          generateSearchDocument({ navigation: navigation.items }),
+          generateSearchDocument({
+            navigation: navigation.items,
+            ...(basePath === "" ? {} : { basePath }),
+          }),
           "Search",
           navigation.items,
         ),
@@ -684,6 +727,7 @@ export async function createSite(options: BuildOptions): Promise<Site> {
           generateNotFoundDocument({
             requestedPath,
             navigation: navigation.items,
+            ...(basePath === "" ? {} : { basePath }),
           }),
           "Page not found",
           navigation.items,

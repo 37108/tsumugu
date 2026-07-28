@@ -33,6 +33,15 @@ export interface ScanOptions {
 export interface ScanResult {
   readonly snapshot: DocumentSnapshot;
   /**
+   * Files that are not documents, relative to the root, POSIX-separated.
+   *
+   * Images, downloads and everything else a document sits beside. They are not
+   * documents and never become pages, but the server serves them and link
+   * validation checks against them, and both need to know they exist without
+   * asking the file system again.
+   */
+  readonly assets: readonly string[];
+  /**
    * Problems found while scanning. A scan always completes: one unreadable
    * directory must not cost the user every other page.
    */
@@ -115,6 +124,7 @@ function errorCode(cause: unknown): string | undefined {
 export async function scan(options: ScanOptions): Promise<ScanResult> {
   const extra = new Set(options.ignore ?? []);
   const documents: DiscoveredDocument[] = [];
+  const assets: string[] = [];
   const diagnostics: DocumentDiagnostic[] = [];
 
   const walk = async (directory: string): Promise<void> => {
@@ -188,8 +198,15 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
         { size: stats.size, modifiedAtMs: stats.mtimeMs },
       );
 
+      const relative = toRelative(options.root, absolute);
+
       if (discovered.ok) {
         documents.push(discovered.value);
+      } else if (
+        discovered.diagnostic.code === documentCodes.unsupportedFormat
+      ) {
+        // Not a document, but still a file the project contains.
+        assets.push(relative);
       } else if (
         discovered.diagnostic.code !== documentCodes.unsupportedFormat
       ) {
@@ -202,7 +219,11 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
 
   await walk(options.root);
 
-  return { snapshot: toSnapshot(documents), diagnostics };
+  return {
+    snapshot: toSnapshot(documents),
+    assets: assets.sort(),
+    diagnostics,
+  };
 }
 
 function toRelative(root: string, absolute: string): string {

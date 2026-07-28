@@ -96,20 +96,64 @@ function notFound(route: string, pages: ReadonlyMap<RoutePath, Page>): string {
 }
 
 /**
+ * Resolves one request.
+ *
+ * Separate from the server so that request handling is a function of the
+ * request and the pages — no sockets, no timing, no shared state — which is
+ * what makes it testable and what makes two identical requests two identical
+ * responses.
+ */
+function handle(
+  target: string,
+  options: ServeOptions,
+  send: (status: number, html: string) => void,
+): void {
+  const withoutQuery = target.split(/[?#]/)[0] ?? "/";
+  const route = decodeRequestPath(withoutQuery);
+
+  if (route === undefined) {
+    // A path that cannot be decoded, or that contains traversal, is something
+    // a client sent. It is a bad request, not a crash.
+    send(
+      400,
+      options.renderBadRequest?.() ??
+        page(400, "Bad request", "<p>That request path is not valid.</p>"),
+    );
+    return;
+  }
+
+  const found = options.pages.get(route);
+  if (found === undefined) {
+    send(
+      404,
+      options.renderNotFound?.(route) ?? notFound(route, options.pages),
+    );
+    return;
+  }
+
+  send(200, found.html);
+}
+
+/**
  * Starts the server.
  *
  * Resolves once the port is actually bound, so a caller can print a URL that
  * works rather than one that will work shortly.
+ *
+ * ## Shutdown
+ *
+ * `close()` stops accepting connections, drops the keep-alive ones a browser
+ * leaves open, and resolves when the port is free. Nothing installs a signal
+ * handler here: a library that catches `SIGINT` decides on its own that the
+ * process should end, which is not a library's decision. The CLI handles the
+ * signals and calls `close()`, which is the arrangement that lets a test start
+ * and stop a dozen servers without leaking a handle.
  */
 export function serve(options: ServeOptions): Promise<RunningServer> {
   const host = options.host ?? "127.0.0.1";
   const requestedPort = options.port ?? 0;
 
   const server: Server = createServer((request, response) => {
-    const target = request.url ?? "/";
-    const withoutQuery = target.split(/[?#]/)[0] ?? "/";
-    const route = decodeRequestPath(withoutQuery);
-
     const send = (status: number, html: string): void => {
       response.writeHead(status, {
         "content-type": "text/html; charset=utf-8",
@@ -118,27 +162,23 @@ export function serve(options: ServeOptions): Promise<RunningServer> {
       response.end(html);
     };
 
-    if (route === undefined) {
-      // A path that cannot be decoded, or that contains traversal, is
-      // something a client sent. It is a bad request, not a crash.
+    try {
+      handle(request.url ?? "/", options, send);
+    } catch (cause) {
+      // Reaching here is a bug in Tsumugu rather than a problem with the
+      // project, so the reader gets a page that says so and nothing else. A
+      // stack trace in a response would name absolute paths on the machine
+      // running the server; it goes to the console, where it belongs.
+      console.error(cause);
       send(
-        400,
-        options.renderBadRequest?.() ??
-          page(400, "Bad request", "<p>That request path is not valid.</p>"),
+        500,
+        page(
+          500,
+          "Server error",
+          "<p>Tsumugu failed to produce this page. The error was written to the terminal running the server.</p>",
+        ),
       );
-      return;
     }
-
-    const found = options.pages.get(route);
-    if (found === undefined) {
-      send(
-        404,
-        options.renderNotFound?.(route) ?? notFound(route, options.pages),
-      );
-      return;
-    }
-
-    send(200, found.html);
   });
 
   return new Promise((resolve, reject) => {

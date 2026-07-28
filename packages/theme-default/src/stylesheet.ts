@@ -167,6 +167,17 @@ export const stylesheet = `
   margin-block-start: 0.4em;
 }
 
+/* A paragraph inside a list item is the item's own line, not a paragraph with
+   space around it. Without this a nested list reads as a page of gaps. */
+.tsumugu-doc li p {
+  margin-block: 0.15em;
+}
+
+.tsumugu-doc li > ul,
+.tsumugu-doc li > ol {
+  margin-block-start: 0.35em;
+}
+
 .tsumugu-doc blockquote {
   border-inline-start: 2px solid var(--doc-indigo);
   color: var(--doc-ink-muted);

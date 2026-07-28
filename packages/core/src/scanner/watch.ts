@@ -1,4 +1,4 @@
-import { watch as watchDirectory, type FSWatcher } from "node:fs";
+import { realpathSync, watch as watchDirectory, type FSWatcher } from "node:fs";
 
 /**
  * Watching the documentation root.
@@ -72,7 +72,15 @@ export function watchRoot(
   };
 
   try {
-    watcher = watchDirectory(root, { recursive: true }, schedule);
+    // The real path, not the spelled one. On Windows a path may arrive in 8.3
+    // short form — C:\Users\RUNNER~1\... — while the events for it report
+    // long names, and libuv asserts (fs-event.c) when the two do not share a
+    // prefix. Resolving first means the watcher and its events agree.
+    watcher = watchDirectory(
+      realpathSync.native(root),
+      { recursive: true },
+      schedule,
+    );
     watcher.on("error", (cause) => {
       options.onError?.(cause);
     });

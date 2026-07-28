@@ -1,5 +1,18 @@
 # tsumugu-theme-default
 
+## 0.2.0
+
+### Patch Changes
+
+- d71e12b: The shell and theme stylesheets are now authored in Tailwind and compiled at
+  build time into the same inline stylesheets that always shipped. No runtime
+  change: same selectors, same palette, same content-security policy, zero
+  client dependencies.
+- Updated dependencies [91060dc]
+- Updated dependencies [d71e12b]
+- Updated dependencies [42d86f2]
+  - tsumugu-core@0.2.0
+
 ## 0.1.0
 
 ### Minor Changes

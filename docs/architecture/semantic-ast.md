@@ -111,7 +111,7 @@ consumer has to acknowledge the distinction rather than infer it from the node's
 name.
 
 The serializer decides what may actually be emitted. Nothing here may be assumed
-safe to inject into the page shell. See [`SECURITY.md`](../../SECURITY.md).
+safe to inject into the page shell. See [`SECURITY.md`](https://github.com/37108/tsumugu/blob/main/SECURITY.md).
 
 `textContent()` deliberately skips these nodes: their text is unparsed and
 untrusted, so counting it would put markup into a heading identifier or a search

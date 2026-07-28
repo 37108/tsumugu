@@ -92,13 +92,13 @@ pnpm check:boundaries
 
 Two layers, because a boundary can be broken in two different places.
 
-**The manifests.** [`tests/workspace.test.ts`](../../tests/workspace.test.ts)
+**The manifests.** [`tests/workspace.test.ts`](https://github.com/37108/tsumugu/blob/main/tests/workspace.test.ts)
 reads every `package.json` and checks the declared graph: privacy, explicit
 `exports`, the `workspace:` protocol, the absence of cycles, and core's
 forbidden targets. This is where a mistake becomes permanent — once a package is
 published, a dependency edge cannot be withdrawn without a breaking change.
 
-**The imports.** [`tests/boundaries.test.ts`](../../tests/boundaries.test.ts)
+**The imports.** [`tests/boundaries.test.ts`](https://github.com/37108/tsumugu/blob/main/tests/boundaries.test.ts)
 reads every source file, because an import can bypass the manifest entirely.
 Five rules, each reported separately with the file, the line, the source and
 target packages, and what was violated:

@@ -178,8 +178,17 @@ const unrenderable: DocumentNode = {
  * becomes a diagnostic, and every other page is still produced.
  */
 export async function createSite(options: BuildOptions): Promise<Site> {
-  const siteName = options.siteName ?? "Documentation";
   const rootRoute = "/" as RoutePath;
+
+  /**
+   * What the site is called.
+   *
+   * The home page's own title wins, when there is one. A project that has
+   * written `# Tsumugu` at the top of its index has already named itself, and
+   * asking again — through an option, or by showing the directory name beside
+   * it — would be asking a question the documentation answered.
+   */
+  let siteName = options.siteName ?? "Documentation";
 
   // State that survives an update, and is the only thing that does.
   let documents: ReadonlyMap<DocumentId, LoadedDocument> = new Map();
@@ -383,6 +392,13 @@ export async function createSite(options: BuildOptions): Promise<Site> {
     }
 
     const entries = [...prepared.values()];
+
+    const home = entries.find((entry) => entry.route === rootRoute);
+    siteName =
+      home?.metadata.titleSource === "file-name"
+        ? (options.siteName ?? "Documentation")
+        : (home?.metadata.title ?? options.siteName ?? "Documentation");
+
     const navigation = buildNavigation(
       entries.map((entry) => ({
         sourcePath: entry.sourcePath,

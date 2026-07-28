@@ -213,7 +213,14 @@ describe("renderShell", () => {
     expect(head).toContain('media="(prefers-color-scheme: light)"');
   });
 
-  it("requires no script anywhere in the page", () => {
-    expect(shell()).not.toContain("<script");
+  it("carries exactly the one page client, and nothing that needs it", () => {
+    const html = shell();
+
+    // One script — the page client, allowed by its hash — and a page that
+    // reads, navigates and searches (via /search) without it.
+    expect(html.match(/<script/gu)).toHaveLength(1);
+    // The copy control is created by the script, not server-rendered: a
+    // button that does nothing without JavaScript is worse than no button.
+    expect(html).not.toContain("<button");
   });
 });

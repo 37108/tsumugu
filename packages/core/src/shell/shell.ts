@@ -7,7 +7,7 @@ import { encodeRoutePath } from "../routing/routes.js";
 import { element, fragment, text, trustedHtml } from "../theme/virtual-tree.js";
 import type { VirtualNode } from "../theme/virtual-tree.js";
 
-import { searchScript } from "./search-script.js";
+import { clientScript } from "./client-script.js";
 import { shellStylesheet } from "./stylesheet.js";
 
 /**
@@ -321,19 +321,17 @@ export function renderShell(input: ShellInput): ShellResult {
       ),
     ),
     // Last in the body, not in the head: a script in the head runs before the
-    // elements it is about exist, and would quietly find nothing.
-    ...(input.search === true
-      ? [
-          element(
-            "script",
-            {},
-            trustedHtml(
-              searchScript,
-              "Tsumugu's own search client, allowed by its hash in the content security policy",
-            ),
-          ),
-        ]
-      : []),
+    // elements it is about exist, and would quietly find nothing. Always
+    // present, even with no search field, because it also creates the copy
+    // buttons on code blocks; the search half exits when the form is absent.
+    element(
+      "script",
+      {},
+      trustedHtml(
+        clientScript,
+        "Tsumugu's own page client, allowed by its hash in the content security policy",
+      ),
+    ),
     ...(input.script === undefined
       ? []
       : [

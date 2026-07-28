@@ -1,5 +1,9 @@
 # 4. Client-side search, and the second script Tsumugu ships
 
+> **Amended:** the second script is now the _page client_: it carries search
+> and the copy control on code blocks, under one hash. The policy still names
+> exactly two scripts. Ranking, added for issue #54, is defined below.
+
 - **Status:** Accepted
 - **Date:** 2026-07-28
 - **Supersedes:** none
@@ -61,9 +65,22 @@ same export records as `documents.json`. Tokenizing on the server would fix a
 matching strategy into a file that the browser, a build tool and any future
 server-side search would all have to agree with.
 
-Matching is substring, case- and accent-insensitive. It is deliberately not
-fuzzy: a documentation search that guesses hides the exact page somebody asked
-for.
+Matching is substring, case- and accent-insensitive (lowercase, Unicode NFKD,
+combining marks stripped), and deliberately not fuzzy: a documentation search
+that guesses hides the exact page somebody asked for.
+
+Ranking, added later for issue #54:
+
+- the query splits on whitespace and **every term must match** — two words
+  narrow a search, they do not widen it;
+- a match in the section heading outweighs the document title, which outweighs
+  the body text, and a match at the start of a word outweighs one inside it;
+- ties keep document order, and no document contributes more than three of the
+  twelve results, so one long page cannot fill the list.
+
+The scoring function is embedded into the script from the same TypeScript
+source the unit tests call, so the ranking the browser runs is the ranking the
+tests saw.
 
 ### The script is small enough to read
 
@@ -97,8 +114,6 @@ hash is taken over and what a reader sees in view-source.
 
 ### Follow-up required
 
-- Ranking and normalization (issue #54) are unsolved: results are currently in
-  document order, capped at twelve.
 - The static build (issue #48) must serve `/search.json` for this to work
   outside the development server.
 - If a third script is ever proposed, this pair of ADRs is the precedent to

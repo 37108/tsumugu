@@ -53,8 +53,9 @@ than tokens, because tokenizing here would fix a matching strategy into a file
 that the browser, a build and any future server-side search would all have to
 agree with.
 
-Hidden, generated and unrenderable documents are excluded. What consumes it is
-described in [ADR 4](decisions/0004-client-side-search.md).
+Hidden, generated and unrenderable documents are excluded. What consumes it,
+and how results are ranked, is described in
+[ADR 4](decisions/0004-client-side-search.md).
 
 ## Ordering and stability
 

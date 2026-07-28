@@ -35,7 +35,11 @@ function run(
   cwd: string,
 ): Promise<string> {
   return new Promise((resolve, reject) => {
-    execFile(command, [...args], { cwd }, (error, stdout, stderr) => {
+    // On Windows, npm and pnpm are .cmd shims, and Node refuses to spawn a
+    // .cmd without a shell. tar is a real executable everywhere.
+    const shell = process.platform === "win32";
+
+    execFile(command, [...args], { cwd, shell }, (error, stdout, stderr) => {
       if (error === null) {
         resolve(stdout);
       } else {

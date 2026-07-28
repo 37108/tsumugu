@@ -27,6 +27,7 @@
     "version-packages": "changeset version && pnpm install --no-frozen-lockfile",
     "release": "pnpm run check && changeset publish",
     "bench": "pnpm run build && node scripts/benchmark.mjs",
+    "sbom": "pnpm sbom --sbom-format cyclonedx --sbom-spec-version 1.7 --prod --sbom-type application --out sbom.cyclonedx.json",
     "docs": "pnpm run build && node packages/cli/dist/bin.js dev docs",
     "docs:build": "pnpm run build && node packages/cli/dist/bin.js build docs --out dist-docs --origin https://tsumugu.dev",
     "check:boundaries": "pnpm run build && vitest run tests/boundaries.test.ts tests/workspace.test.ts",

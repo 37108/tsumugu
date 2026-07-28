@@ -1,8 +1,19 @@
 #!/usr/bin/env node
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import path from "node:path";
+
+// Resolved to the CLI's real JavaScript entry and run with this Node, because
+// the bin shim in node_modules/.bin is a .cmd on Windows, which Node refuses
+// to spawn without a shell.
+const require = createRequire(import.meta.url);
+const tailwind = path.join(
+  path.dirname(require.resolve("@tailwindcss/cli/package.json")),
+  "dist",
+  "index.mjs",
+);
 
 /**
  * Compiles the authored Tailwind stylesheets into the TypeScript constants
@@ -56,11 +67,9 @@ let failed = false;
 try {
   for (const entry of entries) {
     const out = path.join(scratch, path.basename(entry.target) + ".css");
-    execFileSync(
-      "node_modules/.bin/tailwindcss",
-      ["-i", entry.source, "-o", out],
-      { stdio: ["ignore", "ignore", "inherit"] },
-    );
+    execFileSync(process.execPath, [tailwind, "-i", entry.source, "-o", out], {
+      stdio: ["ignore", "ignore", "inherit"],
+    });
 
     const css = readFileSync(out, "utf8")
       .replace(/^\/\*! tailwindcss [^*]*\*\/\n?/u, "")

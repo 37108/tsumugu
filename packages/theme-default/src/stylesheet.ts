@@ -58,6 +58,26 @@ export const stylesheet = `
   overflow-wrap: break-word;
 }
 
+/*
+ * Dark mode, matching the shell's palette exactly.
+ *
+ * The two stylesheets keep their own tokens — the theme owns document colours
+ * and the shell owns the page around them — so the values are stated twice on
+ * purpose. A theme that read the shell's variables would be a theme that could
+ * not be replaced without replacing the shell.
+ */
+@media (prefers-color-scheme: dark) {
+  .tsumugu-doc {
+    --doc-ink: #e7e5df;
+    --doc-ink-muted: #a6aab4;
+    --doc-paper: #14161b;
+    --doc-indigo: #9db8e8;
+    --doc-indigo-bright: #c2d3f2;
+    --doc-rule: #2b2f38;
+    --doc-surface: #1d2028;
+  }
+}
+
 .tsumugu-doc > * + * {
   margin-block-start: 1.4em;
 }

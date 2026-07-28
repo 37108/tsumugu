@@ -197,6 +197,22 @@ describe("renderShell", () => {
     );
   });
 
+  it("tells the browser both schemes are supported", () => {
+    const result = renderShell({
+      siteName: "Docs",
+      title: "Setup",
+      currentRoute: "/" as RoutePath,
+      navigation: [],
+      tableOfContents: [],
+      content: element("p", {}, text("x")),
+      diagnostics: [],
+    });
+
+    const head = serializeToHtml(result.head);
+    expect(head).toContain('media="(prefers-color-scheme: dark)"');
+    expect(head).toContain('media="(prefers-color-scheme: light)"');
+  });
+
   it("requires no script anywhere in the page", () => {
     expect(shell()).not.toContain("<script");
   });

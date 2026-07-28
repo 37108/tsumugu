@@ -213,6 +213,17 @@ describe("the default theme", () => {
     expect(stylesheet).not.toContain("url(");
   });
 
+  it("answers the reader's dark-mode preference without asking again", () => {
+    const stylesheet = defaultTheme.stylesheet ?? "";
+
+    expect(stylesheet).toContain("@media (prefers-color-scheme: dark)");
+    // The tokens are redefined, rather than individual rules being repeated:
+    // one palette in two directions, not two stylesheets.
+    expect(stylesheet).toMatch(
+      /@media \(prefers-color-scheme: dark\)[^}]*\{[^}]*--doc-ink:/u,
+    );
+  });
+
   it("styles only document content, leaving the page around it to the shell", () => {
     const selectors = (defaultTheme.stylesheet ?? "")
       .split("\n")
@@ -222,6 +233,7 @@ describe("the default theme", () => {
     for (const selector of selectors) {
       expect(
         selector.includes(".tsumugu-doc") ||
+          selector.includes("prefers-color-scheme") ||
           selector.includes(".tsumugu-anchor") ||
           selector.includes(".tsumugu-table-scroll") ||
           selector.startsWith("@"),

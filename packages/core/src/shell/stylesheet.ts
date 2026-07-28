@@ -30,9 +30,35 @@ export const shellStylesheet = `
   --ts-serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Hiragino Mincho ProN", "Yu Mincho", Georgia, serif;
   --ts-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
 
-  /* Stated rather than left to the browser, so form controls, scrollbars and
-     the space beyond the page match the page. */
-  color-scheme: light;
+  /* Both, stated rather than left to the browser, so form controls, scrollbars
+     and the space beyond the page match whichever one the reader is in. */
+  color-scheme: light dark;
+}
+
+/*
+ * Dark mode.
+ *
+ * The same design in the other direction rather than an inversion of it: sumi
+ * ink and washi paper trade places, and the 藍 indigo is lifted until it reads
+ * as a link on a dark ground instead of disappearing into it. Every pair below
+ * clears the project's 4.5:1 target; the muted greys clear it too, because
+ * "secondary" is not a licence to be unreadable.
+ *
+ * A preference, not a toggle. The reader has already told their operating
+ * system which they want, and a control that asks again is a control that can
+ * disagree with them.
+ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ts-ink: #e7e5df;
+    --ts-ink-muted: #a6aab4;
+    --ts-paper: #14161b;
+    --ts-panel: #1d2028;
+    --ts-indigo: #9db8e8;
+    --ts-rule: #2b2f38;
+    --ts-warning: #e0b571;
+    --ts-error: #ef9d94;
+  }
 }
 
 * {

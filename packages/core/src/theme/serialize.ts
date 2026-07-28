@@ -169,8 +169,22 @@ function write(node: VirtualNode, treeHasProblems: boolean): string {
       if (rawTextElements.has(node.tag) && node.children.length > 0) {
         // Escaping would corrupt the content and not escaping would let it
         // close the element. A theme that needs one of these builds it with
-        // trustedHtml, where the decision is visible.
-        return `<${node.tag}${attributes}></${node.tag}>`;
+        // trustedHtml, where the decision is visible — and even then the
+        // content may not contain this element's own end tag, because that is
+        // the one thing raw text cannot express.
+        const raw = node.children
+          .filter((child) => child.type === "trusted-html")
+          .map((child) => child.html)
+          .join("");
+
+        const escapes =
+          raw === "" ||
+          node.children.some((child) => child.type !== "trusted-html") ||
+          raw.toLowerCase().includes(`</${node.tag}`);
+
+        return escapes
+          ? `<${node.tag}${attributes}></${node.tag}>`
+          : `<${node.tag}${attributes}>${raw}</${node.tag}>`;
       }
 
       const children = node.children

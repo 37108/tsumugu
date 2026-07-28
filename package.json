@@ -33,6 +33,7 @@
     "@tsumugu/internal-tsconfig": "workspace:*",
     "@tsumugu/renderer-html": "workspace:*",
     "@tsumugu/renderer-markdown": "workspace:*",
+    "@tsumugu/theme-default": "workspace:*",
     "@types/node": "^24.13.2",
     "@vitest/coverage-v8": "^4.1.9",
     "eslint": "^10.6.0",

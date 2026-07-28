@@ -10,8 +10,7 @@ import {
 } from "@tsumugu/core";
 import { createHtmlRenderer } from "@tsumugu/renderer-html";
 import { createMarkdownRenderer } from "@tsumugu/renderer-markdown";
-
-import { minimalTheme } from "./minimal-theme.js";
+import { defaultTheme } from "@tsumugu/theme-default";
 
 /**
  * The zero-config development command.
@@ -106,7 +105,7 @@ export async function startDev(options: DevOptions = {}): Promise<DevResult> {
     // default. A project that wants different ones registers a different
     // transformer here rather than configuring this one.
     transformers: [createHeadingIdTransformer()],
-    theme: minimalTheme,
+    theme: defaultTheme,
   });
 
   const server = await serve({

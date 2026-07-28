@@ -8,7 +8,8 @@
   "references": [
     { "path": "../core" },
     { "path": "../renderer-markdown" },
-    { "path": "../renderer-html" }
+    { "path": "../renderer-html" },
+    { "path": "../theme-default" }
   ],
   "exclude": ["**/*.test.ts", "**/*.suite.ts"]
 }

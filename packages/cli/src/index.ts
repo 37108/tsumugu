@@ -42,4 +42,3 @@ export {
   type DevOptions,
   type DevResult,
 } from "./dev.js";
-export { minimalTheme } from "./minimal-theme.js";

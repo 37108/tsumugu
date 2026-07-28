@@ -2,8 +2,9 @@ import {
   dedupeDiagnostics,
   type DocumentDiagnostic,
 } from "../document/diagnostics.js";
-import type { RoutePath } from "../document/paths.js";
-import { resolveMetadata } from "../metadata/resolve.js";
+import type { DocumentNode } from "../ast/nodes.js";
+import type { RoutePath, SourcePath } from "../document/paths.js";
+import { resolveMetadata, type ResolvedMetadata } from "../metadata/resolve.js";
 import { renderDocument, type Renderer } from "../renderer/contract.js";
 import { findRouteCollisions, routeForSource } from "../routing/routes.js";
 import { diffSnapshots, type DocumentSnapshot } from "../scanner/events.js";
@@ -13,6 +14,12 @@ import {
   type DocumentCache,
 } from "../scanner/reconcile.js";
 import { scan } from "../scanner/scan.js";
+import {
+  buildNavigation,
+  type NavigationDocument,
+} from "../navigation/tree.js";
+import { buildTableOfContents } from "../navigation/table-of-contents.js";
+import { renderShell } from "../shell/shell.js";
 import { renderWithTheme, type Theme } from "../theme/contract.js";
 import { runTransformers, type Transformer } from "../transformer/contract.js";
 import { serializeDocument } from "../theme/serialize.js";
@@ -24,7 +31,7 @@ import { element } from "../theme/virtual-tree.js";
  * Every boundary the architecture describes appears here once, in order:
  *
  * ```text
- * scan → reconcile → route → render → theme → serialize
+ * scan → reconcile → route → render → transform → theme → shell → serialize
  * ```
  *
  * The point of this module is that it is short. If the abstractions chosen for
@@ -53,6 +60,8 @@ export interface BuildOptions {
   readonly theme: Theme;
   /** Language for the generated document element. */
   readonly lang?: string;
+  /** Name shown in the header and in the browser title. */
+  readonly siteName?: string;
 }
 
 /** One servable page. */
@@ -60,6 +69,16 @@ export interface Page {
   readonly route: RoutePath;
   readonly title: string;
   readonly html: string;
+  readonly diagnostics: readonly DocumentDiagnostic[];
+}
+
+/** A document after rendering, transforming and metadata resolution. */
+interface PreparedDocument {
+  readonly sourcePath: SourcePath;
+  readonly route: RoutePath;
+  readonly metadata: ResolvedMetadata;
+  /** The transformed AST, or `undefined` when rendering failed. */
+  readonly root?: DocumentNode;
   readonly diagnostics: readonly DocumentDiagnostic[];
 }
 
@@ -124,11 +143,15 @@ export async function buildSite(options: BuildOptions): Promise<BuildResult> {
     },
   );
 
-  const pages = new Map<RoutePath, Page>();
+  // Documents are prepared before any page is built, because a page needs the
+  // navigation, and navigation is a property of the whole project rather than
+  // of the page being rendered. A pipeline that rendered as it went would give
+  // the first page a sidebar listing only itself.
+  const prepared: PreparedDocument[] = [];
 
   for (const document of loaded.cache.values()) {
     const rendered = await renderDocument(options.renderers, document);
-    const pageDiagnostics: DocumentDiagnostic[] = [...rendered.diagnostics];
+    const diagnostics: DocumentDiagnostic[] = [...rendered.diagnostics];
 
     const transformed =
       rendered.stage === "rendered"
@@ -137,7 +160,7 @@ export async function buildSite(options: BuildOptions): Promise<BuildResult> {
           })
         : undefined;
     if (transformed !== undefined) {
-      pageDiagnostics.push(...transformed.diagnostics);
+      diagnostics.push(...transformed.diagnostics);
     }
 
     const metadata = resolveMetadata({
@@ -145,36 +168,77 @@ export async function buildSite(options: BuildOptions): Promise<BuildResult> {
       metadata: document.metadata,
       ...(transformed === undefined ? {} : { root: transformed.root }),
     });
-    pageDiagnostics.push(...metadata.diagnostics);
+    diagnostics.push(...metadata.diagnostics);
+
+    prepared.push({
+      sourcePath: document.sourcePath,
+      route: document.route,
+      metadata,
+      ...(transformed === undefined ? {} : { root: transformed.root }),
+      diagnostics,
+    });
+  }
+
+  const navigation = buildNavigation(
+    prepared.map((entry): NavigationDocument => ({
+      sourcePath: entry.sourcePath,
+      route: entry.route,
+      metadata: entry.metadata,
+    })),
+  );
+
+  const siteName = options.siteName ?? "Documentation";
+  const pages = new Map<RoutePath, Page>();
+
+  for (const entry of prepared) {
+    const pageDiagnostics: DocumentDiagnostic[] = [...entry.diagnostics];
 
     // A document that failed to render still gets a page, so the server can
     // explain the failure instead of returning nothing.
     const body =
-      transformed !== undefined
-        ? renderWithTheme(options.theme, {
-            root: transformed.root,
-            metadata,
-            sourcePath: document.sourcePath,
-          })
-        : {
+      entry.root === undefined
+        ? {
             tree: element(
               "p",
               {},
-              `This document could not be rendered. See the diagnostics below.`,
+              "This document could not be rendered. See the problems listed below.",
             ),
             diagnostics: [],
-          };
+          }
+        : renderWithTheme(options.theme, {
+            root: entry.root,
+            metadata: entry.metadata,
+            sourcePath: entry.sourcePath,
+          });
     pageDiagnostics.push(...body.diagnostics);
 
-    const serialized = serializeDocument(body.tree, {
+    const shell = renderShell({
+      siteName,
+      title: entry.metadata.title,
+      ...(entry.metadata.description === undefined
+        ? {}
+        : { description: entry.metadata.description }),
+      currentRoute: entry.route,
+      navigation: navigation.items,
+      tableOfContents:
+        entry.root === undefined ? [] : buildTableOfContents(entry.root),
+      content: body.tree,
+      diagnostics: dedupeDiagnostics(pageDiagnostics),
+      ...(options.theme.stylesheet === undefined
+        ? {}
+        : { themeStylesheet: options.theme.stylesheet }),
+    });
+
+    const serialized = serializeDocument(shell.body, {
       lang: options.lang ?? "en",
-      title: metadata.title,
+      title: shell.documentTitle,
+      head: shell.head,
     });
     pageDiagnostics.push(...serialized.diagnostics);
 
-    pages.set(document.route, {
-      route: document.route,
-      title: metadata.title,
+    pages.set(entry.route, {
+      route: entry.route,
+      title: entry.metadata.title,
       html: serialized.html,
       diagnostics: dedupeDiagnostics(pageDiagnostics),
     });
@@ -187,6 +251,7 @@ export async function buildSite(options: BuildOptions): Promise<BuildResult> {
       ...routing,
       ...collisions,
       ...loaded.diagnostics,
+      ...navigation.diagnostics,
     ]),
   };
 }

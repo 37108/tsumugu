@@ -84,7 +84,12 @@ export type {
   ThemeRenderInput,
   ThemeRenderResult,
 } from "./theme/contract.js";
-export { renderUnsupported } from "./theme/contract.js";
+// `renderWithTheme` and `serializeToHtml` are exported for the same reason the
+// Virtual Tree builders are: a theme lives outside core, and its author cannot
+// otherwise render one of their own nodes or see the HTML it becomes. Both are
+// what the pipeline itself calls, so a theme is tested against the real thing.
+export { renderUnsupported, renderWithTheme } from "./theme/contract.js";
+export { serializeToHtml } from "./theme/serialize.js";
 export type {
   AttributeValue,
   TrustedHtml,

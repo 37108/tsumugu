@@ -160,6 +160,38 @@ describe("raw-text elements", () => {
       '<script src="/a.js"></script>',
     );
   });
+
+  it("emits trusted content, which is how a theme ships a stylesheet", () => {
+    const css = "main > p { color: #000 }";
+
+    expect(
+      serializeToHtml(
+        element("style", {}, trustedHtml(css, "the theme's own stylesheet")),
+      ),
+    ).toBe(`<style>${css}</style>`);
+  });
+
+  it("drops trusted content that would close the element", () => {
+    // The one thing raw text cannot express is its own end tag, so content
+    // containing it is dropped rather than allowed to escape the element.
+    expect(
+      serializeToHtml(
+        element(
+          "style",
+          {},
+          trustedHtml("a{}</style><script>x</script>", "claimed to be trusted"),
+        ),
+      ),
+    ).toBe("<style></style>");
+  });
+
+  it("drops trusted content mixed with ordinary text", () => {
+    expect(
+      serializeToHtml(
+        element("style", {}, trustedHtml("a{}", "trusted"), "b{}"),
+      ),
+    ).toBe("<style></style>");
+  });
 });
 
 describe("fragments", () => {

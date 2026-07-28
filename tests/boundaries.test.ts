@@ -234,21 +234,18 @@ describe("public export surface", () => {
       "formatDiagnostics",
       "fragment",
       "renderUnsupported",
+      "renderWithTheme",
+      "serializeToHtml",
       "serve",
       "summarizeDiagnostics",
       "text",
       "trustedHtml",
       "version",
     ],
-    "@tsumugu/cli": [
-      "describeStartup",
-      "minimalTheme",
-      "parseDevOptions",
-      "run",
-      "startDev",
-    ],
+    "@tsumugu/cli": ["describeStartup", "parseDevOptions", "run", "startDev"],
     "@tsumugu/renderer-markdown": ["createMarkdownRenderer"],
     "@tsumugu/renderer-html": ["createHtmlRenderer", "isFullDocument"],
+    "@tsumugu/theme-default": ["defaultTheme", "defaultThemeStylesheet"],
   };
 
   /**

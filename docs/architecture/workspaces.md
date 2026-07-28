@@ -21,7 +21,8 @@ tsumugu/
 │   ├── core/                  @tsumugu/core
 │   ├── cli/                   @tsumugu/cli
 │   ├── renderer-markdown/     @tsumugu/renderer-markdown
-│   └── renderer-html/         @tsumugu/renderer-html
+│   ├── renderer-html/         @tsumugu/renderer-html
+│   └── theme-default/         @tsumugu/theme-default
 ├── internal/          internal-only workspaces, never published
 │   └── tsconfig/      @tsumugu/internal-tsconfig
 └── tests/             repository-level tests
@@ -39,12 +40,17 @@ Unit tests are colocated with the code they cover, under
 Dependencies point towards core. Core never points back.
 
 ```text
-@tsumugu/cli   @tsumugu/renderer-markdown   @tsumugu/renderer-html
-     │                     │                          │
-     └─────────────────────┼──────────────────────────┘
+@tsumugu/cli   @tsumugu/renderer-markdown   @tsumugu/renderer-html   @tsumugu/theme-default
+     │                     │                          │                        │
+     └─────────────────────┼──────────────────────────┴────────────────────────┘
                            ▼
                      @tsumugu/core
 ```
+
+The CLI is the composition root: it is the one package that decides which
+renderers, which transformers and which theme an ordinary project gets. Core
+composes what it is handed and chooses nothing, which is what keeps a different
+set of choices possible without changing core.
 
 Each renderer holds every type of its own parser: mdast never leaves
 `@tsumugu/renderer-markdown`, hast never leaves `@tsumugu/renderer-html`. Core

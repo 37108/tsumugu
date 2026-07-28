@@ -61,6 +61,18 @@ export type NodeRenderer = (
 export interface Theme {
   readonly id: string;
   readonly renderers: Partial<Record<SemanticNode["type"], NodeRenderer>>;
+  /**
+   * CSS for the document content this theme renders.
+   *
+   * A theme owns how a heading or a table looks, so it owns the rules that say
+   * so; the shell places them in the page. Stated as text rather than as a file
+   * because a documentation server has no asset pipeline and should not need
+   * one to show a styled page — and because a stylesheet that has to be
+   * fetched is a page that is unstyled until it arrives.
+   *
+   * A theme that only wants correct HTML omits it.
+   */
+  readonly stylesheet?: string;
 }
 
 export const themeCodes = {

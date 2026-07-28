@@ -2,7 +2,7 @@ import {
   formatDiagnostic,
   summarizeDiagnostics,
   type DocumentDiagnostic,
-} from "@tsumugu/core";
+} from "tsumugu-core";
 
 /**
  * What the terminal sees.

@@ -1,4 +1,4 @@
-# @tsumugu/cli
+# tsumugu
 
 ## 0.1.0
 
@@ -17,10 +17,10 @@
 ### Patch Changes
 
 - Updated dependencies [a06ff82]
-  - @tsumugu/build@0.1.0
-  - @tsumugu/core@0.1.0
-  - @tsumugu/preset@0.1.0
-  - @tsumugu/renderer-html@0.1.0
-  - @tsumugu/renderer-markdown@0.1.0
-  - @tsumugu/theme-default@0.1.0
-  - @tsumugu/transformer-highlight@0.1.0
+  - tsumugu-build@0.1.0
+  - tsumugu-core@0.1.0
+  - tsumugu-preset@0.1.0
+  - tsumugu-renderer-html@0.1.0
+  - tsumugu-renderer-markdown@0.1.0
+  - tsumugu-theme-default@0.1.0
+  - tsumugu-transformer-highlight@0.1.0

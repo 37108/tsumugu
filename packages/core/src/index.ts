@@ -1,5 +1,5 @@
 /**
- * The public surface of `@tsumugu/core`.
+ * The public surface of `tsumugu-core`.
  *
  * Almost everything here is a **type**. That is the point: the first real
  * consumer — the Markdown renderer — needs to describe the shape of what it

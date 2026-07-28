@@ -3,8 +3,8 @@ import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
-import { createSite } from "@tsumugu/core";
-import { createPreset } from "@tsumugu/preset";
+import { createSite } from "tsumugu-core";
+import { createPreset } from "tsumugu-preset";
 
 /**
  * Performance baselines.

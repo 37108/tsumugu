@@ -1,5 +1,5 @@
 {
-  "name": "@tsumugu/renderer-markdown",
+  "name": "tsumugu-renderer-markdown",
   "version": "0.1.0",
   "type": "module",
   "description": "Markdown renderer for Tsumugu. Converts Markdown into the Semantic Document AST and keeps parser-specific types from escaping.",
@@ -32,7 +32,7 @@
     "clean": "tsc --build --clean"
   },
   "dependencies": {
-    "@tsumugu/core": "workspace:*",
+    "tsumugu-core": "workspace:*",
     "mdast-util-from-markdown": "^2.0.3",
     "mdast-util-frontmatter": "^2.0.1",
     "mdast-util-gfm-table": "^2.0.0",

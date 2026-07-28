@@ -19,7 +19,7 @@ import {
   type Renderer,
   type SemanticNode,
   type Theme,
-} from "@tsumugu/core";
+} from "tsumugu-core";
 
 import { buildCodes, buildStatic, fileForRoute } from "./index.js";
 

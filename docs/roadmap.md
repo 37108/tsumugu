@@ -162,9 +162,9 @@ Official packages and representative projects can validate boundaries before any
 
 The following are intentionally not part of the initial implementation plan:
 
-- `@tsumugu/build`;
-- `@tsumugu/search`;
-- `@tsumugu/ai`;
+- `tsumugu-build`;
+- `tsumugu-search`;
+- `tsumugu-ai`;
 - OpenAPI and Mermaid renderers;
 - multiple official themes;
 - sandboxed interactive documents;

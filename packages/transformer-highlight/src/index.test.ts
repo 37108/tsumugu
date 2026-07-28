@@ -3,7 +3,7 @@ import {
   type CodeBlockNode,
   type DocumentNode,
   type SourcePath,
-} from "@tsumugu/core";
+} from "tsumugu-core";
 import { describe, expect, it } from "vitest";
 
 import {

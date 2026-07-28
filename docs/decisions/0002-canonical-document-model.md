@@ -132,7 +132,7 @@ direction.
 
 ### The model stays internal
 
-Nothing here is exported from `@tsumugu/core`. Its public surface remains a
+Nothing here is exported from `tsumugu-core`. Its public surface remains a
 single `version` constant. The model will be used by the renderers, the router
 and the server first; which subset deserves to be public is a question those
 consumers answer, not one this decision should pre-empt.

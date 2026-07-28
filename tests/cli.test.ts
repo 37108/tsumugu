@@ -17,8 +17,8 @@ import { readWorkspaceManifests } from "./helpers/workspace-manifests.js";
  * This test deliberately runs the emitted `dist/bin.js` in a child process
  * rather than importing the CLI source. That is what makes it a foundation
  * test: it only passes when the shared TypeScript configuration, the project
- * references, the ESM output, the workspace link from `@tsumugu/cli` to
- * `@tsumugu/core`, and the `bin` entry point all work together.
+ * references, the ESM output, the workspace link from `tsumugu` to
+ * `tsumugu-core`, and the `bin` entry point all work together.
  */
 
 const binPath = path.join(repositoryRoot, "packages", "cli", "dist", "bin.js");
@@ -72,9 +72,9 @@ beforeAll(async () => {
   }
 
   const manifests = await readWorkspaceManifests();
-  const core = manifests.find((manifest) => manifest.name === "@tsumugu/core");
+  const core = manifests.find((manifest) => manifest.name === "tsumugu-core");
   if (core === undefined) {
-    throw new Error("the @tsumugu/core workspace is missing");
+    throw new Error("the tsumugu-core workspace is missing");
   }
   coreVersion = core.version;
 });
@@ -91,7 +91,7 @@ describe("tsumugu binary", () => {
     expect(outcome.exitCode).toBe(0);
     expect(outcome.stderr).toBe("");
     // Proves the value crossed the package boundary: it is defined in
-    // @tsumugu/core and printed by @tsumugu/cli.
+    // tsumugu-core and printed by tsumugu.
     expect(outcome.stdout).toBe(`tsumugu ${coreVersion}\n`);
   });
 

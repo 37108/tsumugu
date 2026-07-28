@@ -19,7 +19,7 @@ import {
  * supported forever once a third-party renderer relied on it.
  *
  * Options are deliberately absent. A renderer is *built* with its own options
- * and closes over them, so `@tsumugu/core` never sees a Markdown setting and a
+ * and closes over them, so `tsumugu-core` never sees a Markdown setting and a
  * new renderer cannot force a field into core's configuration.
  *
  * Nothing here mentions themes, virtual trees, HTML or the server. A renderer

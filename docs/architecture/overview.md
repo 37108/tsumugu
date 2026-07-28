@@ -138,11 +138,11 @@ A plugin does not receive unrestricted access to core internals and does not int
 Initial public package candidates:
 
 ```text
-@tsumugu/core
-@tsumugu/cli
-@tsumugu/renderer-markdown
-@tsumugu/renderer-html
-@tsumugu/theme-default
+tsumugu-core
+tsumugu
+tsumugu-renderer-markdown
+tsumugu-renderer-html
+tsumugu-theme-default
 ```
 
 Internal workspace modules may separate scanner, document, AST, pipeline, server, serializer, and Virtual Tree responsibilities. Internal packages must not be published or re-exported.

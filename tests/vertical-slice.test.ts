@@ -1,4 +1,4 @@
-import { startDev, type DevResult } from "@tsumugu/cli";
+import { startDev, type DevResult } from "tsumugu";
 import { afterEach, describe, expect, it } from "vitest";
 
 import {

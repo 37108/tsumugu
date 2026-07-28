@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { version } from "@tsumugu/core";
+import { version } from "tsumugu-core";
 
 import { discoverRoot, parseDevOptions, siteNameFor } from "./dev.js";
 import { exitCodes, run, usage } from "./index.js";

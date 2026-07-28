@@ -1,5 +1,5 @@
 {
-  "name": "@tsumugu/renderer-html",
+  "name": "tsumugu-renderer-html",
   "version": "0.1.0",
   "type": "module",
   "description": "HTML renderer for Tsumugu. Converts complete HTML documents and fragments into the Semantic Document AST.",
@@ -32,7 +32,7 @@
     "clean": "tsc --build --clean"
   },
   "dependencies": {
-    "@tsumugu/core": "workspace:*",
+    "tsumugu-core": "workspace:*",
     "hast-util-from-html": "^2.0.3"
   },
   "devDependencies": {

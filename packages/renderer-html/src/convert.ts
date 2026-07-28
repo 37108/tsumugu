@@ -5,7 +5,7 @@ import type {
   SourcePath,
   SourceRange,
   TableAlignment,
-} from "@tsumugu/core";
+} from "tsumugu-core";
 import type { Element, Nodes as HastNode, RootContent } from "hast";
 
 /**

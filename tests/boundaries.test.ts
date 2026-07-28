@@ -24,30 +24,30 @@ import {
  * carry a message naming the source, the target, and the rule it broke.
  */
 
-/** Packages `@tsumugu/core` must never reach for, in any form. */
+/** Packages `tsumugu-core` must never reach for, in any form. */
 const forbiddenFromCore: readonly {
   readonly pattern: RegExp;
   readonly reason: string;
 }[] = [
   {
-    pattern: /^@tsumugu\/cli$/,
+    pattern: /^tsumugu$/,
     reason: "the CLI composes core, not the reverse",
   },
-  { pattern: /^@tsumugu\/theme-/, reason: "themes consume core contracts" },
+  { pattern: /^tsumugu-theme-/, reason: "themes consume core contracts" },
   {
-    pattern: /^@tsumugu\/renderer-/,
+    pattern: /^tsumugu-renderer-/,
     reason: "renderers register into core rather than being part of it",
   },
   {
-    pattern: /^@tsumugu\/transformer-/,
+    pattern: /^tsumugu-transformer-/,
     reason: "transformers register into core rather than being part of it",
   },
   {
-    pattern: /^@tsumugu\/build$/,
+    pattern: /^tsumugu-build$/,
     reason: "the build adapter consumes pipeline output",
   },
-  { pattern: /^@tsumugu\/search$/, reason: "search is a higher-level package" },
-  { pattern: /^@tsumugu\/ai$/, reason: "AI export is a higher-level package" },
+  { pattern: /^tsumugu-search$/, reason: "search is a higher-level package" },
+  { pattern: /^tsumugu-ai$/, reason: "AI export is a higher-level package" },
 ];
 
 interface Violation {
@@ -64,7 +64,7 @@ function describeViolations(violations: readonly Violation[]): string[] {
   );
 }
 
-/** Splits `@tsumugu/core/sub/path` into its package name and subpath. */
+/** Splits `tsumugu-core/sub/path` into its package name and subpath. */
 function splitSpecifier(specifier: string): {
   readonly packageName: string;
   readonly subpath: string;
@@ -156,13 +156,13 @@ beforeAll(async () => {
           });
         }
 
-        if (manifest.name === "@tsumugu/core") {
+        if (manifest.name === "tsumugu-core") {
           for (const { pattern, reason } of forbiddenFromCore) {
             if (pattern.test(packageName)) {
               found.push({
                 ...at,
                 rule: "forbidden-edge",
-                message: `@tsumugu/core imports ${packageName}: ${reason}.`,
+                message: `tsumugu-core imports ${packageName}: ${reason}.`,
               });
             }
           }
@@ -189,7 +189,7 @@ describe("import boundaries", () => {
   it("scans the sources it is supposed to scan", async () => {
     // Without this, a broken discovery step would report zero violations and
     // look like a pass.
-    const core = manifests.find((entry) => entry.name === "@tsumugu/core");
+    const core = manifests.find((entry) => entry.name === "tsumugu-core");
     expect(core).toBeDefined();
     if (core === undefined) {
       return;
@@ -230,7 +230,7 @@ describe("public export surface", () => {
     // builders, and an entry point cannot compose a pipeline it cannot call —
     // so each of these was added because something real could not exist
     // otherwise, which is what "earned" means in docs/principles.md.
-    "@tsumugu/core": [
+    "tsumugu-core": [
       "buildSite",
       "createHeadingIdTransformer",
       "createReloadChannel",
@@ -252,8 +252,8 @@ describe("public export surface", () => {
       "version",
       "watchRoot",
     ],
-    "@tsumugu/build": ["buildCodes", "buildStatic", "fileForRoute"],
-    "@tsumugu/cli": [
+    "tsumugu-build": ["buildCodes", "buildStatic", "fileForRoute"],
+    tsumugu: [
       "describeBuild",
       "describeStartup",
       "describeUpdate",
@@ -270,11 +270,11 @@ describe("public export surface", () => {
       "styleFor",
       "usage",
     ],
-    "@tsumugu/renderer-markdown": ["createMarkdownRenderer"],
-    "@tsumugu/renderer-html": ["createHtmlRenderer", "isFullDocument"],
-    "@tsumugu/preset": ["createPreset", "officialComposition"],
-    "@tsumugu/theme-default": ["defaultTheme", "defaultThemeStylesheet"],
-    "@tsumugu/transformer-highlight": [
+    "tsumugu-renderer-markdown": ["createMarkdownRenderer"],
+    "tsumugu-renderer-html": ["createHtmlRenderer", "isFullDocument"],
+    "tsumugu-preset": ["createPreset", "officialComposition"],
+    "tsumugu-theme-default": ["defaultTheme", "defaultThemeStylesheet"],
+    "tsumugu-transformer-highlight": [
       "createHighlightTransformer",
       "highlightCodes",
       "highlightTransformerId",

@@ -2,7 +2,7 @@ import type {
   DocumentDiagnostic,
   MetadataValue,
   SourcePath,
-} from "@tsumugu/core";
+} from "tsumugu-core";
 import { parse as parseYaml } from "yaml";
 
 /**

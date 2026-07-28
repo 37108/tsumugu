@@ -1,4 +1,4 @@
-import type { LoadedDocument, SemanticNode } from "@tsumugu/core";
+import type { LoadedDocument, SemanticNode } from "tsumugu-core";
 import { describe, expect, it } from "vitest";
 
 import { createMarkdownRenderer } from "./index.js";

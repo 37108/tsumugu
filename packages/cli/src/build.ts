@@ -1,7 +1,7 @@
 import path from "node:path";
 
-import { buildStatic, type StaticBuildReport } from "@tsumugu/build";
-import { createPreset } from "@tsumugu/preset";
+import { buildStatic, type StaticBuildReport } from "tsumugu-build";
+import { createPreset } from "tsumugu-preset";
 
 import { siteNameFor } from "./dev.js";
 import { formatForTerminal, styleFor, type TerminalStyle } from "./terminal.js";

@@ -14,31 +14,31 @@ importers:
       '@eslint/js':
         specifier: ^10.0.1
         version: 10.0.1(eslint@10.6.0)
-      '@tsumugu/build':
+      'tsumugu-build':
         specifier: workspace:*
         version: link:packages/build
-      '@tsumugu/cli':
+      'tsumugu':
         specifier: workspace:*
         version: link:packages/cli
-      '@tsumugu/core':
+      'tsumugu-core':
         specifier: workspace:*
         version: link:packages/core
       '@tsumugu/internal-tsconfig':
         specifier: workspace:*
         version: link:internal/tsconfig
-      '@tsumugu/preset':
+      'tsumugu-preset':
         specifier: workspace:*
         version: link:packages/preset
-      '@tsumugu/renderer-html':
+      'tsumugu-renderer-html':
         specifier: workspace:*
         version: link:packages/renderer-html
-      '@tsumugu/renderer-markdown':
+      'tsumugu-renderer-markdown':
         specifier: workspace:*
         version: link:packages/renderer-markdown
-      '@tsumugu/theme-default':
+      'tsumugu-theme-default':
         specifier: workspace:*
         version: link:packages/theme-default
-      '@tsumugu/transformer-highlight':
+      'tsumugu-transformer-highlight':
         specifier: workspace:*
         version: link:packages/transformer-highlight
       '@types/jsdom':
@@ -76,7 +76,7 @@ importers:
 
   packages/build:
     dependencies:
-      '@tsumugu/core':
+      'tsumugu-core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -86,25 +86,25 @@ importers:
 
   packages/cli:
     dependencies:
-      '@tsumugu/build':
+      'tsumugu-build':
         specifier: workspace:*
         version: link:../build
-      '@tsumugu/core':
+      'tsumugu-core':
         specifier: workspace:*
         version: link:../core
-      '@tsumugu/preset':
+      'tsumugu-preset':
         specifier: workspace:*
         version: link:../preset
-      '@tsumugu/renderer-html':
+      'tsumugu-renderer-html':
         specifier: workspace:*
         version: link:../renderer-html
-      '@tsumugu/renderer-markdown':
+      'tsumugu-renderer-markdown':
         specifier: workspace:*
         version: link:../renderer-markdown
-      '@tsumugu/theme-default':
+      'tsumugu-theme-default':
         specifier: workspace:*
         version: link:../theme-default
-      '@tsumugu/transformer-highlight':
+      'tsumugu-transformer-highlight':
         specifier: workspace:*
         version: link:../transformer-highlight
     devDependencies:
@@ -120,19 +120,19 @@ importers:
 
   packages/preset:
     dependencies:
-      '@tsumugu/core':
+      'tsumugu-core':
         specifier: workspace:*
         version: link:../core
-      '@tsumugu/renderer-html':
+      'tsumugu-renderer-html':
         specifier: workspace:*
         version: link:../renderer-html
-      '@tsumugu/renderer-markdown':
+      'tsumugu-renderer-markdown':
         specifier: workspace:*
         version: link:../renderer-markdown
-      '@tsumugu/theme-default':
+      'tsumugu-theme-default':
         specifier: workspace:*
         version: link:../theme-default
-      '@tsumugu/transformer-highlight':
+      'tsumugu-transformer-highlight':
         specifier: workspace:*
         version: link:../transformer-highlight
     devDependencies:
@@ -142,7 +142,7 @@ importers:
 
   packages/renderer-html:
     dependencies:
-      '@tsumugu/core':
+      'tsumugu-core':
         specifier: workspace:*
         version: link:../core
       hast-util-from-html:
@@ -158,7 +158,7 @@ importers:
 
   packages/renderer-markdown:
     dependencies:
-      '@tsumugu/core':
+      'tsumugu-core':
         specifier: workspace:*
         version: link:../core
       mdast-util-from-markdown:
@@ -189,7 +189,7 @@ importers:
 
   packages/theme-default:
     dependencies:
-      '@tsumugu/core':
+      'tsumugu-core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -199,7 +199,7 @@ importers:
 
   packages/transformer-highlight:
     dependencies:
-      '@tsumugu/core':
+      'tsumugu-core':
         specifier: workspace:*
         version: link:../core
       shiki:

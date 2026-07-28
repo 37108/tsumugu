@@ -2,7 +2,7 @@ import { rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { startDev, type DevOptions, type DevResult } from "@tsumugu/cli";
+import { startDev, type DevOptions, type DevResult } from "tsumugu";
 
 import {
   withTemporaryDirectory,

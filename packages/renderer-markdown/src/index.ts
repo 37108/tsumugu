@@ -1,4 +1,4 @@
-import type { LoadedDocument, RenderResult, Renderer } from "@tsumugu/core";
+import type { LoadedDocument, RenderResult, Renderer } from "tsumugu-core";
 import { frontmatterFromMarkdown } from "mdast-util-frontmatter";
 import { fromMarkdown } from "mdast-util-from-markdown";
 import { gfmTableFromMarkdown } from "mdast-util-gfm-table";

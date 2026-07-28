@@ -6,7 +6,7 @@ import type {
   SourcePath,
   SourceRange,
   TableAlignment,
-} from "@tsumugu/core";
+} from "tsumugu-core";
 import type { Nodes as MdastNode, Parent as MdastParent } from "mdast";
 
 /**

@@ -1,5 +1,5 @@
 {
-  "name": "@tsumugu/build",
+  "name": "tsumugu-build",
   "version": "0.1.0",
   "type": "module",
   "description": "Static build adapter for Tsumugu. Writes the pages, assets and generated files a server would have served.",
@@ -32,7 +32,7 @@
     "clean": "tsc --build --clean"
   },
   "dependencies": {
-    "@tsumugu/core": "workspace:*"
+    "tsumugu-core": "workspace:*"
   },
   "devDependencies": {
     "@tsumugu/internal-tsconfig": "workspace:*"

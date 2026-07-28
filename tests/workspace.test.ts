@@ -21,7 +21,7 @@ import {
  */
 
 /**
- * Package name patterns `@tsumugu/core` must never depend on, taken from
+ * Package name patterns `tsumugu-core` must never depend on, taken from
  * `docs/architecture/overview.md`: dependencies point towards core, never away
  * from it.
  */
@@ -30,20 +30,20 @@ const forbiddenCoreDependencies: readonly {
   readonly reason: string;
 }[] = [
   {
-    pattern: /^@tsumugu\/cli$/,
+    pattern: /^tsumugu$/,
     reason: "the CLI composes core, not the reverse",
   },
-  { pattern: /^@tsumugu\/theme-/, reason: "themes consume core contracts" },
+  { pattern: /^tsumugu-theme-/, reason: "themes consume core contracts" },
   {
-    pattern: /^@tsumugu\/renderer-/,
+    pattern: /^tsumugu-renderer-/,
     reason: "renderers are format-specific and register into core",
   },
   {
-    pattern: /^@tsumugu\/build$/,
+    pattern: /^tsumugu-build$/,
     reason: "the build adapter is a consumer of pipeline output",
   },
-  { pattern: /^@tsumugu\/search$/, reason: "search is a higher-level package" },
-  { pattern: /^@tsumugu\/ai$/, reason: "AI export is a higher-level package" },
+  { pattern: /^tsumugu-search$/, reason: "search is a higher-level package" },
+  { pattern: /^tsumugu-ai$/, reason: "AI export is a higher-level package" },
 ];
 
 let manifests: readonly WorkspaceManifest[];
@@ -257,10 +257,8 @@ describe("dependency direction", () => {
   });
 
   it("keeps core free of dependencies on higher-level packages", () => {
-    const core = manifests.find(
-      (manifest) => manifest.name === "@tsumugu/core",
-    );
-    expect(core, "@tsumugu/core workspace is missing").toBeDefined();
+    const core = manifests.find((manifest) => manifest.name === "tsumugu-core");
+    expect(core, "tsumugu-core workspace is missing").toBeDefined();
     if (core === undefined) {
       return;
     }
@@ -275,7 +273,7 @@ describe("dependency direction", () => {
       );
       expect(
         violations,
-        `@tsumugu/core must not depend on ${pattern.source}: ${reason}`,
+        `tsumugu-core must not depend on ${pattern.source}: ${reason}`,
       ).toEqual([]);
     }
   });

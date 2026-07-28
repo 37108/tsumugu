@@ -1,5 +1,5 @@
 {
-  "name": "@tsumugu/preset",
+  "name": "tsumugu-preset",
   "version": "0.1.0",
   "type": "module",
   "description": "The official Tsumugu composition: which renderers, transformers and theme an ordinary project gets.",
@@ -32,11 +32,11 @@
     "clean": "tsc --build --clean"
   },
   "dependencies": {
-    "@tsumugu/core": "workspace:*",
-    "@tsumugu/renderer-html": "workspace:*",
-    "@tsumugu/renderer-markdown": "workspace:*",
-    "@tsumugu/theme-default": "workspace:*",
-    "@tsumugu/transformer-highlight": "workspace:*"
+    "tsumugu-core": "workspace:*",
+    "tsumugu-renderer-html": "workspace:*",
+    "tsumugu-renderer-markdown": "workspace:*",
+    "tsumugu-theme-default": "workspace:*",
+    "tsumugu-transformer-highlight": "workspace:*"
   },
   "devDependencies": {
     "@tsumugu/internal-tsconfig": "workspace:*"

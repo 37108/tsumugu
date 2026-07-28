@@ -5,7 +5,7 @@ import {
   createSite,
   type BuildOptions as SiteOptions,
   type DocumentDiagnostic,
-} from "@tsumugu/core";
+} from "tsumugu-core";
 
 /**
  * The static build.

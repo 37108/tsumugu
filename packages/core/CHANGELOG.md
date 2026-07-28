@@ -1,4 +1,4 @@
-# @tsumugu/core
+# tsumugu-core
 
 ## 0.1.0
 

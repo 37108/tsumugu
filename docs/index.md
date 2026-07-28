@@ -27,12 +27,14 @@ The project is **experimental and pre-alpha**. Nothing here is a stable API.
 - [Machine-readable outputs](machine-readable.md) — the corpus, `llms.txt` and the sitemap.
 - [Diagnostics](diagnostics.md) — every code the pipeline can produce.
 - [Accessibility](accessibility.md) — what is guaranteed, what is measured, what is checked by hand.
+- [Security model](security-model.md) — what is trusted, what is refused, and the pre-release review.
 - [Compatibility](compatibility.md) — supported runtimes and package formats.
 - [Performance](performance.md) — what it costs, and what keeps rebuilds cheap.
 - [Releasing](releasing.md) — versioning, publishing, and what pre-alpha means.
 - [Testing strategy](testing.md) — the layers, and which one a change belongs in.
 
-## Decisions
+## Decisions and proposals
 
-Architecture Decision Records live in [`decisions/`](decisions/0001-runtime-and-package-compatibility.md)
-and record what was chosen, what was rejected, and why.
+[Architecture Decision Records](decisions/README.md) record what was chosen and
+why; [RFCs](rfcs/README.md) propose what has not been decided yet. Both keep
+their rejected alternatives, which are half the value.

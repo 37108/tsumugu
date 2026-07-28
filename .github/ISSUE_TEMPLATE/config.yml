@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security report
+    url: https://github.com/37108/tsumugu/security/advisories/new
+    about: Vulnerabilities go through private disclosure, never the public tracker. See SECURITY.md.

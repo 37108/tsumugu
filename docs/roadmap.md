@@ -27,11 +27,19 @@ A clear technical constitution, contribution model, and package-boundary policy 
 
 ## Status
 
-Milestones 0 to 4 are implemented on `main`: a directory of Markdown or HTML
-files is served with navigation, a table of contents, generated landing and
-error pages, static assets, and watch-driven incremental rebuilds with live
-reload. Milestone 5 (the CLI and preset) is partly done — `tsumugu dev` exists;
-configuration discovery and the official preset package do not.
+Milestones 0 through 5 are implemented on `main`, and milestone 6 is largely
+in place: `tsumugu dev` and `tsumugu build` run the full pipeline — navigation,
+anchors, highlighting, search, machine-readable outputs, watch mode with live
+reload — through the official preset, with release automation configured and
+awaiting the first publish. Configuration discovery became a decision instead
+of a feature ([ADR 5](decisions/0005-no-configuration-file.md)).
+
+The issue tracker is the backlog, and this file is its map: work is sequenced
+by these milestones, and an issue outside them belongs to "Later, only after
+evidence" until working software argues otherwise. Of the "later" list below,
+the OpenAPI and Mermaid renderers now have draft RFCs
+([1](rfcs/0001-openapi-renderer.md), [2](rfcs/0002-mermaid-renderer.md))
+recording what evidence would move them.
 
 ## Milestone 1 — Thin Vertical Slice
 

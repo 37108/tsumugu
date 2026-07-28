@@ -158,6 +158,8 @@ export interface UpdateSummary {
   readonly removed: number;
   /** Pages whose HTML was produced on this pass. */
   readonly serialized: number;
+  /** Wall-clock cost of the whole update, in milliseconds. */
+  readonly durationMs: number;
 }
 
 /**
@@ -392,6 +394,7 @@ export async function createSite(options: BuildOptions): Promise<Site> {
   }
 
   async function update(): Promise<UpdateSummary> {
+    const started = performance.now();
     const scanned = await scan({ root: options.root });
 
     // The one fatal condition the diagnostics model defines: the root cannot be
@@ -700,7 +703,13 @@ export async function createSite(options: BuildOptions): Promise<Site> {
       ]),
     };
 
-    return { rendered, reused, removed, serialized: pages.size };
+    return {
+      rendered,
+      reused,
+      removed,
+      serialized: pages.size,
+      durationMs: performance.now() - started,
+    };
   }
 
   await update();

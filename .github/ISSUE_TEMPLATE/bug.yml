@@ -1,0 +1,36 @@
+name: Bug report
+description: Something behaves differently from what the documentation or the code promises.
+labels: ["type: bug", "status: triage"]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what you got instead. A diagnostic code or terminal output is worth more than a description of it.
+      placeholder: |
+        1. Created docs/guide/setup.md with the front matter below
+        2. Ran `tsumugu dev docs`
+        3. Expected /guide/setup in the sidebar; it is missing, with no diagnostic
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Smallest project that shows it
+      description: The fewest files that reproduce the problem. Most Tsumugu bugs reproduce from one or two files and a command.
+      render: text
+      placeholder: |
+        docs/index.md:
+          # Home
+        command:
+          tsumugu dev docs
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: "`tsumugu --version`, `node --version`, and your operating system."
+      placeholder: tsumugu 0.1.0, Node 24.2.0, macOS 15
+    validations:
+      required: true

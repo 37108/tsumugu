@@ -202,6 +202,24 @@ describe("package metadata", () => {
     }
   });
 
+  it("exposes no wildcard export paths", () => {
+    for (const manifest of publishableIntent) {
+      const exports = manifest.fields.get("exports");
+      const keys =
+        typeof exports === "object" && exports !== null
+          ? Object.keys(exports)
+          : [];
+
+      expect(keys.length, manifest.id).toBeGreaterThan(0);
+      for (const key of keys) {
+        // A wildcard export publishes whatever lands in dist/ next, which is
+        // how an internal module becomes a compatibility commitment by
+        // accident. Every public path is named on purpose.
+        expect(key, `${manifest.id} exports "${key}"`).not.toContain("*");
+      }
+    }
+  });
+
   it("resolves workspace dependencies through the workspace protocol", () => {
     const workspaceNames = new Set(manifests.map((manifest) => manifest.name));
 

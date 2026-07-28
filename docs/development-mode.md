@@ -66,6 +66,41 @@ This is deliberate: a documentation server that emptied itself because a
 directory was briefly unavailable would be a server nobody could trust to keep a
 page open.
 
+## Seeing what a rebuild did
+
+Every rebuild reports what it actually performed, and the terminal prints it:
+
+```text
+rebuilt  1 document in 24 ms
+```
+
+The same numbers are available programmatically as `UpdateSummary` from
+`Site.update()` — documents rendered, reused and removed, pages serialized, and
+the wall-clock cost. The counts are the observability model: `rendered: 300`
+after a one-line edit _is_ the bug report, no tracing required, and
+`tests/performance.test.ts` asserts on exactly these numbers so the pipeline
+cannot stop being incremental without a test saying so.
+
+Deeper instrumentation — per-stage timings, per-document traces — is
+deliberately absent until a problem needs it that these counts cannot name.
+
+## What is cached, and what invalidates it
+
+Three caches, each keyed on something that cannot lie about staleness, all
+in memory and all rebuilt from the file system on restart — there is nothing
+on disk to go stale:
+
+| Cached                                                                        | Invalidated by                                                                 |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| the loaded document                                                           | file size or modification time                                                 |
+| the parsed, transformed, themed body — and its outline, links and search text | the content hash                                                               |
+| the serialized page                                                           | a signature over the navigation, the site name, and the page's own diagnostics |
+
+The guarantees, stated as behaviour: an unchanged file is never re-read; an
+unchanged document is never re-parsed; and a page is re-serialized only when
+the document changed or something on every page (the sidebar, the site name)
+did. `docs/performance.md` shows what these are worth in milliseconds.
+
 ## Colour
 
 Output is coloured when it is written to a terminal, and plain when it is piped

@@ -21,6 +21,7 @@ Please read:
 - `docs/releasing.md`
 - `docs/development-mode.md`
 - `docs/performance.md`
+- `docs/security-model.md`
 - the relevant Architecture Decision Records in `docs/decisions/`
 
 ## Development status
@@ -112,6 +113,9 @@ Contributions should preserve these principles:
 - stable public APIs earned through real usage.
 
 Before adding a new concept, configuration field, extension category, hook, or public export, explain why existing composition cannot solve the problem.
+
+The ADR process lives in [`docs/decisions/README.md`](docs/decisions/README.md);
+the RFC process in [`docs/rfcs/README.md`](docs/rfcs/README.md).
 
 ## When an RFC is required
 

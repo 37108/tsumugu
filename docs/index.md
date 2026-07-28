@@ -27,6 +27,7 @@ The project is **experimental and pre-alpha**. Nothing here is a stable API.
 - [Diagnostics](diagnostics.md) — every code the pipeline can produce.
 - [Accessibility](accessibility.md) — what is guaranteed, what is measured, what is checked by hand.
 - [Compatibility](compatibility.md) — supported runtimes and package formats.
+- [Releasing](releasing.md) — versioning, publishing, and what pre-alpha means.
 - [Testing strategy](testing.md) — the layers, and which one a change belongs in.
 
 ## Decisions

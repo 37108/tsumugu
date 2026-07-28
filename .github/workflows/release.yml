@@ -1,0 +1,69 @@
+name: Release
+
+# Only on the default branch. A release is a consequence of merging, never of
+# opening a pull request, and never of a fork's branch.
+on:
+  push:
+    branches: [main]
+
+# The one workflow in this repository that writes anything. It needs to open the
+# version pull request Changesets maintains, and to publish with npm's trusted
+# publishing, which exchanges the id-token for a short-lived credential rather
+# than storing a long-lived one.
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+
+# Two releases at once would race over the same versions and the same registry.
+# This queue never cancels: a run that is already publishing must finish.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "24"
+
+jobs:
+  release:
+    name: Version or publish
+    runs-on: ubuntu-latest
+    steps:
+      # Full history, because Changesets compares against the base branch to
+      # decide which packages a changeset touches.
+      - name: Check out the repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+
+      - name: Install Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          registry-url: https://registry.npmjs.org
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # The same gate contributors run locally. A release that skipped it would
+      # be the one build nobody checked.
+      - name: Check
+        run: pnpm run check
+
+      # Two behaviours in one step, decided by whether unreleased changesets
+      # exist: with changesets it opens or updates the version pull request;
+      # with none, on a commit that merged that pull request, it publishes.
+      - name: Version or publish
+        uses: changesets/action@c8bada60c408975afd1a20b3db81d6eee6789308 # v1.4.9
+        with:
+          version: pnpm run version-packages
+          publish: pnpm run release
+          commit: "chore: version packages"
+          title: "chore: version packages"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_CONFIG_PROVENANCE: "true"

@@ -95,6 +95,10 @@ Run these before a release, and after any change to the shell or the theme:
   and wide tables scroll inside their own boxes.
 - **Reduced motion and forced colours.** With the system setting on, nothing
   animates. In a forced-colours mode, text and focus indicators remain visible.
+- **Copy a code block by keyboard.** Tab into a code block: the copy control
+  becomes visible on focus, announces "Copy code", and announces "Copied" after
+  activation. It only exists when the script runs, because a button that does
+  nothing is worse than no button.
 - **Search by keyboard.** Tab to the field, type, walk the results with the
   arrow keys, follow one with Enter, dismiss with Escape. Focus stays in the
   field throughout, and the result count is announced.

@@ -6,7 +6,7 @@ import type { ExportOutput, Page } from "../pipeline/site.js";
 import { decodeRequestPath } from "../routing/routes.js";
 
 import { readAsset } from "./assets.js";
-import { searchScriptHash } from "../shell/search-script.js";
+import { clientScriptHash } from "../shell/client-script.js";
 
 import {
   reloadPath,
@@ -112,12 +112,12 @@ function securityHeaders(
     "font-src 'self'",
     "base-uri 'none'",
     "form-action 'none'",
-    // Two scripts, each identified by its hash: search, which every page may
-    // carry, and live reload, which only a development server adds. Every other
-    // script on the page is still refused, including one an author wrote and
-    // one an attacker injected — a hash cannot be forged into matching
-    // different content.
-    `script-src ${searchScriptHash}${liveReload ? ` ${reloadScriptHash}` : ""}`,
+    // Two scripts, each identified by its hash: the page client (search and
+    // the copy buttons), which every page carries, and live reload, which only
+    // a development server adds. Every other script on the page is still
+    // refused, including one an author wrote and one an attacker injected — a
+    // hash cannot be forged into matching different content.
+    `script-src ${clientScriptHash}${liveReload ? ` ${reloadScriptHash}` : ""}`,
     // The scripts fetch the index and, in development, hold the reload stream
     // open. Both are this server; nothing else may be reached.
     "connect-src 'self'",

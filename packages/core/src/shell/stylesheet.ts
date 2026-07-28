@@ -180,6 +180,49 @@ body {
 }
 
 /*
+ * The copy control the page client adds to code blocks.
+ *
+ * Styled here because the shell owns the control, even though it sits inside
+ * theme markup; the class is the boundary. Revealed on hover or focus on a
+ * fine pointer, always present on a coarse one, where hover does not exist.
+ */
+.tsumugu-doc pre {
+  position: relative;
+}
+
+.tsumugu-copy {
+  background: var(--ts-paper);
+  border: 1px solid var(--ts-rule);
+  border-radius: 5px;
+  color: var(--ts-ink-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.75rem;
+  inset-block-start: 0.5rem;
+  inset-inline-end: 0.5rem;
+  opacity: 0;
+  padding: 0.3rem 0.6rem;
+  position: absolute;
+  transition: opacity 160ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.tsumugu-doc pre:hover .tsumugu-copy,
+.tsumugu-doc pre:focus-within .tsumugu-copy,
+.tsumugu-copy:focus-visible {
+  opacity: 1;
+}
+
+.tsumugu-copy:hover {
+  color: var(--ts-ink);
+}
+
+@media (hover: none) {
+  .tsumugu-copy {
+    opacity: 1;
+  }
+}
+
+/*
  * Available to a screen reader, invisible to everyone else. The clip-path is
  * what keeps it out of the layout without "display: none", which would take it
  * out of the accessibility tree as well.

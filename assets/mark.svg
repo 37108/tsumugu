@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Tsumugu">
+  <!--
+    The mark is つ - the first syllable of 紡ぐ (tsumugu, to spin thread) -
+    drawn as a single stroke of thread, in the same indigo the theme uses for
+    its section-heading thread. One stroke, one colour, legible at 16 pixels.
+  -->
+  <style>
+    path { stroke: #274177; }
+    @media (prefers-color-scheme: dark) {
+      path { stroke: #9db8e8; }
+    }
+  </style>
+  <path
+    d="M 7 11.5 C 12 8, 22 8, 25.2 12.2 C 28.4 16.6, 23.5 23.2, 12.5 24.2"
+    fill="none"
+    stroke-width="4.2"
+    stroke-linecap="round"
+  />
+</svg>

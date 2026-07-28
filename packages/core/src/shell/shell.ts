@@ -67,6 +67,21 @@ export interface ShellResult {
 const mainId = "tsumugu-content";
 
 /**
+ * The default tab icon, inline.
+ *
+ * The same つ mark as `assets/mark.svg`, encoded rather than served: a data
+ * URI needs no request, works in the static build unchanged, and cannot 404.
+ */
+const faviconSvg = [
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">',
+  "<style>path{stroke:#274177}@media(prefers-color-scheme:dark){path{stroke:#9db8e8}}</style>",
+  '<path d="M 7 11.5 C 12 8, 22 8, 25.2 12.2 C 28.4 16.6, 23.5 23.2, 12.5 24.2" fill="none" stroke-width="4.2" stroke-linecap="round"/>',
+  "</svg>",
+].join("");
+
+const faviconHref = `data:image/svg+xml,${encodeURIComponent(faviconSvg)}`;
+
+/**
  * The search field.
  *
  * A real form, addressed to a real page: with no script it submits to
@@ -352,6 +367,16 @@ export function renderShell(input: ShellInput): ShellResult {
   );
 
   const head = fragment(
+    // The mark — つ, the first syllable of 紡ぐ, drawn as one stroke of
+    // thread — as a data URI, so a project gets a tab icon without shipping a
+    // file. A favicon.svg or favicon.ico in the documentation root wins,
+    // because this link points at it the moment the asset exists; the data
+    // URI is only the default for projects that never thought about it.
+    element("link", {
+      rel: "icon",
+      type: "image/svg+xml",
+      href: faviconHref,
+    }),
     // The browser's own chrome, told what colour the page is in each scheme,
     // so a phone's status bar never sits in a different palette to the page
     // under it.

@@ -61,9 +61,9 @@ describe("a directory with one Markdown file", () => {
 
       expect(html.startsWith("<!doctype html>")).toBe(true);
       // The title came from front matter through the shared precedence rules.
-      // The site name comes from the directory being served, which is a
-      // temporary one here, so only the page's own title is asserted.
-      expect(html).toContain("<title>Getting started · ");
+      // The home page names the site, so the tab says the page's title once
+      // rather than repeating it either side of a separator.
+      expect(html).toContain("<title>Getting started</title>");
       expect(html).toContain('<h1 id="getting-started">Getting started');
       // Inline code survived the AST, the theme and the serializer.
       expect(html).toContain("<code>pnpm tsumugu dev</code>");

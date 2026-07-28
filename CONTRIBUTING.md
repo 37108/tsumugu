@@ -47,7 +47,14 @@ pnpm check
 | `pnpm test:coverage`    | builds, then runs the suite with coverage             |
 | `pnpm check:boundaries` | checks the dependency direction and export surface    |
 | `pnpm check`            | formatting, linting, types and tests — the local gate |
+| `pnpm docs`             | builds, then serves this repository's own `docs/`     |
 | `pnpm clean`            | removes build output                                  |
+
+`pnpm docs` serves the documentation you are reading through Tsumugu itself, on
+localhost, with watch mode on: edit a file under `docs/` and the open page
+reloads. It is the fastest way to see what a change to the pipeline does to a
+real project, and `tests/self-hosting.test.ts` runs the same thing in CI —
+a broken link or an untitled page in `docs/` fails the suite.
 
 `pnpm check` never modifies files: it uses `format:check` rather than `format`,
 so it can be run safely before committing and in CI. Use `pnpm format` and

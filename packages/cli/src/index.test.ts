@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { version } from "tsumugu-core";
 
 import { discoverRoot, parseDevOptions, siteNameFor } from "./dev.js";
+import { formatSize } from "./build.js";
 import { exitCodes, run, usage } from "./index.js";
 import { formatForTerminal, styleFor } from "./terminal.js";
 
@@ -191,5 +192,20 @@ describe("formatForTerminal", () => {
         plain,
       ).split("\n")[0],
     ).toBe("1 warning");
+  });
+});
+
+describe("formatSize", () => {
+  it.each([
+    [0, "0 B"],
+    [512, "512 B"],
+    [1024, "1.0 KB"],
+    [1536, "1.5 KB"],
+    [1048576, "1.0 MB"],
+    [1258291, "1.2 MB"],
+  ])("formats %d bytes as %s", (bytes, expected) => {
+    // No locale formatting: the same project prints the same string on every
+    // machine.
+    expect(formatSize(bytes)).toBe(expected);
   });
 });

@@ -1,4 +1,11 @@
-import { copyFile, mkdir, readdir, rm, writeFile } from "node:fs/promises";
+import {
+  copyFile,
+  mkdir,
+  readdir,
+  rm,
+  stat,
+  writeFile,
+} from "node:fs/promises";
 import path from "node:path";
 
 import {
@@ -64,6 +71,8 @@ export interface StaticBuildReport {
   readonly files: readonly string[];
   readonly pageCount: number;
   readonly assetCount: number;
+  /** Total size of everything written, in bytes. */
+  readonly totalBytes: number;
   readonly diagnostics: readonly DocumentDiagnostic[];
 }
 
@@ -169,6 +178,7 @@ export async function buildStatic(
   }
 
   const written = new Map<string, string>();
+  let totalBytes = 0;
 
   const claim = (file: string, what: string): boolean => {
     const existing = written.get(file);
@@ -190,21 +200,26 @@ export async function buildStatic(
     const file = fileForRoute(page.route);
     if (claim(file, `the page at ${page.route}`)) {
       await write(outDir, file, page.html);
+      totalBytes += Buffer.byteLength(page.html);
     }
   }
 
   for (const [route, output] of result.exports) {
     const file = route.replace(/^\//u, "");
     if (claim(file, `the generated ${file}`)) {
-      await write(outDir, file, output.render(origin ?? placeholderOrigin));
+      const body = output.render(origin ?? placeholderOrigin);
+      await write(outDir, file, body);
+      totalBytes += Buffer.byteLength(body);
     }
   }
 
   for (const asset of result.assets) {
     if (claim(asset, `the file ${asset}`)) {
+      const source = path.join(root, ...asset.split("/"));
       const target = path.join(outDir, ...asset.split("/"));
       await mkdir(path.dirname(target), { recursive: true });
-      await copyFile(path.join(root, ...asset.split("/")), target);
+      await copyFile(source, target);
+      totalBytes += (await stat(source)).size;
     }
   }
 
@@ -215,6 +230,7 @@ export async function buildStatic(
     files: [...written.keys(), markerFile].sort(),
     pageCount: result.pages.size,
     assetCount: result.assets.length,
+    totalBytes,
     diagnostics,
   };
 }

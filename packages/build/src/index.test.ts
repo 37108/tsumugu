@@ -163,6 +163,8 @@ describe("buildStatic", () => {
     ]);
     expect(report.pageCount).toBe(3);
     expect(report.assetCount).toBe(1);
+    // Everything written, including the copied asset, is accounted for.
+    expect(report.totalBytes).toBeGreaterThan("not really a png".length);
   });
 
   it("writes the same HTML the server would have served", async () => {

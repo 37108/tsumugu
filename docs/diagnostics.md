@@ -123,12 +123,13 @@ Every code in the implementation appears here.
 
 ### `metadata/`
 
-| Code                           | Severity | When                                                                  |
-| ------------------------------ | -------- | --------------------------------------------------------------------- |
-| `metadata/invalid-title`       | warning  | `title` is not text; the next fallback is used                        |
-| `metadata/invalid-description` | warning  | `description` is not text; it is omitted                              |
-| `metadata/invalid-order`       | warning  | `order` is not a finite number; the page is ordered as if it had none |
-| `metadata/invalid-hidden`      | warning  | `hidden` is not a boolean; the page stays visible                     |
+| Code                           | Severity | When                                                                              |
+| ------------------------------ | -------- | --------------------------------------------------------------------------------- |
+| `metadata/invalid-title`       | warning  | `title` is not text; the next fallback is used                                    |
+| `metadata/invalid-description` | warning  | `description` is not text; it is omitted                                          |
+| `metadata/invalid-order`       | warning  | `order` is not a finite number; the page is ordered as if it had none             |
+| `metadata/invalid-hidden`      | warning  | `hidden` is not a boolean; the page stays visible                                 |
+| `metadata/unknown-key-typo`    | warning  | an unknown key is one letter from a known one; genuinely unknown keys stay silent |
 
 ### `renderer/`
 

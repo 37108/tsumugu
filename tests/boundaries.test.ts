@@ -261,6 +261,7 @@ describe("public export surface", () => {
       "discoverRoot",
       "exitCodes",
       "formatForTerminal",
+      "formatSize",
       "parseBuildOptions",
       "parseDevOptions",
       "run",

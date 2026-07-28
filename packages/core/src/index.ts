@@ -21,6 +21,8 @@ export type {
   BlockNode,
   BlockquoteNode,
   CodeBlockNode,
+  CodeLine,
+  CodeToken,
   DocumentNode,
   EmphasisNode,
   HeadingNode,
@@ -110,6 +112,9 @@ export type {
   Transformer,
 } from "./transformer/contract.js";
 export { createHeadingIdTransformer } from "./transformer/heading-ids.js";
+// Exported for the same reason `renderWithTheme` is: a transformer written
+// outside core has to be able to run itself through the real contract.
+export { runTransformers } from "./transformer/contract.js";
 
 // The pipeline and the development server: what an entry point composes.
 export type {

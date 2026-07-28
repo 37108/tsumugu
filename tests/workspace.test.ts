@@ -69,6 +69,7 @@ describe("workspace discovery", () => {
       "packages/renderer-html",
       "packages/renderer-markdown",
       "packages/theme-default",
+      "packages/transformer-highlight",
     ]);
   });
 

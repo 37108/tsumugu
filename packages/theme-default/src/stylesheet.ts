@@ -234,6 +234,24 @@ export const stylesheet = `
   padding: 0;
 }
 
+/*
+ * Highlighted tokens.
+ *
+ * Each span carries both colours; the media query picks one. Doing it this way
+ * means a reader who switches their system theme with the page already open
+ * sees the code change with everything else, and no script decides it after the
+ * page has painted.
+ */
+.tsumugu-doc pre code span {
+  color: var(--tsumugu-code, inherit);
+}
+
+@media (prefers-color-scheme: dark) {
+  .tsumugu-doc pre code span {
+    color: var(--tsumugu-code-dark, var(--tsumugu-code, inherit));
+  }
+}
+
 .tsumugu-table-scroll {
   overflow-x: auto;
 }

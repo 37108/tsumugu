@@ -164,6 +164,13 @@ Every code in the implementation appears here.
 | `renderer-markdown/invalid-front-matter`       | warning  | the front matter is not valid YAML, or is not a mapping; the document still renders |
 | `renderer-markdown/unsupported-metadata-value` | warning  | a front-matter value has no metadata representation, such as a date or nested map   |
 
+### `transformer-highlight/`
+
+| Code                                     | Severity | When                                                                     |
+| ---------------------------------------- | -------- | ------------------------------------------------------------------------ |
+| `transformer-highlight/unknown-language` | warning  | no grammar exists for the language on the fence; the code is shown plain |
+| `transformer-highlight/failed`           | warning  | a grammar failed while tokenizing; the code is shown plain               |
+
 ### `renderer-html/`
 
 | Code                                | Severity | When                                                                                |

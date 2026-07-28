@@ -17,6 +17,7 @@ import {
 import { createHtmlRenderer } from "@tsumugu/renderer-html";
 import { createMarkdownRenderer } from "@tsumugu/renderer-markdown";
 import { defaultTheme } from "@tsumugu/theme-default";
+import { createHighlightTransformer } from "@tsumugu/transformer-highlight";
 
 /**
  * The zero-config development command.
@@ -254,7 +255,9 @@ export async function startDev(options: DevOptions = {}): Promise<DevResult> {
     // Anchors are what make a section linkable, so every project gets them by
     // default. A project that wants different ones registers a different
     // transformer here rather than configuring this one.
-    transformers: [createHeadingIdTransformer()],
+    // Order is registration order and it matters: anchors first, so a heading
+    // is addressable whatever happens later, then highlighting.
+    transformers: [createHeadingIdTransformer(), createHighlightTransformer()],
     theme: defaultTheme,
     siteName: siteNameFor(root),
     ...(reloading ? { script: reloadScript } : {}),

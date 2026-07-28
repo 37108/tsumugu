@@ -45,7 +45,7 @@
     "@tsumugu/theme-default": "workspace:*",
     "@tsumugu/transformer-highlight": "workspace:*",
     "@types/jsdom": "^28.0.3",
-    "@types/node": "^24.13.2",
+    "@types/node": "^26.1.0",
     "@vitest/coverage-v8": "^4.1.9",
     "axe-core": "^4.12.1",
     "eslint": "^10.6.0",

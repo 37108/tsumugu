@@ -62,7 +62,7 @@ describe("a directory with one Markdown file", () => {
       expect(html.startsWith("<!doctype html>")).toBe(true);
       // The title came from front matter through the shared precedence rules.
       expect(html).toContain("<title>Getting started</title>");
-      expect(html).toContain("<h1>Getting started</h1>");
+      expect(html).toContain('<h1 id="getting-started">Getting started</h1>');
       // Inline code survived the AST, the theme and the serializer.
       expect(html).toContain("<code>pnpm tsumugu dev</code>");
     });
@@ -115,9 +115,9 @@ describe("routing through the real rules", () => {
       expect(pageCount).toBe(3);
 
       for (const [route, heading] of [
-        ["", "<h1>Home</h1>"],
-        ["guide", "<h1>Guide</h1>"],
-        ["guide/setup", "<h1>Setup</h1>"],
+        ["", '<h1 id="home">Home</h1>'],
+        ["guide", '<h1 id="guide">Guide</h1>'],
+        ["guide/setup", '<h1 id="setup">Setup</h1>'],
       ] as const) {
         const response = await fetch(`${server.url}${route}`);
 
@@ -134,7 +134,7 @@ describe("routing through the real rules", () => {
         const response = await fetch(`${server.url}getting%20started`);
 
         expect(response.status).toBe(200);
-        expect(await response.text()).toContain("<h1>Spaced</h1>");
+        expect(await response.text()).toContain('<h1 id="spaced">Spaced</h1>');
       },
     );
   });
@@ -187,10 +187,10 @@ describe("problems a user will actually hit", () => {
       async ({ server, diagnostics }) => {
         // A stray colon in one file must not cost a reader the whole site.
         expect(await (await fetch(server.url)).text()).toContain(
-          "<h1>Fine</h1>",
+          '<h1 id="fine">Fine</h1>',
         );
         expect(await (await fetch(`${server.url}broken`)).text()).toContain(
-          "<h1>Still served</h1>",
+          '<h1 id="still-served">Still served</h1>',
         );
         expect(diagnostics.some((d) => d.severity === "warning")).toBe(true);
       },

@@ -14,6 +14,7 @@ import {
 } from "../scanner/reconcile.js";
 import { scan } from "../scanner/scan.js";
 import { renderWithTheme, type Theme } from "../theme/contract.js";
+import { runTransformers, type Transformer } from "../transformer/contract.js";
 import { serializeDocument } from "../theme/serialize.js";
 import { element } from "../theme/virtual-tree.js";
 
@@ -41,6 +42,14 @@ export interface BuildOptions {
   readonly root: string;
   /** Renderers to choose between, in registration order. */
   readonly renderers: readonly Renderer[];
+  /**
+   * Transformers applied between rendering and theming, in this order.
+   *
+   * Optional: a project that registers none gets its documents as the
+   * renderers produced them, which is what makes the stage composable rather
+   * than mandatory.
+   */
+  readonly transformers?: readonly Transformer[];
   readonly theme: Theme;
   /** Language for the generated document element. */
   readonly lang?: string;
@@ -121,19 +130,29 @@ export async function buildSite(options: BuildOptions): Promise<BuildResult> {
     const rendered = await renderDocument(options.renderers, document);
     const pageDiagnostics: DocumentDiagnostic[] = [...rendered.diagnostics];
 
+    const transformed =
+      rendered.stage === "rendered"
+        ? await runTransformers(options.transformers ?? [], rendered.root, {
+            sourcePath: document.sourcePath,
+          })
+        : undefined;
+    if (transformed !== undefined) {
+      pageDiagnostics.push(...transformed.diagnostics);
+    }
+
     const metadata = resolveMetadata({
       sourcePath: document.sourcePath,
       metadata: document.metadata,
-      ...(rendered.stage === "rendered" ? { root: rendered.root } : {}),
+      ...(transformed === undefined ? {} : { root: transformed.root }),
     });
     pageDiagnostics.push(...metadata.diagnostics);
 
     // A document that failed to render still gets a page, so the server can
     // explain the failure instead of returning nothing.
     const body =
-      rendered.stage === "rendered"
+      transformed !== undefined
         ? renderWithTheme(options.theme, {
-            root: rendered.root,
+            root: transformed.root,
             metadata,
             sourcePath: document.sourcePath,
           })

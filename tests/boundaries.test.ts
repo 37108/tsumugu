@@ -228,6 +228,7 @@ describe("public export surface", () => {
     // otherwise, which is what "earned" means in docs/principles.md.
     "@tsumugu/core": [
       "buildSite",
+      "createHeadingIdTransformer",
       "element",
       "formatDiagnostic",
       "formatDiagnostics",

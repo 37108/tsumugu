@@ -2,6 +2,7 @@ import path from "node:path";
 
 import {
   buildSite,
+  createHeadingIdTransformer,
   formatDiagnostics,
   serve,
   type DocumentDiagnostic,
@@ -101,6 +102,10 @@ export async function startDev(options: DevOptions = {}): Promise<DevResult> {
     // Registration is explicit and ordered. Nothing is discovered from
     // node_modules, which is what keeps selection predictable.
     renderers: [createMarkdownRenderer(), createHtmlRenderer()],
+    // Anchors are what makes a section linkable, so every project gets them by
+    // default. A project that wants different ones registers a different
+    // transformer here rather than configuring this one.
+    transformers: [createHeadingIdTransformer()],
     theme: minimalTheme,
   });
 

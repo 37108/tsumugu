@@ -96,6 +96,16 @@ export type {
 } from "./theme/virtual-tree.js";
 export { element, fragment, text, trustedHtml } from "./theme/virtual-tree.js";
 
+// The transformer contract, and the official heading-id transformer. Core
+// provides the implementation; the composition root decides whether to run it,
+// which is what keeps "core chooses nothing" true for anchors as well.
+export type {
+  TransformContext,
+  TransformResult,
+  Transformer,
+} from "./transformer/contract.js";
+export { createHeadingIdTransformer } from "./transformer/heading-ids.js";
+
 // The pipeline and the development server: what an entry point composes.
 export type { BuildOptions, BuildResult, Page } from "./pipeline/build.js";
 export { buildSite } from "./pipeline/build.js";

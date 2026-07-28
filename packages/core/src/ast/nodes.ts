@@ -63,6 +63,16 @@ export interface HeadingNode extends NodeBase {
   readonly type: "heading";
   /** 1 to 6. */
   readonly depth: 1 | 2 | 3 | 4 | 5 | 6;
+  /**
+   * The heading's identifier, used as a URL fragment.
+   *
+   * A renderer sets this only when the source stated one, such as an HTML
+   * `id` attribute. Every other heading gets one from the heading-id
+   * transformer, so a theme reading this field can rely on it being resolved
+   * and unique — or absent, when no transformer ran and the document simply
+   * has no anchors.
+   */
+  readonly id?: string;
   readonly children: readonly InlineNode[];
 }
 

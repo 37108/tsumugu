@@ -124,6 +124,16 @@ Every code in the implementation appears here.
 | `renderer/duplicate-id` | error    | two renderers share an id                         |
 | `renderer/threw`        | error    | a renderer threw; the original is kept as `cause` |
 
+### `transformer/`
+
+| Code                               | Severity | When                                                                                          |
+| ---------------------------------- | -------- | --------------------------------------------------------------------------------------------- |
+| `transformer/duplicate-id`         | error    | two transformers share an id; only the first runs                                             |
+| `transformer/threw`                | error    | a transformer threw; the document keeps the shape it had before that transformer              |
+| `transformer/invalid-result`       | error    | a transformer returned something other than a document; its change is discarded               |
+| `transformer/invalid-heading-id`   | warning  | an identifier written in the source cannot be a URL fragment; one is derived from the heading |
+| `transformer/duplicate-heading-id` | warning  | two headings claim one identifier; the later one is suffixed so both stay reachable           |
+
 ### `serializer/`
 
 | Code                      | Severity | When                                                                                              |

@@ -361,11 +361,16 @@ function block(conversion: Conversion, node: RootContent): BlockNode[] {
 
   const depth = headingDepths[tag];
   if (depth !== undefined) {
+    // An `id` an author wrote is a link somebody may already have shared, so it
+    // is carried into the AST rather than replaced by a derived one. Whether it
+    // survives is the heading-id transformer's decision, not this renderer's.
+    const id = stringProperty(node, "id");
     return [
       {
         type: "heading",
         depth,
         children: inlines(conversion, node.children),
+        ...(id === undefined ? {} : { id }),
         ...rangeOf(node),
       },
     ];

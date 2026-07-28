@@ -46,7 +46,14 @@ export const minimalTheme: Theme = {
 
     heading: (node, context) =>
       node.type === "heading"
-        ? element(`h${String(node.depth)}`, {}, ...children(node, context))
+        ? element(
+            `h${String(node.depth)}`,
+            // The identifier the heading-id transformer resolved, if one ran.
+            // A theme never invents one: an anchor nobody else knows about is
+            // not a link anyone can share.
+            node.id === undefined ? {} : { id: node.id },
+            ...children(node, context),
+          )
         : fragment(),
 
     paragraph: wrap("p"),

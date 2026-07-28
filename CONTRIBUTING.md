@@ -20,6 +20,7 @@ Please read:
 - `docs/machine-readable.md`
 - `docs/releasing.md`
 - `docs/development-mode.md`
+- `docs/performance.md`
 - the relevant Architecture Decision Records in `docs/decisions/`
 
 ## Development status
@@ -51,6 +52,7 @@ pnpm check
 | `pnpm check:boundaries` | checks the dependency direction and export surface    |
 | `pnpm check`            | formatting, linting, types and tests — the local gate |
 | `pnpm docs`             | builds, then serves this repository's own `docs/`     |
+| `pnpm bench`            | measures build and rebuild cost on a generated site   |
 | `pnpm clean`            | removes build output                                  |
 
 `pnpm docs` serves the documentation you are reading through Tsumugu itself, on

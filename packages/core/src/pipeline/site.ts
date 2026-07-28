@@ -195,6 +195,20 @@ interface PreparedDocument {
   /** Where this document points, and what it can be pointed at. */
   readonly references: ReturnType<typeof collectReferences>;
   readonly diagnostics: readonly DocumentDiagnostic[];
+  /**
+   * The page this document last produced, and what it depended on.
+   *
+   * Serializing a page is cheap next to parsing one and expensive next to
+   * nothing, and a project with a thousand documents rebuilds a thousand pages
+   * every time one of them changes — because every page carries the navigation.
+   * So the HTML is kept with a signature of everything outside the document
+   * that went into it, and reused when that signature has not moved.
+   */
+  page?: {
+    readonly signature: string;
+    readonly html: string;
+    readonly diagnostics: readonly DocumentDiagnostic[];
+  };
 }
 
 /** The document shown in place of one that could not be rendered. */
@@ -526,8 +540,31 @@ export async function createSite(options: BuildOptions): Promise<Site> {
     const searchable = searchEntries(records);
     hasSearch = searchable.length > 0;
 
+    // Everything outside a document that its page depends on. Two of them: the
+    // navigation, which every page shows, and the site's name, which is in
+    // every title.
+    const shellSignature = `${siteName}\u0000${JSON.stringify(
+      navigation.items,
+    )}\u0000${String(hasSearch)}`;
+
     const pages = new Map<RoutePath, Page>();
     for (const entry of entries) {
+      const pageDiagnostics = dedupeDiagnostics([
+        ...entry.diagnostics,
+        ...(linkDiagnostics.get(entry.sourcePath) ?? []),
+      ]);
+      const signature = `${shellSignature}\u0000${JSON.stringify(pageDiagnostics)}`;
+
+      if (entry.page?.signature === signature) {
+        pages.set(entry.route, {
+          route: entry.route,
+          title: entry.metadata.title,
+          html: entry.page.html,
+          diagnostics: entry.page.diagnostics,
+        });
+        continue;
+      }
+
       const page = toHtml({
         body: entry.body,
         title: entry.metadata.title,
@@ -537,17 +574,17 @@ export async function createSite(options: BuildOptions): Promise<Site> {
         currentRoute: entry.route,
         tableOfContents: entry.tableOfContents,
         navigation: navigation.items,
-        diagnostics: dedupeDiagnostics([
-          ...entry.diagnostics,
-          ...(linkDiagnostics.get(entry.sourcePath) ?? []),
-        ]),
+        diagnostics: pageDiagnostics,
       });
+
+      const diagnostics = dedupeDiagnostics(page.diagnostics);
+      entry.page = { signature, html: page.html, diagnostics };
 
       pages.set(entry.route, {
         route: entry.route,
         title: entry.metadata.title,
         html: page.html,
-        diagnostics: dedupeDiagnostics(page.diagnostics),
+        diagnostics,
       });
     }
 

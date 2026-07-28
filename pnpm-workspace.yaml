@@ -22,3 +22,11 @@ onlyBuiltDependencies: []
 # runtime in docs/compatibility.md is advisory, and an unsupported runtime
 # surfaces later as an unrelated error instead of a clear install failure.
 engineStrict: true
+
+# @parcel/watcher is @tailwindcss/cli's optional file-watcher, used only by
+# `tailwindcss --watch`, which nothing here runs — styles compile one-shot in
+# `pnpm styles`. false keeps its native postinstall from ever executing while
+# letting `pnpm install` exit cleanly, which is the same decision the empty
+# allowlist above records for everything else.
+allowBuilds:
+  "@parcel/watcher": false

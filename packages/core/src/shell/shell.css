@@ -1,12 +1,22 @@
-/**
- * The application shell's stylesheet.
+/*
+ * The application shell's stylesheet — the authored source.
  *
- * GENERATED from `shell.css` by `scripts/build-styles.mjs` — edit the
- * CSS, then run `pnpm styles`. The authored file carries the reasoning;
- * this one carries the bytes the pages ship.
+ * Written in Tailwind's vocabulary and compiled by `pnpm styles` into
+ * `stylesheet.ts`, which is what ships: the output is still one inline
+ * stylesheet in the page head, so the content-security policy, the
+ * no-network rule and the no-build-step experience are untouched. Tailwind
+ * is an authoring tool here, not a runtime.
+ *
+ * The boundary rules are unchanged: layout, navigation, landmarks and
+ * diagnostics belong to the shell; nothing here reaches inside .tsumugu-doc.
+ * The palette stays on custom properties — not Tailwind theme tokens —
+ * because dark mode swaps them wholesale, and that swap is the design.
  */
-export const shellStylesheet = `
-@layer properties;
+
+/* The default tokens, inlined: utilities compile to literal values, so no
+   :root emission reaches a stylesheet that must stay inside its own scope. */
+@import "tailwindcss/theme.css" theme(inline);
+
 :root {
   --ts-ink: #1a1c22;
   --ts-ink-muted: #5a5f6b;
@@ -16,14 +26,26 @@ export const shellStylesheet = `
   --ts-rule: #e2ded2;
   --ts-warning: #8a5a10;
   --ts-error: #9a2b23;
-  --ts-sans: system-ui, -apple-system, "Segoe UI", "Hiragino Kaku Gothic ProN",
+  --ts-sans:
+    system-ui, -apple-system, "Segoe UI", "Hiragino Kaku Gothic ProN",
     "Noto Sans JP", sans-serif;
-  --ts-serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Hiragino Mincho ProN",
+  --ts-serif:
+    "Iowan Old Style", "Palatino Linotype", Palatino, "Hiragino Mincho ProN",
     "Yu Mincho", Georgia, serif;
-  --ts-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
+  --ts-mono:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
     monospace;
+
+  /* Both, stated rather than left to the browser, so form controls, scrollbars
+     and the space beyond the page match whichever one the reader is in. */
   color-scheme: light dark;
 }
+
+/*
+ * Dark mode: the same design in the other direction rather than an inversion
+ * of it. Every pair clears the project's 4.5:1 target, recorded in
+ * docs/accessibility.md. A preference, not a toggle.
+ */
 @media (prefers-color-scheme: dark) {
   :root {
     --ts-ink: #e7e5df;
@@ -36,87 +58,90 @@ export const shellStylesheet = `
     --ts-error: #ef9d94;
   }
 }
+
 * {
-  box-sizing: border-box;
+  @apply box-border;
 }
+
 body {
-  margin: 0;
+  @apply m-0;
   background: var(--ts-paper);
   color: var(--ts-ink);
   font-family: var(--ts-sans);
+  /* No 300ms wait before a tap becomes a click, and no grey flash over the
+     link that was tapped. */
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   -webkit-text-size-adjust: 100%;
 }
+
 .tsumugu-skip {
-  position: fixed;
-  z-index: 10;
-  padding-inline: calc(0.25rem * 4);
-  padding-block: calc(0.25rem * 3);
+  @apply fixed z-10 px-4 py-3;
   background: var(--ts-indigo);
   color: #fff;
   inset-block-start: 0.5rem;
   inset-inline-start: 0.5rem;
   transform: translateY(-200%);
 }
+
 .tsumugu-skip:focus-visible {
   transform: none;
 }
+
 .tsumugu-shell {
-  margin-inline: auto;
-  max-width: 80rem;
+  @apply mx-auto max-w-7xl;
   display: grid;
   gap: 0 2.5rem;
-  grid-template-areas: "header" "sidebar" "main" "toc" "footer";
+  grid-template-areas:
+    "header"
+    "sidebar"
+    "main"
+    "toc"
+    "footer";
   padding-inline: 1.25rem;
 }
+
 .tsumugu-header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: calc(0.25rem * 4);
+  @apply flex flex-wrap items-center justify-between gap-4;
   border-block-end: 1px solid var(--ts-rule);
   grid-area: header;
   padding-block: 1.4rem;
 }
+
 .tsumugu-brand {
-  text-decoration-line: none;
+  @apply no-underline;
   color: var(--ts-ink);
   font-family: var(--ts-serif);
   font-size: 1.15rem;
   letter-spacing: 0.01em;
 }
+
 .tsumugu-brand:hover {
   color: var(--ts-indigo);
 }
+
+/* Search ----------------------------------------------------------------- */
+
 .tsumugu-search {
-  position: relative;
-  max-width: 24rem;
-  flex: auto;
+  @apply relative max-w-sm flex-auto;
   flex-basis: 12rem;
 }
+
 .tsumugu-search input {
-  width: 100%;
-  border-radius: 0.375rem;
-  padding-inline: calc(0.25rem * 3);
-  padding-block: calc(0.25rem * 2);
+  @apply w-full rounded-md px-3 py-2;
   background: var(--ts-panel);
   border: 1px solid var(--ts-rule);
   color: var(--ts-ink);
   font: inherit;
   font-size: 0.9rem;
 }
+
 .tsumugu-search input::placeholder {
   color: var(--ts-ink-muted);
 }
+
 .tsumugu-search ul {
-  position: absolute;
-  z-index: 5;
-  margin: 0;
-  overflow-y: auto;
-  border-radius: 0.5rem;
-  padding: 0.25rem;
+  @apply absolute z-5 m-0 overflow-y-auto rounded-lg p-1;
   background: var(--ts-paper);
   border: 1px solid var(--ts-rule);
   box-shadow: 0 12px 32px rgb(0 0 0 / 12%);
@@ -125,38 +150,44 @@ body {
   list-style: none;
   max-height: min(24rem, 60dvh);
 }
+
 .tsumugu-search li a {
-  display: grid;
-  gap: calc(0.25rem * 0.5);
-  border-radius: 5px;
-  padding-inline: calc(0.25rem * 2.5);
-  padding-block: calc(0.25rem * 2);
-  text-decoration-line: none;
+  @apply grid gap-0.5 rounded-[5px] px-2.5 py-2 no-underline;
   color: var(--ts-ink);
 }
-.tsumugu-search li[aria-selected="true"] a, .tsumugu-search li a:hover {
+
+.tsumugu-search li[aria-selected="true"] a,
+.tsumugu-search li a:hover {
   background: var(--ts-panel);
 }
+
 .tsumugu-search-title {
   font-size: 0.9rem;
 }
+
 .tsumugu-search-context {
   color: var(--ts-ink-muted);
   font-size: 0.775rem;
 }
+
+/* Regions ---------------------------------------------------------------- */
+
 .tsumugu-sidebar {
   grid-area: sidebar;
   padding-block: 1rem;
 }
+
 .tsumugu-main {
-  min-width: 0;
+  @apply min-w-0;
   grid-area: main;
   padding-block: 1.5rem 3rem;
 }
+
 .tsumugu-toc {
   grid-area: toc;
   padding-block: 1rem 2rem;
 }
+
 .tsumugu-footer {
   border-block-start: 1px solid var(--ts-rule);
   color: var(--ts-ink-muted);
@@ -164,143 +195,158 @@ body {
   grid-area: footer;
   padding-block: 1.5rem 2.5rem;
 }
+
 .tsumugu-footer p {
-  margin: 0;
+  @apply m-0;
 }
-.tsumugu-sidebar ul, .tsumugu-toc ol {
-  margin: 0;
-  list-style-type: none;
-  padding: 0;
+
+/* Navigation ------------------------------------------------------------- */
+
+.tsumugu-sidebar ul,
+.tsumugu-toc ol {
+  @apply m-0 list-none p-0;
 }
+
 .tsumugu-sidebar li ul {
   border-inline-start: 1px solid var(--ts-rule);
   margin-inline-start: 0.55rem;
   padding-inline-start: 0.7rem;
 }
-.tsumugu-sidebar a, .tsumugu-nav-group {
-  display: block;
-  border-radius: 0.25rem;
-  text-decoration-line: none;
+
+.tsumugu-sidebar a,
+.tsumugu-nav-group {
+  @apply block rounded no-underline;
   color: var(--ts-ink-muted);
   font-size: 0.925rem;
+  /* Comfortably past the 44px target on a touch screen, counting the gap
+     between rows. */
   padding: 0.55rem 0.5rem;
   transition: color 160ms cubic-bezier(0.32, 0.72, 0, 1);
 }
+
 .tsumugu-sidebar a:hover {
   color: var(--ts-ink);
 }
+
 .tsumugu-nav-group {
-  --tw-font-weight: 600;
-  font-weight: 600;
+  @apply font-semibold;
   color: var(--ts-ink);
 }
-.tsumugu-sidebar li[data-active] > a, .tsumugu-sidebar li[data-active] > .tsumugu-nav-group {
-  --tw-font-weight: 600;
-  font-weight: 600;
+
+.tsumugu-sidebar li[data-active] > a,
+.tsumugu-sidebar li[data-active] > .tsumugu-nav-group {
+  @apply font-semibold;
   color: var(--ts-ink);
 }
+
+/* The thread again: the current page is marked, not merely coloured. */
 .tsumugu-sidebar a[aria-current="page"] {
   background: var(--ts-panel);
   box-shadow: inset 2px 0 0 var(--ts-indigo);
   color: var(--ts-indigo);
 }
+
 .tsumugu-disclosure > summary {
-  cursor: pointer;
-  --tw-font-weight: 600;
-  font-weight: 600;
-  text-transform: uppercase;
+  @apply cursor-pointer font-semibold uppercase;
   color: var(--ts-ink);
   font-size: 0.85rem;
   letter-spacing: 0.08em;
   padding: 0.6rem 0.5rem;
 }
+
 .tsumugu-toc h2 {
-  margin: 0;
-  margin-bottom: calc(0.25rem * 2);
-  --tw-font-weight: 600;
-  font-weight: 600;
-  text-transform: uppercase;
+  @apply m-0 mb-2 font-semibold uppercase;
   color: var(--ts-ink-muted);
   font-family: var(--ts-sans);
   font-size: 0.75rem;
   letter-spacing: 0.12em;
 }
+
 .tsumugu-toc a {
-  display: block;
-  padding-block: calc(0.25rem * 1.5);
-  text-decoration-line: none;
+  @apply block py-1.5 no-underline;
   color: var(--ts-ink-muted);
   font-size: 0.875rem;
 }
+
 .tsumugu-toc a:hover {
   color: var(--ts-indigo);
 }
+
+/* The section being read, marked by the page client the same way the sidebar
+   marks the current page: a thread beside it, not colour alone. */
 .tsumugu-toc a[aria-current="location"] {
   box-shadow: inset 2px 0 0 var(--ts-indigo);
   color: var(--ts-indigo);
   padding-inline-start: 0.6rem;
 }
+
 .tsumugu-toc li ol {
   padding-inline-start: 0.9rem;
 }
+
 :focus-visible {
   border-radius: 3px;
   outline: 2px solid var(--ts-indigo);
   outline-offset: 2px;
 }
+
+/* Diagnostics ------------------------------------------------------------ */
+
 .tsumugu-diagnostics {
-  border-radius: 0.5rem;
+  @apply rounded-lg;
   border: 1px solid var(--ts-rule);
   margin-block-start: 3rem;
   padding: 1rem 1.2rem;
 }
+
 .tsumugu-diagnostics h2 {
-  margin: 0;
-  margin-bottom: calc(0.25rem * 3);
+  @apply m-0 mb-3;
   font-family: var(--ts-sans);
   font-size: 0.95rem;
 }
+
 .tsumugu-diagnostics ul {
-  margin: 0;
-  display: grid;
-  list-style-type: none;
-  gap: calc(0.25rem * 3.5);
-  padding: 0;
+  @apply m-0 grid list-none gap-3.5 p-0;
 }
+
 .tsumugu-diagnostics li {
-  display: grid;
-  gap: 0.25rem;
+  @apply grid gap-1;
   font-size: 0.875rem;
 }
+
 .tsumugu-severity {
-  --tw-font-weight: 700;
-  font-weight: 700;
-  text-transform: uppercase;
+  @apply font-bold uppercase;
   font-size: 0.7rem;
   letter-spacing: 0.1em;
 }
+
 li[data-severity="warning"] .tsumugu-severity {
   color: var(--ts-warning);
 }
-li[data-severity="error"] .tsumugu-severity, li[data-severity="fatal"] .tsumugu-severity {
+
+li[data-severity="error"] .tsumugu-severity,
+li[data-severity="fatal"] .tsumugu-severity {
   color: var(--ts-error);
 }
+
 .tsumugu-hint {
   color: var(--ts-ink-muted);
 }
+
 .tsumugu-diagnostics code {
   color: var(--ts-ink-muted);
   font-family: var(--ts-mono);
   font-size: 0.75rem;
 }
+
+/* The copy control the page client adds to code blocks ------------------- */
+
 .tsumugu-doc pre {
-  position: relative;
+  @apply relative;
 }
+
 .tsumugu-copy {
-  position: absolute;
-  cursor: pointer;
-  border-radius: 5px;
-  opacity: 0%;
+  @apply absolute cursor-pointer rounded-[5px] opacity-0;
   background: var(--ts-paper);
   border: 1px solid var(--ts-rule);
   color: var(--ts-ink-muted);
@@ -311,69 +357,84 @@ li[data-severity="error"] .tsumugu-severity, li[data-severity="fatal"] .tsumugu-
   padding: 0.3rem 0.6rem;
   transition: opacity 160ms cubic-bezier(0.32, 0.72, 0, 1);
 }
-.tsumugu-doc pre:hover .tsumugu-copy, .tsumugu-doc pre:focus-within .tsumugu-copy, .tsumugu-copy:focus-visible {
-  opacity: 100%;
+
+.tsumugu-doc pre:hover .tsumugu-copy,
+.tsumugu-doc pre:focus-within .tsumugu-copy,
+.tsumugu-copy:focus-visible {
+  @apply opacity-100;
 }
+
 .tsumugu-copy:hover {
   color: var(--ts-ink);
 }
+
 @media (hover: none) {
   .tsumugu-copy {
-    opacity: 100%;
+    @apply opacity-100;
   }
 }
+
+/*
+ * Available to a screen reader, invisible to everyone else. The clip-path is
+ * what keeps it out of the layout without "display: none", which would take it
+ * out of the accessibility tree as well.
+ */
 .tsumugu-visually-hidden {
-  position: absolute;
-  margin: -1px;
-  overflow: hidden;
-  padding: 0;
-  white-space: nowrap;
+  @apply absolute m-[-1px] overflow-hidden p-0 whitespace-nowrap;
   block-size: 1px;
   clip-path: inset(50%);
   inline-size: 1px;
 }
+
+/* Wide layout ------------------------------------------------------------ */
+
 @media (min-width: 64rem) {
   .tsumugu-shell {
-    grid-template-areas: "header header header" "sidebar main toc" "footer footer footer";
+    grid-template-areas:
+      "header header header"
+      "sidebar main toc"
+      "footer footer footer";
     grid-template-columns: 15rem minmax(0, 1fr) 13rem;
   }
+
+  /* The disclosure is a narrow-screen affordance. With room for a sidebar the
+     list is simply the sidebar — the summary disappears and the content is
+     forced visible whatever the open state. ::details-content is what makes
+     that possible; a browser without it keeps the summary as a working
+     toggle, which is the degraded state a navigation can afford. */
   @supports selector(details::details-content) {
     .tsumugu-disclosure > summary {
-      display: none;
+      @apply hidden;
     }
+
     .tsumugu-disclosure::details-content {
       content-visibility: visible;
     }
   }
-  .tsumugu-sidebar, .tsumugu-toc {
-    position: sticky;
-    align-self: flex-start;
-    overflow-y: auto;
+
+  .tsumugu-sidebar,
+  .tsumugu-toc {
+    @apply sticky self-start overflow-y-auto;
     max-height: calc(100dvh - 6rem);
     top: 1.5rem;
   }
 }
+
+/* Without a table of contents the content takes the space back rather than
+   leaving a column of nothing beside it. */
 @media (min-width: 64rem) {
   .tsumugu-shell:not([data-contents]) {
     grid-template-columns: 15rem minmax(0, 1fr);
-    grid-template-areas: "header header" "sidebar main" "footer footer";
+    grid-template-areas:
+      "header header"
+      "sidebar main"
+      "footer footer";
   }
 }
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation: none !important;
     transition: none !important;
   }
 }
-@property --tw-font-weight {
-  syntax: "*";
-  inherits: false;
-}
-@layer properties {
-  @supports ((-webkit-hyphens: none) and (not (margin-trim: inline))) or ((-moz-orient: inline) and (not (color:rgb(from red r g b)))) {
-    *, ::before, ::after, ::backdrop {
-      --tw-font-weight: initial;
-    }
-  }
-}
-`;

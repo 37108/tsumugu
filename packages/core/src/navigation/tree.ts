@@ -25,7 +25,10 @@ import type { ResolvedMetadata } from "../metadata/resolve.js";
 export interface NavigationDocument {
   readonly sourcePath: SourcePath;
   readonly route: RoutePath;
-  readonly metadata: Pick<ResolvedMetadata, "title" | "order" | "hidden">;
+  readonly metadata: Pick<
+    ResolvedMetadata,
+    "title" | "description" | "order" | "hidden"
+  >;
 }
 
 /**
@@ -39,6 +42,14 @@ export interface NavigationDocument {
  */
 export interface NavigationItem {
   readonly label: string;
+  /**
+   * The document's description, when it has one.
+   *
+   * Carried because the generated landing page lists entries with a line of
+   * explanation, and inventing that line is the one thing a generated page must
+   * not do. A sidebar that has no room for it simply ignores it.
+   */
+  readonly description?: string;
   /** Where the entry links to, or `undefined` for a directory with no index. */
   readonly route?: RoutePath;
   /** The file this entry stands for, when one exists. */
@@ -173,6 +184,9 @@ function toItems(directory: DirectoryNode): {
       },
       item: {
         label: document.metadata.title,
+        ...(document.metadata.description === undefined
+          ? {}
+          : { description: document.metadata.description }),
         route: document.route,
         sourcePath: document.sourcePath,
         children: [],
@@ -205,6 +219,9 @@ function toItems(directory: DirectoryNode): {
         label,
         // The index document is the directory, not a child of it. Listing it
         // both ways is the duplicate entry every hand-written sidebar grows.
+        ...(child.index?.metadata.description === undefined
+          ? {}
+          : { description: child.index.metadata.description }),
         ...(child.index === undefined
           ? {}
           : { route: child.index.route, sourcePath: child.index.sourcePath }),
@@ -319,6 +336,9 @@ export function buildNavigation(
   const items: readonly NavigationItem[] = [
     {
       label: home.metadata.title,
+      ...(home.metadata.description === undefined
+        ? {}
+        : { description: home.metadata.description }),
       route: home.route,
       sourcePath: home.sourcePath,
       children: [],

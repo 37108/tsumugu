@@ -149,10 +149,43 @@ describe("problems a user will actually hit", () => {
       const response = await fetch(server.url);
 
       // A project with no documents is a project someone just started, not an
-      // error condition.
-      expect(response.status).toBe(404);
+      // error condition — so it gets a page saying what to do next.
+      expect(response.status).toBe(200);
       expect(await response.text()).toContain("no documents yet");
     });
+  });
+
+  it("generates a landing page when the root has no index document", async () => {
+    await serveFixture(
+      {
+        "guide/setup.md": "# Setup\n",
+        "secret.md": "---\nhidden: true\n---\n\n# Secret\n",
+      },
+      async ({ server, pageCount }) => {
+        const response = await fetch(server.url);
+        const html = await response.text();
+
+        expect(response.status).toBe(200);
+        // Generated, so it does not count as a document the author wrote.
+        expect(pageCount).toBe(2);
+        expect(html).toContain('href="/guide/setup"');
+        // A hidden document keeps its route and stays off every listing.
+        expect(html).not.toContain("Secret");
+        expect((await fetch(`${server.url}secret`)).status).toBe(200);
+      },
+    );
+  });
+
+  it("lets an authored index document replace the generated landing page", async () => {
+    await serveFixture(
+      { "index.md": page, "guide/setup.md": "# Setup\n" },
+      async ({ server }) => {
+        const html = await (await fetch(server.url)).text();
+
+        expect(html).toContain("Getting started");
+        expect(html).not.toContain("to write your own");
+      },
+    );
   });
 
   it("lists the routes that do exist when one is not found", async () => {
@@ -162,9 +195,12 @@ describe("problems a user will actually hit", () => {
 
       expect(response.status).toBe(404);
       // Turning "not found" into something actionable is the difference
-      // between a 404 and a dead end.
+      // between a 404 and a dead end. It is the same page as every other,
+      // through the same theme and shell.
       expect(html).toContain("/nope");
+      expect(html).toContain("Page not found");
       expect(html).toContain('href="/"');
+      expect(html).toContain("tsumugu-doc");
     });
   });
 

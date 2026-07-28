@@ -1,6 +1,9 @@
 import type { DocumentNode } from "../ast/nodes.js";
 import type { DocumentDiagnostic } from "../document/diagnostics.js";
-import type { MetadataValue } from "../document/metadata.js";
+import {
+  toDocumentMetadata,
+  type MetadataValue,
+} from "../document/metadata.js";
 import {
   withDiagnostics,
   type LoadedDocument,
@@ -211,7 +214,22 @@ export async function renderDocument(
   }
 
   const rendered = withDiagnostics(document, result.diagnostics ?? []);
-  return { ...rendered, stage: "rendered", root: result.root };
+
+  // What the renderer found in the source outranks what the loader knew, and
+  // it has to be carried: front matter that never reaches the precedence rules
+  // is front matter the author wrote for nothing.
+  const metadata =
+    result.metadata === undefined
+      ? rendered.metadata
+      : toDocumentMetadata([...rendered.metadata.values, ...result.metadata]);
+
+  return {
+    ...rendered,
+    stage: "rendered",
+    root: result.root,
+    metadata,
+    ...(result.htmlTitle === undefined ? {} : { htmlTitle: result.htmlTitle }),
+  };
 }
 
 function messageOf(cause: unknown): string {

@@ -110,6 +110,8 @@ export async function startDev(options: DevOptions = {}): Promise<DevResult> {
 
   const server = await serve({
     pages: built.pages,
+    renderNotFound: built.renderNotFound,
+    renderBadRequest: built.renderBadRequest,
     ...(options.host === undefined ? {} : { host: options.host }),
     ...(options.port === undefined ? {} : { port: options.port }),
   });
@@ -121,7 +123,11 @@ export async function startDev(options: DevOptions = {}): Promise<DevResult> {
   return {
     server,
     diagnostics: [...built.diagnostics, ...pageDiagnostics],
-    pageCount: built.pages.size,
+    // Generated pages are not counted: a project with no documents should be
+    // told it has none, not told it has one it did not write.
+    pageCount: [...built.pages.values()].filter(
+      (page) => page.generated !== true,
+    ).length,
   };
 }
 

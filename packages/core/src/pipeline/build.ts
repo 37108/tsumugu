@@ -20,10 +20,15 @@ import {
 } from "../navigation/tree.js";
 import { buildTableOfContents } from "../navigation/table-of-contents.js";
 import { renderShell } from "../shell/shell.js";
+
+import {
+  generateBadRequestDocument,
+  generateHomeDocument,
+  generateNotFoundDocument,
+} from "./generated.js";
 import { renderWithTheme, type Theme } from "../theme/contract.js";
 import { runTransformers, type Transformer } from "../transformer/contract.js";
 import { serializeDocument } from "../theme/serialize.js";
-import { element } from "../theme/virtual-tree.js";
 
 /**
  * The pipeline, composed.
@@ -70,6 +75,8 @@ export interface Page {
   readonly title: string;
   readonly html: string;
   readonly diagnostics: readonly DocumentDiagnostic[];
+  /** True when Tsumugu wrote this page because the project had none. */
+  readonly generated?: boolean;
 }
 
 /** A document after rendering, transforming and metadata resolution. */
@@ -84,6 +91,15 @@ interface PreparedDocument {
 
 export interface BuildResult {
   readonly pages: ReadonlyMap<RoutePath, Page>;
+  /**
+   * Renders the page for a request that resolved to no document.
+   *
+   * A function rather than a page, because it names the path that was asked
+   * for — and the server is the only thing that knows it.
+   */
+  readonly renderNotFound: (requestedPath: string) => string;
+  /** Renders the page for a request path that could not be read at all. */
+  readonly renderBadRequest: () => string;
   /** Problems not attributable to a single page. */
   readonly diagnostics: readonly DocumentDiagnostic[];
 }
@@ -165,7 +181,12 @@ export async function buildSite(options: BuildOptions): Promise<BuildResult> {
 
     const metadata = resolveMetadata({
       sourcePath: document.sourcePath,
-      metadata: document.metadata,
+      // The rendered document carries what the source declared; the loaded one
+      // only knows what could be read without parsing it.
+      metadata: rendered.metadata,
+      ...(rendered.stage === "rendered" && rendered.htmlTitle !== undefined
+        ? { htmlTitle: rendered.htmlTitle }
+        : {}),
       ...(transformed === undefined ? {} : { root: transformed.root }),
     });
     diagnostics.push(...metadata.diagnostics);
@@ -188,42 +209,53 @@ export async function buildSite(options: BuildOptions): Promise<BuildResult> {
   );
 
   const siteName = options.siteName ?? "Documentation";
-  const pages = new Map<RoutePath, Page>();
 
-  for (const entry of prepared) {
-    const pageDiagnostics: DocumentDiagnostic[] = [...entry.diagnostics];
+  /**
+   * Renders one page: theme, shell, serializer.
+   *
+   * Generated pages — the landing page, the 404, the 400 — go through this too.
+   * A page that took a shortcut around the theme would be the one page that
+   * looked like a different site.
+   */
+  const renderPage = (input: {
+    readonly root: DocumentNode;
+    readonly title: string;
+    readonly description?: string;
+    readonly sourcePath: SourcePath;
+    readonly currentRoute: RoutePath;
+    readonly diagnostics: readonly DocumentDiagnostic[];
+  }): {
+    readonly html: string;
+    readonly diagnostics: readonly DocumentDiagnostic[];
+  } => {
+    const diagnostics = [...input.diagnostics];
 
-    // A document that failed to render still gets a page, so the server can
-    // explain the failure instead of returning nothing.
-    const body =
-      entry.root === undefined
-        ? {
-            tree: element(
-              "p",
-              {},
-              "This document could not be rendered. See the problems listed below.",
-            ),
-            diagnostics: [],
-          }
-        : renderWithTheme(options.theme, {
-            root: entry.root,
-            metadata: entry.metadata,
-            sourcePath: entry.sourcePath,
-          });
-    pageDiagnostics.push(...body.diagnostics);
+    const body = renderWithTheme(options.theme, {
+      root: input.root,
+      metadata: {
+        title: input.title,
+        titleSource: "file-name",
+        hidden: false,
+        diagnostics: [],
+        ...(input.description === undefined
+          ? {}
+          : { description: input.description }),
+      },
+      sourcePath: input.sourcePath,
+    });
+    diagnostics.push(...body.diagnostics);
 
     const shell = renderShell({
       siteName,
-      title: entry.metadata.title,
-      ...(entry.metadata.description === undefined
+      title: input.title,
+      ...(input.description === undefined
         ? {}
-        : { description: entry.metadata.description }),
-      currentRoute: entry.route,
+        : { description: input.description }),
+      currentRoute: input.currentRoute,
       navigation: navigation.items,
-      tableOfContents:
-        entry.root === undefined ? [] : buildTableOfContents(entry.root),
+      tableOfContents: buildTableOfContents(input.root),
       content: body.tree,
-      diagnostics: dedupeDiagnostics(pageDiagnostics),
+      diagnostics: dedupeDiagnostics(diagnostics),
       ...(options.theme.stylesheet === undefined
         ? {}
         : { themeStylesheet: options.theme.stylesheet }),
@@ -234,18 +266,100 @@ export async function buildSite(options: BuildOptions): Promise<BuildResult> {
       title: shell.documentTitle,
       head: shell.head,
     });
-    pageDiagnostics.push(...serialized.diagnostics);
+
+    return {
+      html: serialized.html,
+      diagnostics: dedupeDiagnostics([
+        ...diagnostics,
+        ...serialized.diagnostics,
+      ]),
+    };
+  };
+
+  const pages = new Map<RoutePath, Page>();
+
+  for (const entry of prepared) {
+    // A document that failed to render still gets a page, so the server can
+    // explain the failure instead of returning nothing.
+    const root: DocumentNode = entry.root ?? {
+      type: "document",
+      children: [
+        {
+          type: "paragraph",
+          children: [
+            {
+              type: "text",
+              value:
+                "This document could not be rendered. The problems below say why.",
+            },
+          ],
+        },
+      ],
+    };
+
+    const rendered = renderPage({
+      root,
+      title: entry.metadata.title,
+      ...(entry.metadata.description === undefined
+        ? {}
+        : { description: entry.metadata.description }),
+      sourcePath: entry.sourcePath,
+      currentRoute: entry.route,
+      diagnostics: entry.diagnostics,
+    });
 
     pages.set(entry.route, {
       route: entry.route,
       title: entry.metadata.title,
-      html: serialized.html,
-      diagnostics: dedupeDiagnostics(pageDiagnostics),
+      html: rendered.html,
+      diagnostics: rendered.diagnostics,
+    });
+  }
+
+  const rootRoute = "/" as RoutePath;
+
+  // A project whose root has no index document still has a home page: one
+  // listing what it does have. An authored index always wins, because the
+  // generated page is a default rather than a policy.
+  if (!pages.has(rootRoute)) {
+    const generated = renderPage({
+      root: generateHomeDocument({ siteName, navigation: navigation.items }),
+      title: siteName,
+      sourcePath: "" as SourcePath,
+      currentRoute: rootRoute,
+      diagnostics: [],
+    });
+
+    pages.set(rootRoute, {
+      route: rootRoute,
+      title: siteName,
+      html: generated.html,
+      diagnostics: generated.diagnostics,
+      generated: true,
     });
   }
 
   return {
     pages,
+    renderNotFound: (requestedPath) =>
+      renderPage({
+        root: generateNotFoundDocument({
+          requestedPath,
+          navigation: navigation.items,
+        }),
+        title: "Page not found",
+        sourcePath: "" as SourcePath,
+        currentRoute: rootRoute,
+        diagnostics: [],
+      }).html,
+    renderBadRequest: () =>
+      renderPage({
+        root: generateBadRequestDocument(),
+        title: "Bad request",
+        sourcePath: "" as SourcePath,
+        currentRoute: rootRoute,
+        diagnostics: [],
+      }).html,
     diagnostics: dedupeDiagnostics([
       ...scanned.diagnostics,
       ...routing,

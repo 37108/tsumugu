@@ -25,6 +25,16 @@ export interface ServeOptions {
   readonly host?: string;
   /** Port, or 0 to let the operating system choose a free one. */
   readonly port?: number;
+  /**
+   * Renders the page for a request that resolved to no document.
+   *
+   * Supplied by the pipeline, so a missing page looks like the rest of the
+   * site and lists what does exist. Without it the server falls back to the
+   * plain page below, which is what a server composed without a pipeline gets.
+   */
+  readonly renderNotFound?: (requestedPath: string) => string;
+  /** Renders the page for a request path that could not be read at all. */
+  readonly renderBadRequest?: () => string;
 }
 
 export interface RunningServer {
@@ -113,14 +123,18 @@ export function serve(options: ServeOptions): Promise<RunningServer> {
       // something a client sent. It is a bad request, not a crash.
       send(
         400,
-        page(400, "Bad request", "<p>That request path is not valid.</p>"),
+        options.renderBadRequest?.() ??
+          page(400, "Bad request", "<p>That request path is not valid.</p>"),
       );
       return;
     }
 
     const found = options.pages.get(route);
     if (found === undefined) {
-      send(404, notFound(route, options.pages));
+      send(
+        404,
+        options.renderNotFound?.(route) ?? notFound(route, options.pages),
+      );
       return;
     }
 

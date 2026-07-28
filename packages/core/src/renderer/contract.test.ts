@@ -313,3 +313,39 @@ describe("renderDocument", () => {
     expect(JSON.stringify(markdownFile)).toBe(before);
   });
 });
+
+describe("what a renderer reports about the source", () => {
+  it("carries declared metadata onto the rendered document", async () => {
+    const renderer: Renderer = {
+      id: "declares",
+      supports: () => true,
+      render: () => ({
+        root: { type: "document", children: [] },
+        metadata: [["hidden", true] as const],
+      }),
+    };
+
+    const rendered = await renderDocument([renderer], document("a.md", "x"));
+
+    // Front matter that never reaches the precedence rules is front matter the
+    // author wrote for nothing.
+    expect(rendered.metadata.values.get("hidden")).toBe(true);
+  });
+
+  it("carries a full HTML document's title", async () => {
+    const renderer: Renderer = {
+      id: "html-ish",
+      supports: () => true,
+      render: () => ({
+        root: { type: "document", children: [] },
+        htmlTitle: "From the title element",
+      }),
+    };
+
+    const rendered = await renderDocument([renderer], document("a.html", "x"));
+
+    expect(rendered.stage === "rendered" ? rendered.htmlTitle : undefined).toBe(
+      "From the title element",
+    );
+  });
+});

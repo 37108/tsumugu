@@ -23,6 +23,7 @@ The project is **experimental and pre-alpha**. Nothing here is a stable API.
 
 - [Semantic Document AST](architecture/semantic-ast.md) — the node set every format converges on.
 - [Workspace layout](architecture/workspaces.md) — the packages and the rules between them.
+- [Machine-readable outputs](machine-readable.md) — the corpus, `llms.txt` and the sitemap.
 - [Diagnostics](diagnostics.md) — every code the pipeline can produce.
 - [Accessibility](accessibility.md) — what is guaranteed, what is measured, what is checked by hand.
 - [Compatibility](compatibility.md) — supported runtimes and package formats.

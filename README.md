@@ -30,9 +30,11 @@ What works today:
 - a generated landing page when the root has no `index`, and a documentation-aware 404;
 - documentation-local images and downloads, served without a way out of the root;
 - diagnostics shown on the page they belong to, rather than only in the terminal;
+- syntax highlighting, as annotated tokens rather than trusted markup;
+- `documents.json`, `llms.txt` and `sitemap.xml`, generated from the same documents as the pages;
 - watch mode: saving a file rebuilds what changed and reloads the open page.
 
-What is deliberately missing: search, static build output, syntax highlighting, configuration files, and any published API. See [the roadmap](docs/roadmap.md).
+What is deliberately missing: search, static build output, configuration files, and any published API. See [the roadmap](docs/roadmap.md).
 
 ## Development
 

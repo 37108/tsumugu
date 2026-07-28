@@ -160,6 +160,88 @@ describe("routing through the real rules", () => {
   });
 });
 
+describe("machine-readable outputs", () => {
+  const files = {
+    "index.md": "---\ndescription: The handbook\n---\n\n# Handbook\n",
+    "guide/setup.md": "# Setup\n\n## Install\n",
+    "draft.md": "---\nhidden: true\n---\n\n# Draft\n",
+  };
+
+  it("serves a JSON corpus derived from the same documents as the pages", async () => {
+    await serveFixture(files, async ({ server }) => {
+      const response = await fetch(`${server.url}documents.json`);
+
+      expect(response.status).toBe(200);
+      expect(response.headers.get("content-type")).toBe(
+        "application/json; charset=utf-8",
+      );
+
+      const body = (await response.json()) as {
+        readonly schemaVersion: number;
+        readonly documents: readonly {
+          readonly route: string;
+          readonly hidden: boolean;
+          readonly headings: readonly { readonly text: string }[];
+        }[];
+      };
+
+      expect(body.schemaVersion).toBe(1);
+      expect(body.documents.map((entry) => entry.route)).toEqual([
+        "/",
+        "/draft",
+        "/guide/setup",
+      ]);
+      expect(
+        body.documents.find((entry) => entry.route === "/draft")?.hidden,
+      ).toBe(true);
+      expect(
+        body.documents
+          .find((entry) => entry.route === "/guide/setup")
+          ?.headings.map((heading) => heading.text),
+      ).toEqual(["Setup", "Install"]);
+    });
+  });
+
+  it("serves llms.txt without the pages an author hid", async () => {
+    await serveFixture(files, async ({ server }) => {
+      const response = await fetch(`${server.url}llms.txt`);
+      const text = await response.text();
+
+      expect(response.headers.get("content-type")).toBe(
+        "text/plain; charset=utf-8",
+      );
+      expect(text).toContain("# Handbook");
+      expect(text).toContain("- [Setup](/guide/setup)");
+      expect(text).not.toContain("Draft");
+    });
+  });
+
+  it("serves a sitemap under the address it answered on", async () => {
+    await serveFixture(files, async ({ server }) => {
+      const response = await fetch(`${server.url}sitemap.xml`);
+      const xml = await response.text();
+
+      expect(response.headers.get("content-type")).toBe(
+        "application/xml; charset=utf-8",
+      );
+      expect(xml).toContain(`<loc>${server.url}guide/setup</loc>`);
+      expect(xml).not.toContain("/draft");
+    });
+  });
+
+  it("lets an authored file win over the generated one", async () => {
+    await serveFixture(
+      { ...files, "llms.txt": "written by hand\n" },
+      async ({ server }) => {
+        // Somebody who committed their own file meant it.
+        expect(await (await fetch(`${server.url}llms.txt`)).text()).toBe(
+          "written by hand\n",
+        );
+      },
+    );
+  });
+});
+
 describe("problems a user will actually hit", () => {
   it("explains an empty documentation root instead of failing", async () => {
     await serveFixture({}, async ({ server, pageCount, diagnostics }) => {

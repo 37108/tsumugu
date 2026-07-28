@@ -17,6 +17,7 @@ Please read:
 - `docs/diagnostics.md`
 - `docs/accessibility.md`
 - `docs/composition.md`
+- `docs/machine-readable.md`
 - the relevant Architecture Decision Records in `docs/decisions/`
 
 ## Development status

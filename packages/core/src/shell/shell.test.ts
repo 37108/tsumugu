@@ -77,7 +77,9 @@ describe("renderShell", () => {
   it("does not mark any other entry as current", () => {
     const html = shell();
 
-    expect(html.match(/aria-current/gu)).toHaveLength(1);
+    // Once in the markup; the page client's scrollspy code mentions the
+    // attribute too, so the count is over aria-current="page" specifically.
+    expect(html.match(/aria-current="page"/gu)).toHaveLength(1);
   });
 
   it("links every navigation entry", () => {

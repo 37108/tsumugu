@@ -73,6 +73,13 @@ know that. In development the origin is the address the request arrived on, so
 `sitemap.xml` is inspectable locally without pretending it is publishable. A
 future build adapter takes the origin as configuration.
 
+## In a static build
+
+`tsumugu build` writes all four files into the output directory, so the search
+client and any tool that reads the corpus work the same way on a static host as
+they do in development. The sitemap needs `--origin`; without it the file is
+written with a placeholder and a diagnostic says so.
+
 ## Overriding one
 
 An authored file wins. If the documentation root contains its own `llms.txt`,

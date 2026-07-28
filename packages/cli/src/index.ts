@@ -38,14 +38,21 @@ export const exitCodes = {
 export const usage = `tsumugu: a documentation server for plain files
 
 Usage
-  tsumugu dev [directory] [options]   serve documentation on localhost
-  tsumugu --version                   print the version
-  tsumugu --help                      print this message
+  tsumugu dev [directory] [options]     serve documentation on localhost
+  tsumugu build [directory] [options]   write the site to a directory
+  tsumugu --version                     print the version
+  tsumugu --help                        print this message
 
 Options for dev
   --root <directory>   directory to serve, the same as the positional argument
   --host <host>        interface to bind (default: 127.0.0.1, loopback only)
   --port <port>        port to bind, 0 for any free port (default: 0)
+
+Options for build
+  --root <directory>   directory to build, the same as the positional argument
+  --out <directory>    where to write (default: ./dist)
+  --origin <url>       where the site will be published, for sitemap.xml
+  --clean              remove the output directory even if tsumugu did not write it
 
 Without a directory, tsumugu serves ./docs, or the current directory when it
 contains an index document. Files are watched while dev runs: save a document
@@ -80,6 +87,12 @@ export function run(argv: readonly string[]): CliResult {
   return { stdout: "", stderr: usage, exitCode: exitCodes.usage };
 }
 
+export {
+  describeBuild,
+  parseBuildOptions,
+  runBuild,
+  type BuildCommandOptions,
+} from "./build.js";
 export {
   describeStartup,
   describeUpdate,

@@ -12,6 +12,7 @@
     { "path": "./packages/renderer-html" },
     { "path": "./packages/theme-default" },
     { "path": "./packages/transformer-highlight" },
-    { "path": "./packages/preset" }
+    { "path": "./packages/preset" },
+    { "path": "./packages/build" }
   ]
 }

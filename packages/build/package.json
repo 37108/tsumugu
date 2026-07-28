@@ -1,20 +1,17 @@
 {
-  "name": "@tsumugu/cli",
+  "name": "@tsumugu/build",
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Tsumugu command-line interface. Composes public packages and is never depended on by them.",
+  "description": "Static build adapter for Tsumugu. Writes the pages, assets and generated files a server would have served.",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/37108/tsumugu.git",
-    "directory": "packages/cli"
+    "directory": "packages/build"
   },
   "engines": {
     "node": ">=24.0.0"
-  },
-  "bin": {
-    "tsumugu": "./dist/bin.js"
   },
   "exports": {
     ".": {
@@ -32,13 +29,7 @@
     "clean": "tsc --build --clean"
   },
   "dependencies": {
-    "@tsumugu/build": "workspace:*",
-    "@tsumugu/core": "workspace:*",
-    "@tsumugu/preset": "workspace:*",
-    "@tsumugu/renderer-html": "workspace:*",
-    "@tsumugu/renderer-markdown": "workspace:*",
-    "@tsumugu/theme-default": "workspace:*",
-    "@tsumugu/transformer-highlight": "workspace:*"
+    "@tsumugu/core": "workspace:*"
   },
   "devDependencies": {
     "@tsumugu/internal-tsconfig": "workspace:*"

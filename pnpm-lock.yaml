@@ -11,6 +11,9 @@ importers:
       '@eslint/js':
         specifier: ^9.39.4
         version: 9.39.4
+      '@tsumugu/build':
+        specifier: workspace:*
+        version: link:packages/build
       '@tsumugu/cli':
         specifier: workspace:*
         version: link:packages/cli
@@ -68,8 +71,21 @@ importers:
 
   internal/tsconfig: {}
 
+  packages/build:
+    dependencies:
+      '@tsumugu/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@tsumugu/internal-tsconfig':
+        specifier: workspace:*
+        version: link:../../internal/tsconfig
+
   packages/cli:
     dependencies:
+      '@tsumugu/build':
+        specifier: workspace:*
+        version: link:../build
       '@tsumugu/core':
         specifier: workspace:*
         version: link:../core

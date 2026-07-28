@@ -11,7 +11,8 @@
     { "path": "../renderer-html" },
     { "path": "../theme-default" },
     { "path": "../transformer-highlight" },
-    { "path": "../preset" }
+    { "path": "../preset" },
+    { "path": "../build" }
   ],
   "exclude": ["**/*.test.ts", "**/*.suite.ts"]
 }

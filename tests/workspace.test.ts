@@ -64,6 +64,7 @@ describe("workspace discovery", () => {
   it("finds the expected workspaces in a deterministic order", () => {
     expect(manifests.map((manifest) => manifest.id)).toEqual([
       "internal/tsconfig",
+      "packages/build",
       "packages/cli",
       "packages/core",
       "packages/preset",

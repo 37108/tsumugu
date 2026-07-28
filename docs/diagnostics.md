@@ -106,6 +106,13 @@ Every code in the implementation appears here.
 | ---------------------------- | -------- | -------------------------------------------------------------------------------------- |
 | `navigation/duplicate-label` | warning  | two entries in the same section read identically; both pages still work and are linked |
 
+### `build/`
+
+| Code                   | Severity | When                                                                         |
+| ---------------------- | -------- | ---------------------------------------------------------------------------- |
+| `build/missing-origin` | warning  | no origin was given, so `sitemap.xml` was written with a placeholder         |
+| `build/collision`      | error    | two outputs want the same file; the first is written and the second is named |
+
 ### `link/`
 
 | Code                    | Severity | When                                                                    |

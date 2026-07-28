@@ -70,7 +70,9 @@ beforeAll(async () => {
     contents.set(
       file,
       listing
-        .split("\n")
+        // Windows tar ends its lines with \r\n, and a stray \r makes every
+        // file name compare unequal to itself.
+        .split(/\r?\n/u)
         .filter((line) => line.trim() !== "")
         .map((line) => line.replace(/^package\//u, ""))
         .sort(),

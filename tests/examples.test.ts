@@ -52,11 +52,20 @@ describe("examples/handbook", () => {
     });
 
     // Every diagnostic here is a real problem in the example somebody will
-    // read. Fix the example rather than the assertion.
+    // read — except the MDX policy warnings, which the MDX page exists to
+    // demonstrate. Fix the example rather than the assertion.
     expect(
-      running.diagnostics.map(
-        (diagnostic) => `${diagnostic.sourcePath ?? "-"}: ${diagnostic.code}`,
-      ),
+      running.diagnostics
+        .filter(
+          (diagnostic) =>
+            // Both layers report the MDX islands: the renderer preserving
+            // them, and the theme presenting what was preserved.
+            diagnostic.code !== "renderer-markdown/unsupported-construct" &&
+            diagnostic.code !== "theme/unsupported-node",
+        )
+        .map(
+          (diagnostic) => `${diagnostic.sourcePath ?? "-"}: ${diagnostic.code}`,
+        ),
     ).toEqual([]);
   });
 
@@ -108,6 +117,22 @@ describe("examples/handbook", () => {
     expect(
       await (await fetch(`${running.server.url}llms.txt`)).text(),
     ).not.toContain("Drafts");
+  });
+
+  it("serves the MDX page with its dynamic parts shown, not run", async () => {
+    running = await startDev({
+      root: example("handbook"),
+      port: 0,
+      watch: false,
+    });
+
+    const html = await (
+      await fetch(`${running.server.url}guide/writing-in-mdx`)
+    ).text();
+
+    expect(html).toContain('id="why"');
+    expect(html).toContain("&lt;Callout");
+    expect(html).not.toContain("<Callout");
   });
 
   it("serves the image the guide references", async () => {

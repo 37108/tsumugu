@@ -88,7 +88,13 @@ export function classifyLink(url: string): ClassifiedLink {
 }
 
 /** Extensions that mean "this link points at a document, by its file name". */
-const documentExtensions = new Set([".md", ".markdown", ".html", ".htm"]);
+const documentExtensions = new Set([
+  ".md",
+  ".markdown",
+  ".mdx",
+  ".html",
+  ".htm",
+]);
 
 function extensionOf(path: string): string {
   const name = path.slice(path.lastIndexOf("/") + 1);

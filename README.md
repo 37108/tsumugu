@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  A zero-config documentation server that turns plain Markdown and HTML files<br>
+  A zero-config documentation server that turns plain Markdown, MDX and HTML files<br>
   into a documentation experience for humans <em>and</em> AI.
 </p>
 
@@ -36,6 +36,7 @@ below, and your files stay ordinary files that outlive the tool.
 | **For machines**  | `documents.json`, `llms.txt`, `search.json` and `sitemap.xml`, generated from the same documents as the pages                                                                       |
 | **While writing** | watch mode with incremental rebuilds and live reload; broken links, missing anchors and front-matter typos reported _on the page they belong to_                                    |
 | **Shipping**      | `tsumugu build` writes the same site to static files with clean URLs                                                                                                                |
+| **Formats**       | `.md`, `.mdx` and `.html` through one semantic pipeline — MDX parses fully and executes never ([ADR 6](docs/decisions/0006-mdx-without-execution.md))                               |
 
 ## Security is a design constraint, not a page in the docs
 

@@ -31,7 +31,7 @@ export type RoutePath = string & { readonly [routePathBrand]: "RoutePath" };
 export type DocumentId = string & { readonly [documentIdBrand]: "DocumentId" };
 
 /** Source formats the pipeline can currently represent. */
-export type SourceFormat = "markdown" | "html";
+export type SourceFormat = "markdown" | "mdx" | "html";
 
 /** Why a candidate path could not become a {@link SourcePath}. */
 export type PathRejection =
@@ -183,6 +183,7 @@ export function documentIdOf(path: SourcePath): DocumentId {
 const formatsByExtension = new Map<string, SourceFormat>([
   [".md", "markdown"],
   [".markdown", "markdown"],
+  [".mdx", "mdx"],
   [".html", "html"],
   [".htm", "html"],
 ]);

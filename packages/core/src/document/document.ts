@@ -157,7 +157,7 @@ export function discoverDocument(
         severity: "warning",
         stage: "document",
         message: `No renderer handles "${path.value}".`,
-        hint: "Supported extensions are .md, .markdown, .html and .htm. Files with any other extension are ignored, which is usually what you want.",
+        hint: "Supported extensions are .md, .markdown, .mdx, .html and .htm. Files with any other extension are ignored, which is usually what you want.",
         sourcePath: path.value,
       },
     };

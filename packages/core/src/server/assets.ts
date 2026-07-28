@@ -78,7 +78,13 @@ const contentTypes = new Map<string, string>([
  * unstyled, and would publish front matter an author may not have meant to
  * show.
  */
-const documentExtensions = new Set([".md", ".markdown", ".html", ".htm"]);
+const documentExtensions = new Set([
+  ".md",
+  ".markdown",
+  ".mdx",
+  ".html",
+  ".htm",
+]);
 
 /**
  * Serving an asset must never be a way to learn what a project's file system

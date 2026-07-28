@@ -21,7 +21,13 @@ import {
 const indexNames = new Set(["index"]);
 
 /** Extensions removed from a route, matched case-insensitively. */
-const documentExtensions = new Set([".md", ".markdown", ".html", ".htm"]);
+const documentExtensions = new Set([
+  ".md",
+  ".markdown",
+  ".mdx",
+  ".html",
+  ".htm",
+]);
 
 export const routingCodes = {
   collision: "routing/collision",

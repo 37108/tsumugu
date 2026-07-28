@@ -363,3 +363,68 @@ describe("edge cases", () => {
     expect(JSON.stringify(document)).toBe(before);
   });
 });
+
+describe("MDX", () => {
+  function mdxDocument(content: string): LoadedDocument {
+    return { ...documentOf(content, "docs/page.mdx"), format: "mdx" };
+  }
+
+  it("claims .mdx documents", () => {
+    expect(createMarkdownRenderer().supports(mdxDocument("# Hi\n"))).toBe(true);
+  });
+
+  it("renders the Markdown parts exactly as Markdown", async () => {
+    const result = await createMarkdownRenderer().render(
+      mdxDocument("# Title\n\nSome **bold** prose.\n"),
+    );
+
+    expect(result.diagnostics ?? []).toEqual([]);
+    expect(JSON.stringify(result.root)).toContain('"strong"');
+  });
+
+  it("preserves an expression as source and never evaluates it", async () => {
+    const result = await createMarkdownRenderer().render(
+      mdxDocument("The year is {new Date().getFullYear()}.\n"),
+    );
+
+    const text = JSON.stringify(result.root);
+    // The source survives, escaped; no evaluation result appears anywhere.
+    expect(text).toContain("getFullYear");
+    expect(text).toContain('"unsupported"');
+    expect(
+      (result.diagnostics ?? []).some((entry) =>
+        entry.message.includes("not executed"),
+      ),
+    ).toBe(true);
+  });
+
+  it("preserves a component and an import the same way", async () => {
+    const result = await createMarkdownRenderer().render(
+      mdxDocument('import X from "./x.js"\n\n<Widget prop={1}>hi</Widget>\n'),
+    );
+
+    const text = JSON.stringify(result.root);
+    expect(text).toContain("Widget");
+    expect(text).toContain("import X");
+    expect(result.diagnostics?.length).toBe(2);
+  });
+
+  it("reads front matter in MDX like everywhere else", async () => {
+    const result = await createMarkdownRenderer().render(
+      mdxDocument("---\ntitle: From MDX\n---\n\n# Body\n"),
+    );
+
+    expect(result.metadata).toContainEqual(["title", "From MDX"]);
+  });
+
+  it("does not parse MDX syntax inside ordinary Markdown", async () => {
+    // In .md, braces are just text: an .md file must not change meaning
+    // because MDX exists.
+    const result = await createMarkdownRenderer().render(
+      documentOf("Braces {are} text.\n"),
+    );
+
+    expect(JSON.stringify(result.root)).toContain("Braces {are} text.");
+    expect(result.diagnostics ?? []).toEqual([]);
+  });
+});

@@ -2,8 +2,10 @@ import type { LoadedDocument, RenderResult, Renderer } from "tsumugu-core";
 import { frontmatterFromMarkdown } from "mdast-util-frontmatter";
 import { fromMarkdown } from "mdast-util-from-markdown";
 import { gfmTableFromMarkdown } from "mdast-util-gfm-table";
+import { mdxFromMarkdown } from "mdast-util-mdx";
 import { frontmatter } from "micromark-extension-frontmatter";
 import { gfmTable } from "micromark-extension-gfm-table";
+import { mdxjs } from "micromark-extension-mdxjs";
 
 import { convertToSemanticAst } from "./convert.js";
 import { readFrontMatter } from "./frontmatter.js";
@@ -59,14 +61,26 @@ export function createMarkdownRenderer(
     id,
 
     supports: (document: LoadedDocument): boolean =>
-      document.format === "markdown",
+      document.format === "markdown" || document.format === "mdx",
 
     render: (document: LoadedDocument): RenderResult => {
+      // MDX is Markdown with three more kinds of node — expressions, JSX and
+      // ESM — and all three are handled by *not executing them*: the converter
+      // preserves each as escaped source with a diagnostic naming the policy.
+      // That is what lets .mdx into the default composition without touching
+      // the trust model. docs/decisions/0006-mdx-without-execution.md is the
+      // argument in full.
+      const isMdx = document.format === "mdx";
       const tree = fromMarkdown(document.content, {
-        extensions: [gfmTable(), frontmatter(["yaml"])],
+        extensions: [
+          gfmTable(),
+          frontmatter(["yaml"]),
+          ...(isMdx ? [mdxjs()] : []),
+        ],
         mdastExtensions: [
           gfmTableFromMarkdown(),
           frontmatterFromMarkdown(["yaml"]),
+          ...(isMdx ? [mdxFromMarkdown()] : []),
         ],
       });
 

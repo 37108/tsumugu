@@ -1,0 +1,21 @@
+---
+title: Writing in MDX
+description: MDX parses fully; its dynamic parts are shown, never run.
+order: 3
+---
+
+# Writing in MDX
+
+This page is a `.mdx` file. Everything that is Markdown renders exactly as it
+does in `.md` — headings, anchors, tables, code.
+
+The dynamic parts of MDX are **shown, never executed**: the expression
+{1 + 1} and the component below appear as written, each with a diagnostic
+explaining the policy.
+
+<Callout kind="info">Components do not run here.</Callout>
+
+## Why
+
+Documentation content does not execute in Tsumugu, whoever wrote it. The full
+argument is architecture decision record 6 in the Tsumugu repository.

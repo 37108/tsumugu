@@ -150,6 +150,13 @@ third-party action pinned to a commit, `--frozen-lockfile` on every install,
 read-only permissions, no repository secret, and no step calling a script the
 root manifest does not define.
 
+## Source formats
+
+`.md` and `.markdown` (CommonMark plus GFM tables and YAML front matter),
+`.mdx` (the same, with MDX syntax parsed and never executed — see
+[ADR 6](decisions/0006-mdx-without-execution.md)), and `.html` / `.htm` (full
+documents and fragments). Anything else beside the documents is an asset.
+
 ## Browsers
 
 The pages Tsumugu produces target **the current and previous major release of

@@ -3,6 +3,7 @@ import {
   fragment,
   renderUnsupported,
   text,
+  type CodeLine,
   type NodeRenderer,
   type RenderContext,
   type SemanticNode,
@@ -67,6 +68,43 @@ function headingText(node: SemanticNode): string {
   return "children" in node ? node.children.map(headingText).join("") : "";
 }
 
+/** Renders tokenized code, one span per token and one newline per line. */
+function highlightedLines(lines: readonly CodeLine[]): VirtualNode[] {
+  const rendered: VirtualNode[] = [];
+
+  for (const [index, line] of lines.entries()) {
+    if (index > 0) {
+      // The newline is text rather than markup: `pre` keeps it, and a browser
+      // copying the block copies exactly what the author wrote.
+      rendered.push(text("\n"));
+    }
+
+    for (const token of line) {
+      const style = [
+        token.color === undefined ? "" : `--tsumugu-code:${token.color}`,
+        token.darkColor === undefined
+          ? ""
+          : `--tsumugu-code-dark:${token.darkColor}`,
+        token.fontStyle === undefined
+          ? ""
+          : token.fontStyle === "underline"
+            ? "text-decoration:underline"
+            : `font-style:${token.fontStyle === "bold" ? "normal;font-weight:600" : "italic"}`,
+      ]
+        .filter((part) => part !== "")
+        .join(";");
+
+      rendered.push(
+        style === ""
+          ? text(token.value)
+          : element("span", { style }, text(token.value)),
+      );
+    }
+  }
+
+  return rendered;
+}
+
 export const defaultTheme: Theme = {
   id: "default",
   stylesheet,
@@ -128,9 +166,13 @@ export const defaultTheme: Theme = {
     /**
      * A code block, focusable so its overflow can be scrolled without a mouse.
      *
-     * The language is exposed as data rather than as a class: no highlighting
-     * exists yet, and a class named after a highlighter Tsumugu does not ship
-     * would be a promise it does not keep.
+     * When a highlighting transformer has annotated the block, each token
+     * becomes a span carrying both colours as custom properties, and a media
+     * query picks one. The token's text is escaped like any other text, so the
+     * highlighter contributes colour and cannot contribute markup.
+     *
+     * With no annotation the same block renders as plain text. That is what
+     * makes highlighting removable rather than assumed.
      */
     "code-block": (node) =>
       node.type === "code-block"
@@ -142,7 +184,9 @@ export const defaultTheme: Theme = {
               node.language === undefined
                 ? {}
                 : { "data-language": node.language },
-              text(node.value),
+              ...(node.highlighted === undefined
+                ? [text(node.value)]
+                : highlightedLines(node.highlighted)),
             ),
           )
         : fragment(),

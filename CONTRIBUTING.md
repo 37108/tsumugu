@@ -15,6 +15,7 @@ Please read:
 - `docs/compatibility.md`
 - `docs/testing.md`
 - `docs/diagnostics.md`
+- `docs/accessibility.md`
 - the relevant Architecture Decision Records in `docs/decisions/`
 
 ## Development status

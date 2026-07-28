@@ -29,8 +29,9 @@
  * - **No network.** No `@import`, no `url()`, no web font, no icon set. A page
  *   renders identically offline, which is where documentation is often read.
  * - **No JavaScript.** Nothing here depends on a class a script would add.
- * - **Contrast.** Body text is 15.9:1 on the page background, muted text 6.2:1,
- *   links 7.4:1 — every one above the 4.5:1 the project targets.
+ * - **Contrast.** Body text is 16.5:1 on the page background, muted text 6.2:1
+ *   and links 9.6:1; in dark mode 14.4:1, 7.8:1 and 9.0:1. Every pair is
+ *   recorded in `docs/accessibility.md` and above the 4.5:1 the project targets.
  * - **Reduced motion.** The only transitions are colour changes; they are
  *   removed entirely when a reader has asked for less motion.
  */
@@ -232,6 +233,24 @@ export const stylesheet = `
   font-size: 0.875rem;
   line-height: 1.6;
   padding: 0;
+}
+
+/*
+ * Highlighted tokens.
+ *
+ * Each span carries both colours; the media query picks one. Doing it this way
+ * means a reader who switches their system theme with the page already open
+ * sees the code change with everything else, and no script decides it after the
+ * page has painted.
+ */
+.tsumugu-doc pre code span {
+  color: var(--tsumugu-code, inherit);
+}
+
+@media (prefers-color-scheme: dark) {
+  .tsumugu-doc pre code span {
+    color: var(--tsumugu-code-dark, var(--tsumugu-code, inherit));
+  }
 }
 
 .tsumugu-table-scroll {

@@ -105,6 +105,26 @@ export interface InlineCodeNode extends NodeBase {
   readonly value: string;
 }
 
+/**
+ * One run of code that shares a colour.
+ *
+ * Text and presentation are separate fields on purpose: `value` is what the
+ * author wrote and what a copy button, a search index or an AI export reads,
+ * and it is escaped like any other text when it is rendered. Nothing here is
+ * markup, so a highlighter cannot inject any.
+ */
+export interface CodeToken {
+  readonly value: string;
+  /** Colour for a light background, as a CSS colour. */
+  readonly color?: string;
+  /** Colour for a dark background, when the highlighter offered one. */
+  readonly darkColor?: string;
+  readonly fontStyle?: "italic" | "bold" | "underline";
+}
+
+/** A line of code, as tokens. Empty for a blank line. */
+export type CodeLine = readonly CodeToken[];
+
 export interface CodeBlockNode extends NodeBase {
   readonly type: "code-block";
   readonly value: string;
@@ -114,6 +134,15 @@ export interface CodeBlockNode extends NodeBase {
    * what the document said.
    */
   readonly language?: string;
+  /**
+   * Tokens produced by a highlighting transformer, when one ran.
+   *
+   * `value` above stays exactly as the author wrote it, so removing the
+   * transformer removes the colour and nothing else. A theme that finds no
+   * tokens renders the plain text, which is what makes highlighting optional
+   * rather than assumed.
+   */
+  readonly highlighted?: readonly CodeLine[];
 }
 
 export interface ListNode extends NodeBase {

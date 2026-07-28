@@ -1,20 +1,17 @@
 {
-  "name": "@tsumugu/cli",
+  "name": "@tsumugu/transformer-highlight",
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Tsumugu command-line interface. Composes public packages and is never depended on by them.",
+  "description": "Syntax highlighting for Tsumugu, as a Semantic AST transformer. Annotates code blocks with tokens; renders nothing itself.",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/37108/tsumugu.git",
-    "directory": "packages/cli"
+    "directory": "packages/transformer-highlight"
   },
   "engines": {
     "node": ">=24.0.0"
-  },
-  "bin": {
-    "tsumugu": "./dist/bin.js"
   },
   "exports": {
     ".": {
@@ -33,10 +30,7 @@
   },
   "dependencies": {
     "@tsumugu/core": "workspace:*",
-    "@tsumugu/renderer-html": "workspace:*",
-    "@tsumugu/renderer-markdown": "workspace:*",
-    "@tsumugu/theme-default": "workspace:*",
-    "@tsumugu/transformer-highlight": "workspace:*"
+    "shiki": "^3.14.0"
   },
   "devDependencies": {
     "@tsumugu/internal-tsconfig": "workspace:*"

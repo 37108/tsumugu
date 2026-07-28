@@ -39,6 +39,10 @@ const forbiddenFromCore: readonly {
     reason: "renderers register into core rather than being part of it",
   },
   {
+    pattern: /^@tsumugu\/transformer-/,
+    reason: "transformers register into core rather than being part of it",
+  },
+  {
     pattern: /^@tsumugu\/build$/,
     reason: "the build adapter consumes pipeline output",
   },
@@ -239,6 +243,7 @@ describe("public export surface", () => {
       "reloadScript",
       "renderUnsupported",
       "renderWithTheme",
+      "runTransformers",
       "serializeToHtml",
       "serve",
       "summarizeDiagnostics",
@@ -261,6 +266,12 @@ describe("public export surface", () => {
     "@tsumugu/renderer-markdown": ["createMarkdownRenderer"],
     "@tsumugu/renderer-html": ["createHtmlRenderer", "isFullDocument"],
     "@tsumugu/theme-default": ["defaultTheme", "defaultThemeStylesheet"],
+    "@tsumugu/transformer-highlight": [
+      "createHighlightTransformer",
+      "highlightCodes",
+      "highlightTransformerId",
+      "resolveLanguage",
+    ],
   };
 
   /**

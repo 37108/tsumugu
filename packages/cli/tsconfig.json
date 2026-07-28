@@ -9,7 +9,8 @@
     { "path": "../core" },
     { "path": "../renderer-markdown" },
     { "path": "../renderer-html" },
-    { "path": "../theme-default" }
+    { "path": "../theme-default" },
+    { "path": "../transformer-highlight" }
   ],
   "exclude": ["**/*.test.ts", "**/*.suite.ts"]
 }

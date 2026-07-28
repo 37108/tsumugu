@@ -107,9 +107,92 @@ body {
 }
 
 .tsumugu-header {
+  align-items: center;
   border-block-end: 1px solid var(--ts-rule);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
   grid-area: header;
+  justify-content: space-between;
   padding-block: 1.4rem;
+}
+
+/* Search ----------------------------------------------------------------- */
+
+.tsumugu-search {
+  flex: 1 1 12rem;
+  max-width: 22rem;
+  position: relative;
+}
+
+.tsumugu-search input {
+  background: var(--ts-panel);
+  border: 1px solid var(--ts-rule);
+  border-radius: 6px;
+  color: var(--ts-ink);
+  font: inherit;
+  font-size: 0.9rem;
+  inline-size: 100%;
+  padding: 0.5rem 0.7rem;
+}
+
+.tsumugu-search input::placeholder {
+  color: var(--ts-ink-muted);
+}
+
+.tsumugu-search ul {
+  background: var(--ts-paper);
+  border: 1px solid var(--ts-rule);
+  border-radius: 8px;
+  box-shadow: 0 12px 32px rgb(0 0 0 / 12%);
+  inset-block-start: calc(100% + 0.4rem);
+  inset-inline: 0;
+  list-style: none;
+  margin: 0;
+  max-height: min(24rem, 60dvh);
+  overflow-y: auto;
+  padding: 0.3rem;
+  position: absolute;
+  z-index: 5;
+}
+
+.tsumugu-search li a {
+  border-radius: 5px;
+  color: var(--ts-ink);
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.5rem 0.6rem;
+  text-decoration: none;
+}
+
+.tsumugu-search li[aria-selected="true"] a,
+.tsumugu-search li a:hover {
+  background: var(--ts-panel);
+}
+
+.tsumugu-search-title {
+  font-size: 0.9rem;
+}
+
+.tsumugu-search-context {
+  color: var(--ts-ink-muted);
+  font-size: 0.775rem;
+}
+
+/*
+ * Available to a screen reader, invisible to everyone else. The clip-path is
+ * what keeps it out of the layout without "display: none", which would take it
+ * out of the accessibility tree as well.
+ */
+.tsumugu-visually-hidden {
+  block-size: 1px;
+  clip-path: inset(50%);
+  inline-size: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
 }
 
 .tsumugu-brand {

@@ -230,6 +230,35 @@ describe("accessibility", () => {
     expect(table?.getAttribute("aria-label")).toBe("Table");
   });
 
+  it("exposes search as a combobox a keyboard can drive", async () => {
+    await audit(project, "guide/setup");
+
+    const input = document.querySelector(
+      '.tsumugu-search input[role="combobox"]',
+    );
+    const list = document.getElementById("tsumugu-search-results");
+
+    expect(input?.getAttribute("aria-controls")).toBe("tsumugu-search-results");
+    expect(input?.getAttribute("aria-expanded")).toBe("false");
+    expect(list?.getAttribute("role")).toBe("listbox");
+    // Labelled, not placeholder-labelled: a placeholder disappears the moment
+    // somebody types.
+    expect(
+      document.querySelector(`label[for="${input?.id ?? ""}"]`)?.textContent,
+    ).toBe("Search the documentation");
+  });
+
+  it("keeps the search field useful without JavaScript", async () => {
+    await audit(project, "guide/setup");
+
+    const form = document.querySelector(".tsumugu-search");
+
+    // With no script, submitting goes to a real page that lists everything.
+    expect(form?.getAttribute("action")).toBe("/search");
+    expect(form?.getAttribute("method")).toBe("get");
+    expect(form?.getAttribute("role")).toBe("search");
+  });
+
   it("tells assistive technology which navigation entry is the current page", async () => {
     await audit(project, "guide/setup");
 

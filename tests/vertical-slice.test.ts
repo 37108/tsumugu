@@ -95,9 +95,11 @@ describe("a directory with one Markdown file", () => {
       // The security model stated as something the browser enforces rather
       // than something Tsumugu promises.
       expect(policy).toContain("default-src 'none'");
-      expect(policy).not.toContain("script-src");
+      // Only hashes, never a wildcard and never `unsafe-inline`: an author's
+      // script and an injected one are both still refused.
+      expect(policy).toMatch(/script-src 'sha256-[A-Za-z0-9+/=]+'/u);
+      expect(policy).not.toMatch(/script-src[^;]*(unsafe-inline|'self'|\*)/u);
       expect(response.headers.get("x-content-type-options")).toBe("nosniff");
-      expect(await response.text()).not.toContain("<script");
     });
   });
 
@@ -213,6 +215,43 @@ describe("machine-readable outputs", () => {
       expect(text).toContain("# Handbook");
       expect(text).toContain("- [Setup](/guide/setup)");
       expect(text).not.toContain("Draft");
+    });
+  });
+
+  it("serves a search index split by heading", async () => {
+    await serveFixture(files, async ({ server }) => {
+      const response = await fetch(`${server.url}search.json`);
+
+      expect(response.status).toBe(200);
+      expect(response.headers.get("content-type")).toBe(
+        "application/json; charset=utf-8",
+      );
+
+      const body = (await response.json()) as {
+        readonly entries: readonly {
+          readonly url: string;
+          readonly document: string;
+        }[];
+      };
+
+      expect(body.entries.map((entry) => entry.url)).toContain(
+        "/guide/setup#install",
+      );
+      // A page an author hid is not found by searching either.
+      expect(body.entries.some((entry) => entry.document === "Draft")).toBe(
+        false,
+      );
+    });
+  });
+
+  it("serves a search page that works without JavaScript", async () => {
+    await serveFixture(files, async ({ server }) => {
+      const response = await fetch(`${server.url}search?q=install`);
+      const html = await response.text();
+
+      expect(response.status).toBe(200);
+      expect(html).toContain("Search");
+      expect(html).toContain('href="/guide/setup"');
     });
   });
 

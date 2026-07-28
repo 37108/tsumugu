@@ -19,6 +19,7 @@ import {
   toRecord,
   type DocumentRecord,
 } from "../exports/records.js";
+import { searchEntries, searchJson } from "../exports/search.js";
 import { collectReferences } from "../links/collect.js";
 import { validateDocumentLinks } from "../links/validate.js";
 import { renderShell } from "../shell/shell.js";
@@ -31,6 +32,7 @@ import {
   generateBadRequestDocument,
   generateHomeDocument,
   generateNotFoundDocument,
+  generateSearchDocument,
 } from "./generated.js";
 
 /**
@@ -218,6 +220,14 @@ export async function createSite(options: BuildOptions): Promise<Site> {
    */
   let siteName = options.siteName ?? "Documentation";
 
+  /**
+   * Whether the shell should show a search field.
+   *
+   * A project with nothing to search does not get a control that finds
+   * nothing, so this is decided by the index rather than by an option.
+   */
+  let hasSearch = false;
+
   // State that survives an update, and is the only thing that does.
   let documents: ReadonlyMap<DocumentId, LoadedDocument> = new Map();
   const prepared = new Map<DocumentId, PreparedDocument>();
@@ -306,6 +316,7 @@ export async function createSite(options: BuildOptions): Promise<Site> {
       tableOfContents: input.tableOfContents,
       content: input.body,
       diagnostics: input.diagnostics,
+      search: hasSearch,
       ...(options.theme.stylesheet === undefined
         ? {}
         : { themeStylesheet: options.theme.stylesheet }),
@@ -465,6 +476,30 @@ export async function createSite(options: BuildOptions): Promise<Site> {
       ]),
     );
 
+    // Records first: the shell needs to know whether a search field is worth
+    // showing, and that is a question about what the project contains.
+    const records = sortRecords([
+      ...entries.map((entry) =>
+        toRecord({
+          route: entry.route,
+          sourcePath: entry.sourcePath,
+          format: entry.format,
+          title: entry.metadata.title,
+          ...(entry.metadata.description === undefined
+            ? {}
+            : { description: entry.metadata.description }),
+          hidden: entry.metadata.hidden,
+          generated: false,
+          renderable: entry.root !== undefined,
+          ...(entry.root === undefined ? {} : { root: entry.root }),
+          contentHash: entry.contentHash,
+        }),
+      ),
+    ]);
+
+    const searchable = searchEntries(records);
+    hasSearch = searchable.length > 0;
+
     const pages = new Map<RoutePath, Page>();
     for (const entry of entries) {
       const page = toHtml({
@@ -521,25 +556,7 @@ export async function createSite(options: BuildOptions): Promise<Site> {
       });
     }
 
-    const records = sortRecords([
-      ...entries.map((entry) =>
-        toRecord({
-          route: entry.route,
-          sourcePath: entry.sourcePath,
-          format: entry.format,
-          title: entry.metadata.title,
-          ...(entry.metadata.description === undefined
-            ? {}
-            : { description: entry.metadata.description }),
-          hidden: entry.metadata.hidden,
-          generated: false,
-          renderable: entry.root !== undefined,
-          ...(entry.root === undefined ? {} : { root: entry.root }),
-          contentHash: entry.contentHash,
-        }),
-      ),
-      ...generatedRecords,
-    ]);
+    const exported = sortRecords([...records, ...generatedRecords]);
 
     const site = {
       name: siteName,
@@ -548,6 +565,21 @@ export async function createSite(options: BuildOptions): Promise<Site> {
         : { description: home.metadata.description }),
     };
 
+    const searchRoute = "/search" as RoutePath;
+    if (searchable.length > 0 && !pages.has(searchRoute)) {
+      pages.set(searchRoute, {
+        route: searchRoute,
+        title: "Search",
+        html: renderGenerated(
+          generateSearchDocument({ navigation: navigation.items }),
+          "Search",
+          navigation.items,
+        ),
+        diagnostics: [],
+        generated: true,
+      });
+    }
+
     result = {
       pages,
       exports: new Map<string, ExportOutput>([
@@ -555,21 +587,28 @@ export async function createSite(options: BuildOptions): Promise<Site> {
           "/documents.json",
           {
             contentType: "application/json; charset=utf-8",
-            render: () => documentsJson(records, site),
+            render: () => documentsJson(exported, site),
           },
         ],
         [
           "/llms.txt",
           {
             contentType: "text/plain; charset=utf-8",
-            render: () => llmsTxt(records, site),
+            render: () => llmsTxt(exported, site),
+          },
+        ],
+        [
+          "/search.json",
+          {
+            contentType: "application/json; charset=utf-8",
+            render: () => searchJson(records),
           },
         ],
         [
           "/sitemap.xml",
           {
             contentType: "application/xml; charset=utf-8",
-            render: (origin) => sitemapXml(records, origin),
+            render: (origin) => sitemapXml(exported, origin),
           },
         ],
       ]),

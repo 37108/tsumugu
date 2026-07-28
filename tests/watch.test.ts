@@ -228,26 +228,32 @@ describe("watch mode", () => {
     });
   });
 
-  it("puts one script on the page, and no more", async () => {
+  it("adds the reload script, and nothing beyond the two Tsumugu ships", async () => {
     await withTemporaryDirectory(async (root) => {
-      await writeFiles(root, { "index.md": "# Home\n" });
+      await writeFiles(root, {
+        "index.md": "# Home\n\nSomething to search.\n",
+      });
       running = await startDev({ root, port: 0 });
 
       const html = await (await fetch(running.server.url)).text();
 
-      expect(html.match(/<script/gu)).toHaveLength(1);
+      // Search on every page, live reload only here: two, and no more.
+      expect(html.match(/<script/gu)).toHaveLength(2);
       expect(html).toContain("EventSource");
     });
   });
 
-  it("puts no script on the page when live reload is off", async () => {
+  it("leaves the reload script out when live reload is off", async () => {
     await withTemporaryDirectory(async (root) => {
-      await writeFiles(root, { "index.md": "# Home\n" });
+      await writeFiles(root, {
+        "index.md": "# Home\n\nSomething to search.\n",
+      });
       running = await startDev({ root, port: 0, liveReload: false });
 
-      expect(await (await fetch(running.server.url)).text()).not.toContain(
-        "<script",
-      );
+      const html = await (await fetch(running.server.url)).text();
+
+      expect(html).not.toContain("EventSource");
+      expect(html.match(/<script/gu)).toHaveLength(1);
     });
   });
 

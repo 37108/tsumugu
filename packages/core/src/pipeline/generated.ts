@@ -162,6 +162,54 @@ export function generateNotFoundDocument(
   return { type: "document", children };
 }
 
+export interface GeneratedSearchInput {
+  readonly query?: string;
+  readonly navigation: readonly NavigationItem[];
+}
+
+/**
+ * The search page.
+ *
+ * It exists so the search field is a control that does something before any
+ * script runs: submitting it lands here, on a page that lists everything the
+ * project contains. With the script running, results appear in the field
+ * instead and this page is rarely seen — but "rarely seen" is not "never", and
+ * a form that submits into nothing is a broken form.
+ *
+ * It deliberately does not try to answer the query. Matching belongs in one
+ * place, and duplicating it here in a second implementation is how two searches
+ * start disagreeing about what matches.
+ */
+export function generateSearchDocument(
+  input: GeneratedSearchInput,
+): DocumentNode {
+  const children: BlockNode[] = [
+    { type: "heading", depth: 1, children: [text("Search")] },
+  ];
+
+  if (input.query !== undefined && input.query.trim() !== "") {
+    children.push(
+      paragraph(
+        text("Searching for "),
+        { type: "inline-code", value: input.query.trim() },
+        text(
+          " needs JavaScript, which is not running. Everything this project contains is listed below.",
+        ),
+      ),
+    );
+  } else {
+    children.push(
+      paragraph(text("Everything this project contains is listed below.")),
+    );
+  }
+
+  if (input.navigation.length > 0) {
+    children.push(navigationList(input.navigation));
+  }
+
+  return { type: "document", children };
+}
+
 /**
  * The page shown for a request path that cannot be decoded at all.
  *

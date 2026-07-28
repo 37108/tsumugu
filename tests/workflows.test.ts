@@ -6,7 +6,7 @@ import { repositoryRoot, toPosixPath } from "./helpers/paths.js";
 import { readRootManifest } from "./helpers/workspace-manifests.js";
 
 /**
- * Invariants for the continuous integration workflows.
+ * Invariants for the workflows.
  *
  * These properties are easy to lose in a hurried edit and expensive to notice
  * afterwards: a moved action tag, a widened permission, a `pnpm install` that
@@ -27,6 +27,20 @@ interface Workflow {
 
 let workflows: readonly Workflow[];
 let rootScripts: ReadonlySet<string>;
+
+/**
+ * The release workflow is the exception to several rules below.
+ *
+ * It is the one workflow that writes: it opens the version pull request and
+ * publishes to a registry, so it needs a token and write permissions that
+ * every other workflow must not have. The exception is named here, once, so
+ * that widening a rule for it cannot quietly widen it for the rest.
+ */
+const releaseWorkflow = ".github/workflows/release.yml";
+
+function isRelease(workflow: Workflow): boolean {
+  return workflow.name === releaseWorkflow;
+}
 
 beforeAll(async () => {
   const entries = await readdir(workflowsDirectory, { withFileTypes: true });
@@ -94,14 +108,25 @@ describe("supply chain", () => {
     }
   });
 
-  it("requires no repository secret", () => {
-    for (const workflow of workflows) {
+  it("requires no repository secret outside the release workflow", () => {
+    for (const workflow of workflows.filter((entry) => !isRelease(entry))) {
       // A workflow that reads a secret cannot run for pull requests from forks.
       expect(
         workflow.text,
         `${workflow.name} must not reference secrets`,
       ).not.toMatch(/secrets\./);
     }
+  });
+
+  it("publishes with a short-lived credential rather than a stored token", () => {
+    const release = workflows.find(isRelease);
+    expect(release).toBeDefined();
+
+    // `id-token: write` is what lets npm trusted publishing mint a credential
+    // for this run. A long-lived NPM_TOKEN in repository secrets would be a
+    // credential that leaks once and works forever.
+    expect(release?.text).toMatch(/id-token:\s*write/);
+    expect(release?.text).not.toMatch(/secrets\.NPM_TOKEN/);
   });
 });
 
@@ -118,7 +143,15 @@ describe("permissions", () => {
       ];
       expect(granted.length).toBeGreaterThan(0);
 
+      // The release workflow writes, and what it may write is stated exactly.
+      const allowedToWrite = isRelease(workflow)
+        ? new Set(["contents", "pull-requests", "id-token"])
+        : new Set<string>();
+
       for (const [line, scope, level] of granted) {
+        if (level === "write" && allowedToWrite.has(scope ?? "")) {
+          continue;
+        }
         expect(
           level,
           `${workflow.name} grants ${scope ?? "?"}: write ("${line.trim()}"); nothing here writes to the repository`,
@@ -130,15 +163,31 @@ describe("permissions", () => {
 
 describe("triggers", () => {
   it("runs on pull requests and on pushes to the default branch", () => {
-    for (const workflow of workflows) {
+    for (const workflow of workflows.filter((entry) => !isRelease(entry))) {
       expect(workflow.text).toMatch(/^\s*pull_request:/m);
       expect(workflow.text).toMatch(/^\s*push:/m);
       expect(workflow.text).toMatch(/branches:\s*\[main\]/);
     }
   });
 
+  it("releases only from the default branch, never from a pull request", () => {
+    const release = workflows.find(isRelease);
+
+    // A release triggered by opening a pull request would publish a branch.
+    expect(release?.text).not.toMatch(/^\s*pull_request:/m);
+    expect(release?.text).toMatch(/branches:\s*\[main\]/);
+  });
+
+  it("never cancels a release that may already be publishing", () => {
+    const release = workflows.find(isRelease);
+
+    expect(release?.text).toMatch(/concurrency:/);
+    // Cancelling mid-publish would leave some packages released and some not.
+    expect(release?.text).toContain("cancel-in-progress: false");
+  });
+
   it("cancels runs that a newer commit has superseded", () => {
-    for (const workflow of workflows) {
+    for (const workflow of workflows.filter((entry) => !isRelease(entry))) {
       expect(workflow.text).toMatch(/^concurrency:/m);
       expect(workflow.text).toContain("cancel-in-progress: true");
     }

@@ -1,0 +1,102 @@
+---
+description: How Tsumugu's packages are versioned, published, and what pre-alpha means for anyone depending on them.
+---
+
+# Releasing
+
+## What is published
+
+Everything under `packages/` is published to npm under the `@tsumugu` scope.
+`internal/` workspaces never are: they are development tooling, and a consumer
+installing a published package must never end up needing one.
+
+`tests/workspace.test.ts` states the list of publishable packages explicitly, so
+a workspace that became publishable by accident fails the suite rather than
+appearing on the registry.
+
+## One version for all of them
+
+Every package moves together, on one version number, configured through
+Changesets' `fixed` setting.
+
+The packages are not independently useful yet — the CLI, the preset, the
+renderers, the theme and the build adapter are one product split along
+architectural lines — and independent versions would mean a matrix of
+combinations nobody has tested. One version means "these were built and checked
+together", which is the only claim currently worth making.
+
+This is reconsidered when a package earns a reason to move on its own.
+
+## Pre-alpha means 0.x
+
+While the version starts with `0.`, **any release may break anything**. Public
+APIs are earned, not declared: `docs/principles.md` describes the path from
+internal implementation to stable API, and nothing here has finished it.
+
+A minor bump (`0.1.0` → `0.2.0`) is used for anything a consumer would notice; a
+patch for fixes that do not change behaviour they could depend on. Neither is a
+compatibility promise until the version reaches `1.0.0`.
+
+## Making a change
+
+```bash
+pnpm changeset          # describe the change and choose the bump
+```
+
+That writes a Markdown file under `.changeset/`, which is reviewed with the code
+it describes. A change that consumers cannot observe — a test, a comment, an
+internal refactor — needs no changeset.
+
+## Publishing
+
+The release workflow does both halves, and which one it does depends on what is
+on `main`:
+
+1. **With unreleased changesets**, it opens or updates a pull request titled
+   `chore: version packages`, containing the version bumps and the changelog
+   entries those changesets describe.
+2. **When that pull request is merged**, it runs the full gate and publishes.
+
+So publishing is a merge, reviewed like any other, rather than a command
+somebody runs on a laptop at the end of a long day.
+
+### Credentials
+
+Publishing uses npm's trusted publishing: the workflow asks GitHub for a
+short-lived token through `id-token: write`, and npm verifies it. There is no
+`NPM_TOKEN` in repository secrets, because a long-lived token is a credential
+that leaks once and works forever.
+
+`NPM_CONFIG_PROVENANCE` is on, so each published package carries a signed
+statement of the commit and workflow that built it.
+
+### Before the first publish
+
+The npm organisation must be configured to trust this repository's release
+workflow. Until that is done the publish step fails with an authorization error,
+which is the correct failure: nothing is published by accident.
+
+## What a release checks
+
+`pnpm run release` runs `pnpm check` first — formatting, linting, types and the
+full suite — and `tests/packaging.test.ts` is part of that. It packs every
+publishable package and inspects the tarball a consumer would receive:
+
+- the build output is present, with type declarations;
+- no `src/`, no tests, no build state;
+- every path in `exports` and `bin` exists inside the tarball.
+
+Those are the failures that pass every other test and only appear after
+publication.
+
+## Maintainer checklist
+
+- [ ] `pnpm check` passes on `main`.
+- [ ] Every user-visible change since the last release has a changeset.
+- [ ] The version pull request's changelog reads as something a user can act on.
+- [ ] `docs/compatibility.md` still describes the supported runtimes.
+- [ ] Anything newly public is deliberate: check the export lists in
+      `tests/boundaries.test.ts` against what the release adds.
+- [ ] Merge the version pull request and watch the workflow publish.
+- [ ] Install the published CLI in an empty directory and serve a document with
+      it. The registry is the only place where a broken package is real.

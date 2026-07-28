@@ -107,13 +107,44 @@ describe("publication safety", () => {
     expect(root["private"]).toBe(true);
   });
 
-  it("keeps every workspace private during pre-alpha", () => {
+  it("publishes every package under packages/, and nothing else", () => {
     const publishable = manifests
       .filter((manifest) => !manifest.isPrivate)
-      .map((manifest) => manifest.id);
+      .map((manifest) => manifest.id)
+      .sort();
 
-    // Nothing is published yet. Release configuration is tracked in issue #49.
-    expect(publishable).toEqual([]);
+    // An internal workspace that became publishable would be published by
+    // accident on the next release, so the list is stated rather than derived.
+    expect(publishable).toEqual([
+      "packages/build",
+      "packages/cli",
+      "packages/core",
+      "packages/preset",
+      "packages/renderer-html",
+      "packages/renderer-markdown",
+      "packages/theme-default",
+      "packages/transformer-highlight",
+    ]);
+  });
+
+  it("keeps internal workspaces private", () => {
+    for (const manifest of internalWorkspaces) {
+      expect(manifest.isPrivate, manifest.id).toBe(true);
+    }
+  });
+
+  it("publishes every package with public access", () => {
+    for (const manifest of manifests.filter((entry) => !entry.isPrivate)) {
+      const publishConfig = manifest.fields.get("publishConfig");
+      expect(publishConfig, manifest.id).toEqual({ access: "public" });
+    }
+  });
+
+  it("ships only build output", () => {
+    for (const manifest of manifests.filter((entry) => !entry.isPrivate)) {
+      // Publishing `src` would ship the tests and double the size for nothing.
+      expect(manifest.fields.get("files"), manifest.id).toEqual(["dist"]);
+    }
   });
 
   it("names internal workspaces so they are recognisable as internal", () => {

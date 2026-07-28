@@ -18,6 +18,7 @@ Please read:
 - `docs/accessibility.md`
 - `docs/composition.md`
 - `docs/machine-readable.md`
+- `docs/releasing.md`
 - the relevant Architecture Decision Records in `docs/decisions/`
 
 ## Development status
@@ -90,7 +91,7 @@ difference is almost always a path assumption or a line ending — see
 3. Keep each pull request focused on one coherent change.
 4. Add or update tests for behavioral changes.
 5. Update documentation when behavior, architecture, or user-facing expectations change.
-6. Add a changeset when the change affects a publishable package.
+6. Add a changeset when the change affects a publishable package: `pnpm changeset`. See [`docs/releasing.md`](docs/releasing.md).
 
 ## Design expectations
 

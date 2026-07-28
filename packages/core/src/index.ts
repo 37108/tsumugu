@@ -127,6 +127,16 @@ export type {
 } from "./server/serve.js";
 export { serve } from "./server/serve.js";
 
+// Live reload: the channel a development server holds, and the script a page
+// carries. Both are opt-in, and the security model in `server/live-reload.ts`
+// explains why that matters.
+export type { ReloadChannel } from "./server/live-reload.js";
+export {
+  createReloadChannel,
+  reloadPath,
+  reloadScript,
+} from "./server/live-reload.js";
+
 // Watching, so a development entry point can rebuild without implementing its
 // own debounce over a platform's file-system events.
 export type { Watcher, WatchOptions } from "./scanner/watch.js";

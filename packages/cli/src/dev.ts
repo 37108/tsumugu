@@ -3,7 +3,9 @@ import path from "node:path";
 
 import {
   createHeadingIdTransformer,
+  createReloadChannel,
   createSite,
+  reloadScript,
   formatDiagnostics,
   serve,
   watchRoot,
@@ -32,6 +34,14 @@ export interface DevOptions {
   readonly port?: number;
   /** Watch the root and rebuild on change. On unless turned off. */
   readonly watch?: boolean;
+  /**
+   * Reload open browser tabs after a rebuild. On unless watching is off.
+   *
+   * This is the only thing that puts JavaScript on a Tsumugu page, and it is
+   * one script Tsumugu wrote, allowed by its hash. Turning it off returns the
+   * pages to running nothing at all.
+   */
+  readonly liveReload?: boolean;
   /** Called after a rebuild triggered by a file change. */
   readonly onUpdate?: (summary: UpdateSummary) => void;
   /** Called when a rebuild failed, which leaves the last good site served. */
@@ -42,6 +52,8 @@ export interface DevResult {
   readonly server: RunningServer;
   /** The site being served, which rebuilds itself as files change. */
   readonly site: Site;
+  /** Whether the root is being watched. */
+  readonly watching: boolean;
   readonly diagnostics: readonly DocumentDiagnostic[];
   /** How many documents the project has. Generated pages are not counted. */
   readonly pageCount: number;
@@ -228,6 +240,11 @@ export function siteNameFor(root: string): string {
  */
 export async function startDev(options: DevOptions = {}): Promise<DevResult> {
   const root = path.resolve(options.root ?? conventionalDirectory);
+  const watching = options.watch !== false;
+  // Reloading a browser when nothing is watching for changes would be a script
+  // that can never fire, so the two are one decision unless asked otherwise.
+  const reloading = watching && options.liveReload !== false;
+  const reload = reloading ? createReloadChannel() : undefined;
 
   const site = await createSite({
     root,
@@ -240,12 +257,14 @@ export async function startDev(options: DevOptions = {}): Promise<DevResult> {
     transformers: [createHeadingIdTransformer()],
     theme: defaultTheme,
     siteName: siteNameFor(root),
+    ...(reloading ? { script: reloadScript } : {}),
   });
 
   const server = await serve({
     // Asked per request, so an edit is served as soon as the rebuild finishes.
     site: () => site.result,
     assetRoot: root,
+    ...(reload === undefined ? {} : { liveReload: reload }),
     ...(options.host === undefined ? {} : { host: options.host }),
     ...(options.port === undefined ? {} : { port: options.port }),
   });
@@ -255,19 +274,21 @@ export async function startDev(options: DevOptions = {}): Promise<DevResult> {
   // reflects half of one edit and half of another.
   let pending: Promise<void> = Promise.resolve();
 
-  const watcher =
-    options.watch === false
-      ? undefined
-      : watchRoot(root, () => {
-          pending = pending
-            .then(async () => {
-              const summary = await site.update();
-              options.onUpdate?.(summary);
-            })
-            .catch((cause: unknown) => {
-              options.onUpdateFailed?.(cause);
-            });
-        });
+  const watcher = !watching
+    ? undefined
+    : watchRoot(root, () => {
+        pending = pending
+          .then(async () => {
+            const summary = await site.update();
+            // Only after the rebuild finished: a browser told to reload
+            // early would fetch the page it already had.
+            reload?.notify();
+            options.onUpdate?.(summary);
+          })
+          .catch((cause: unknown) => {
+            options.onUpdateFailed?.(cause);
+          });
+      });
 
   return {
     server: {
@@ -277,6 +298,7 @@ export async function startDev(options: DevOptions = {}): Promise<DevResult> {
         await server.close();
       },
     },
+    watching,
     site,
     diagnostics: currentDiagnostics(site),
     // Generated pages are not counted: a project with no documents should be
@@ -323,7 +345,7 @@ export function describeStartup(result: DevResult, root: string): string {
     `tsumugu  ${result.server.url}`,
     `  root   ${root}`,
     `  pages  ${String(result.pageCount)}`,
-    "  watch  on, reload the page after saving",
+    `  watch  ${result.watching ? "on, pages reload themselves after a save" : "off"}`,
   ];
 
   if (result.pageCount === 0) {

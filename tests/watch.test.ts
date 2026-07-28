@@ -53,6 +53,33 @@ async function eventually(
   );
 }
 
+/** Reads the event stream until `marker` arrives, or gives up. */
+async function readUntil(
+  reader: ReadableStreamDefaultReader<Uint8Array> | undefined,
+  marker: string,
+  attempts = 60,
+): Promise<string> {
+  if (reader === undefined) {
+    throw new Error("the response had no body to read");
+  }
+
+  const decoder = new TextDecoder();
+  let seen = "";
+
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    const chunk = await reader.read();
+    if (chunk.done) {
+      break;
+    }
+    seen += decoder.decode(chunk.value, { stream: true });
+    if (seen.includes(marker)) {
+      return seen;
+    }
+  }
+
+  throw new Error(`the stream never sent "${marker}". Saw:\n${seen}`);
+}
+
 describe("watch mode", () => {
   it("serves an edit without restarting", async () => {
     await withTemporaryDirectory(async (root) => {
@@ -176,6 +203,51 @@ describe("watch mode", () => {
 
       expect((await fetch(`${running.server.url}notes`)).status).toBe(200);
       expect((await fetch(running.server.url)).status).toBe(200);
+    });
+  });
+
+  it("tells an open browser to reload after a rebuild", async () => {
+    await withTemporaryDirectory(async (root) => {
+      await writeFiles(root, { "index.md": "# First\n" });
+      running = await startDev({ root, port: 0 });
+
+      const stream = await fetch(`${running.server.url}__tsumugu__/reload`);
+      expect(stream.headers.get("content-type")).toBe("text/event-stream");
+
+      const reader = stream.body?.getReader();
+      expect(reader).toBeDefined();
+
+      await writeFile(path.join(root, "index.md"), "# Second\n");
+
+      // The event is what a browser listens for; the page reloading is the
+      // browser's job, and not something a test can claim to have proven.
+      const received = await readUntil(reader, "event: reload");
+      expect(received).toContain("event: reload");
+
+      await reader?.cancel();
+    });
+  });
+
+  it("puts one script on the page, and no more", async () => {
+    await withTemporaryDirectory(async (root) => {
+      await writeFiles(root, { "index.md": "# Home\n" });
+      running = await startDev({ root, port: 0 });
+
+      const html = await (await fetch(running.server.url)).text();
+
+      expect(html.match(/<script/gu)).toHaveLength(1);
+      expect(html).toContain("EventSource");
+    });
+  });
+
+  it("puts no script on the page when live reload is off", async () => {
+    await withTemporaryDirectory(async (root) => {
+      await writeFiles(root, { "index.md": "# Home\n" });
+      running = await startDev({ root, port: 0, liveReload: false });
+
+      expect(await (await fetch(running.server.url)).text()).not.toContain(
+        "<script",
+      );
     });
   });
 

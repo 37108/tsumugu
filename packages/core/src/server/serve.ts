@@ -1,4 +1,4 @@
-import { createServer, type Server } from "node:http";
+import { createServer, type Server, type ServerResponse } from "node:http";
 import type { AddressInfo } from "node:net";
 
 import type { RoutePath } from "../document/paths.js";
@@ -6,6 +6,11 @@ import type { Page } from "../pipeline/site.js";
 import { decodeRequestPath } from "../routing/routes.js";
 
 import { readAsset } from "./assets.js";
+import {
+  reloadPath,
+  reloadScriptHash,
+  type ReloadChannel,
+} from "./live-reload.js";
 import { escapeText } from "../theme/serialize.js";
 
 /**
@@ -61,6 +66,14 @@ export interface ServeOptions {
    * right default for a server composed without a project behind it.
    */
   readonly assetRoot?: string;
+  /**
+   * Live reload, for a development server.
+   *
+   * Passing a channel is what allows Tsumugu's own reload script to run, by
+   * its hash. Without one, no script may run on any page — see
+   * `live-reload.ts` for why that distinction is where it is.
+   */
+  readonly liveReload?: ReloadChannel;
 }
 
 export interface RunningServer {
@@ -79,12 +92,29 @@ export interface RunningServer {
  * Documentation is content; content does not execute. Inline styles are
  * permitted because a theme's styling has nowhere else to live yet.
  */
-const securityHeaders: Readonly<Record<string, string>> = {
-  "content-security-policy":
-    "default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; font-src 'self'; base-uri 'none'; form-action 'none'",
-  "x-content-type-options": "nosniff",
-  "referrer-policy": "no-referrer",
-};
+function securityHeaders(
+  liveReload: boolean,
+): Readonly<Record<string, string>> {
+  const policy = [
+    "default-src 'none'",
+    "img-src 'self' data:",
+    "style-src 'unsafe-inline'",
+    "font-src 'self'",
+    "base-uri 'none'",
+    "form-action 'none'",
+    // One script, identified by its hash, and a connection back to this server
+    // for it to listen on. Every other script on the page is still refused.
+    ...(liveReload
+      ? [`script-src ${reloadScriptHash}`, "connect-src 'self'"]
+      : []),
+  ];
+
+  return {
+    "content-security-policy": policy.join("; "),
+    "x-content-type-options": "nosniff",
+    "referrer-policy": "no-referrer",
+  };
+}
 
 function page(status: number, title: string, body: string): string {
   return [
@@ -132,14 +162,23 @@ function notFound(route: string, pages: ReadonlyMap<RoutePath, Page>): string {
 async function handle(
   target: string,
   options: ServeOptions,
+  response: ServerResponse,
   send: (
     status: number,
     body: string | Uint8Array,
     contentType?: string,
   ) => void,
 ): Promise<void> {
-  const site = options.site();
   const withoutQuery = target.split(/[?#]/)[0] ?? "/";
+
+  if (options.liveReload !== undefined && withoutQuery === reloadPath) {
+    // Handled before routing, because it is not a document and must never be
+    // shadowed by one.
+    options.liveReload.connect(response);
+    return;
+  }
+
+  const site = options.site();
   const route = decodeRequestPath(withoutQuery);
 
   if (route === undefined) {
@@ -212,26 +251,28 @@ export function serve(options: ServeOptions): Promise<RunningServer> {
         // Development, not production: an edited file must show up on reload
         // rather than being explained away as a cache.
         "cache-control": "no-store",
-        ...securityHeaders,
+        ...securityHeaders(options.liveReload !== undefined),
       });
       response.end(body);
     };
 
-    handle(request.url ?? "/", options, send).catch((cause: unknown) => {
-      // Reaching here is a bug in Tsumugu rather than a problem with the
-      // project, so the reader gets a page that says so and nothing else. A
-      // stack trace in a response would name absolute paths on the machine
-      // running the server; it goes to the console, where it belongs.
-      console.error(cause);
-      send(
-        500,
-        page(
+    handle(request.url ?? "/", options, response, send).catch(
+      (cause: unknown) => {
+        // Reaching here is a bug in Tsumugu rather than a problem with the
+        // project, so the reader gets a page that says so and nothing else. A
+        // stack trace in a response would name absolute paths on the machine
+        // running the server; it goes to the console, where it belongs.
+        console.error(cause);
+        send(
           500,
-          "Server error",
-          "<p>Tsumugu failed to produce this page. The error was written to the terminal running the server.</p>",
-        ),
-      );
-    });
+          page(
+            500,
+            "Server error",
+            "<p>Tsumugu failed to produce this page. The error was written to the terminal running the server.</p>",
+          ),
+        );
+      },
+    );
   });
 
   return new Promise((resolve, reject) => {
@@ -254,9 +295,10 @@ export function serve(options: ServeOptions): Promise<RunningServer> {
         port,
         close: () =>
           new Promise<void>((done, fail) => {
-            // closeAllConnections, then close: without it a keep-alive
-            // connection holds the process open and a test hangs rather than
-            // failing.
+            // An open event stream is a request that never ends, so it is
+            // ended here; closeAllConnections then takes the keep-alive ones,
+            // without which a test hangs rather than failing.
+            options.liveReload?.close();
             server.closeAllConnections();
             server.close((error) => {
               if (error === undefined) {

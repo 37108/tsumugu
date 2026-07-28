@@ -85,8 +85,11 @@ describe("a directory with one Markdown file", () => {
   });
 
   it("forbids scripts at the browser level, not only in the markup", async () => {
-    await serveFixture({ "index.md": page }, async ({ server }) => {
-      const response = await fetch(server.url);
+    await withTemporaryDirectory(async (root) => {
+      await writeFiles(root, { "index.md": page });
+      running = await startDev({ root, port: 0, watch: false });
+
+      const response = await fetch(running.server.url);
       const policy = response.headers.get("content-security-policy") ?? "";
 
       // The security model stated as something the browser enforces rather
@@ -94,6 +97,21 @@ describe("a directory with one Markdown file", () => {
       expect(policy).toContain("default-src 'none'");
       expect(policy).not.toContain("script-src");
       expect(response.headers.get("x-content-type-options")).toBe("nosniff");
+      expect(await response.text()).not.toContain("<script");
+    });
+  });
+
+  it("allows exactly one script, by its hash, when live reload is on", async () => {
+    await serveFixture({ "index.md": page }, async ({ server }) => {
+      const response = await fetch(server.url);
+      const policy = response.headers.get("content-security-policy") ?? "";
+
+      // A hash cannot be forged into matching different content, so an author's
+      // script and an injected one are both still refused.
+      expect(policy).toMatch(/script-src 'sha256-[A-Za-z0-9+/=]+'/u);
+      // Styles are inline; scripts are not, and must never become so here.
+      expect(policy).not.toMatch(/script-src[^;]*unsafe-inline/u);
+      expect(policy).toContain("connect-src 'self'");
     });
   });
 

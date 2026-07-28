@@ -78,6 +78,13 @@ export interface BuildOptions {
   readonly lang?: string;
   /** Name shown in the header and in the browser title. */
   readonly siteName?: string;
+  /**
+   * A script to place in every page, for a development server's live reload.
+   *
+   * Omitted everywhere else. The server decides whether the browser is allowed
+   * to run it; the pipeline only puts it on the page.
+   */
+  readonly script?: string;
 }
 
 /** One servable page. */
@@ -255,6 +262,7 @@ export async function createSite(options: BuildOptions): Promise<Site> {
       ...(options.theme.stylesheet === undefined
         ? {}
         : { themeStylesheet: options.theme.stylesheet }),
+      ...(options.script === undefined ? {} : { script: options.script }),
     });
 
     const serialized = serializeDocument(shell.body, {

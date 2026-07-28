@@ -39,6 +39,13 @@ export interface ShellInput {
   readonly diagnostics: readonly DocumentDiagnostic[];
   /** The theme's own stylesheet, placed after the shell's. */
   readonly themeStylesheet?: string;
+  /**
+   * Tsumugu's own script, when a development server asked for live reload.
+   *
+   * Absent on every other page Tsumugu produces, which is what keeps "a
+   * documentation page runs no JavaScript" true rather than aspirational.
+   */
+  readonly script?: string;
 }
 
 export interface ShellResult {
@@ -274,6 +281,18 @@ export function renderShell(input: ShellInput): ShellResult {
             trustedHtml(
               input.themeStylesheet,
               "the registered theme's own stylesheet, supplied by the composition root",
+            ),
+          ),
+        ]),
+    ...(input.script === undefined
+      ? []
+      : [
+          element(
+            "script",
+            {},
+            trustedHtml(
+              input.script,
+              "Tsumugu's own development script, allowed by its hash in the content security policy",
             ),
           ),
         ]),

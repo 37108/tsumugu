@@ -122,6 +122,14 @@ describe("lists", () => {
 
     expect(problems[0]?.message).toContain("integer");
   });
+
+  it("rejects a non-boolean task state", () => {
+    const problems = findNodeProblems(
+      malformed({ type: "list-item", checked: "yes", children: [] }),
+    );
+
+    expect(problems[0]?.message).toContain("boolean");
+  });
 });
 
 describe("tables", () => {

@@ -154,7 +154,23 @@ export const defaultTheme: Theme = {
     emphasis: wrap("em"),
     strong: wrap("strong"),
     blockquote: wrap("blockquote"),
-    "list-item": wrap("li"),
+    "list-item": (node, context) =>
+      node.type === "list-item"
+        ? element(
+            "li",
+            node.checked === undefined ? {} : { class: "tsumugu-task-item" },
+            ...(node.checked === undefined
+              ? []
+              : [
+                  element("input", {
+                    type: "checkbox",
+                    checked: node.checked,
+                    disabled: true,
+                  }),
+                ]),
+            ...children(node, context),
+          )
+        : fragment(),
 
     text: (node) => (node.type === "text" ? text(node.value) : fragment()),
 

@@ -20,9 +20,10 @@ import { readFrontMatter } from "./frontmatter.js";
  *
  * ## Supported dialect
  *
- * **CommonMark**, plus exactly two intentional extensions:
+ * **CommonMark**, plus three intentional extensions:
  *
  * - **GFM tables**, because documentation has tables and CommonMark has none.
+ * - **GFM task lists**, because checklists are common in operational guides.
  * - **YAML front matter**, because documents need metadata and CommonMark has
  *   no syntax for it.
  *

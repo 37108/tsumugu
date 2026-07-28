@@ -129,6 +129,25 @@ describe("block constructs", () => {
     expect(offset?.type === "list" && offset.start).toBe(3);
   });
 
+  it("renders checked and unchecked task list items", () => {
+    const list = firstOfType(
+      render("- [ ] Open\n- [x] Done\n- Plain\n").root,
+      "list",
+    );
+
+    expect(list?.type).toBe("list");
+    if (list?.type !== "list") {
+      return;
+    }
+    expect(list.children.map((item) => item.checked)).toEqual([
+      false,
+      true,
+      undefined,
+    ]);
+    expect(JSON.stringify(list)).not.toContain("[ ]");
+    expect(JSON.stringify(list)).not.toContain("[x]");
+  });
+
   it("renders blockquotes and thematic breaks", () => {
     const types = nodeTypes(render("> Quoted\n\n---\n").root);
 

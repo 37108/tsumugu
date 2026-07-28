@@ -165,6 +165,8 @@ export interface ListNode extends NodeBase {
  */
 export interface ListItemNode extends NodeBase {
   readonly type: "list-item";
+  /** Whether this is an unchecked or checked task, or a plain list item. */
+  readonly checked?: boolean;
   readonly children: readonly BlockNode[];
 }
 

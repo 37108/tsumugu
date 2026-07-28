@@ -123,6 +123,26 @@ describe("the default theme", () => {
     expect(html).toBe("<h2>Install</h2>");
   });
 
+  it("renders task list markers as disabled checkboxes", () => {
+    const { html } = render({
+      type: "list",
+      ordered: false,
+      children: [
+        {
+          type: "list-item",
+          checked: true,
+          children: [
+            { type: "paragraph", children: [textNode("Already done")] },
+          ],
+        },
+      ],
+    });
+
+    expect(html).toContain('class="tsumugu-task-item"');
+    expect(html).toContain('<input checked disabled type="checkbox">');
+    expect(html).not.toContain("[x]");
+  });
+
   it("makes a code block scrollable by keyboard", () => {
     const { html } = render({
       type: "code-block",

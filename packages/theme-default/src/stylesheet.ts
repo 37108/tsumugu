@@ -123,6 +123,16 @@ export const stylesheet = `
 .tsumugu-doc li p {
   margin-block: 0.15em;
 }
+.tsumugu-doc .tsumugu-task-item {
+  list-style: none;
+}
+.tsumugu-doc .tsumugu-task-item > input[type="checkbox"] {
+  accent-color: var(--doc-indigo);
+  margin-inline: -1.4em 0.5em;
+}
+.tsumugu-doc .tsumugu-task-item > p:first-of-type {
+  display: inline;
+}
 .tsumugu-doc li > ul, .tsumugu-doc li > ol {
   margin-block-start: 0.35em;
 }

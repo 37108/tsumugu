@@ -65,6 +65,12 @@ export function findNodeProblems(root: SemanticNode): NodeProblem[] {
         }
         break;
 
+      case "list-item":
+        if (node.checked !== undefined && typeof node.checked !== "boolean") {
+          at("A task list item's checked state must be a boolean.");
+        }
+        break;
+
       case "table": {
         const columns = node.align.length;
         for (const row of node.children) {

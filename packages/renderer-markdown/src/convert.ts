@@ -3,6 +3,7 @@ import type {
   DocumentDiagnostic,
   DocumentNode,
   InlineNode,
+  ListItemNode,
   SourcePath,
   SourceRange,
   TableAlignment,
@@ -146,6 +147,50 @@ function inlines(conversion: Conversion, node: MdastNode): InlineNode[] {
   return childrenOf(node).flatMap((child) => inline(conversion, child));
 }
 
+const taskMarker = /^\[([ xX])\](?:[ \t]+|$)/u;
+
+function listItem(conversion: Conversion, node: MdastNode): ListItemNode {
+  const converted = blocks(conversion, node);
+  const plain: ListItemNode = {
+    type: "list-item",
+    children: converted,
+    ...rangeOf(node),
+  };
+  const firstBlock = converted[0];
+  if (firstBlock?.type !== "paragraph") {
+    return plain;
+  }
+
+  const firstInline = firstBlock.children[0];
+  if (firstInline?.type !== "text") {
+    return plain;
+  }
+
+  const match = taskMarker.exec(firstInline.value);
+  if (match === null) {
+    return plain;
+  }
+
+  const value = firstInline.value.slice(match[0].length);
+  const remainingInlines = firstBlock.children.slice(1);
+
+  return {
+    type: "list-item",
+    checked: match[1]?.toLowerCase() === "x",
+    children: [
+      {
+        ...firstBlock,
+        children:
+          value === ""
+            ? remainingInlines
+            : [{ ...firstInline, value }, ...remainingInlines],
+      },
+      ...converted.slice(1),
+    ],
+    ...rangeOf(node),
+  };
+}
+
 function block(conversion: Conversion, node: MdastNode): BlockNode[] {
   switch (node.type) {
     case "heading":
@@ -204,15 +249,7 @@ function block(conversion: Conversion, node: MdastNode): BlockNode[] {
             ? { start: node.start }
             : {}),
           children: childrenOf(node).flatMap((child) =>
-            child.type === "listItem"
-              ? [
-                  {
-                    type: "list-item" as const,
-                    children: blocks(conversion, child),
-                    ...rangeOf(child),
-                  },
-                ]
-              : [],
+            child.type === "listItem" ? [listItem(conversion, child)] : [],
           ),
           ...rangeOf(node),
         },

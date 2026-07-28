@@ -5,13 +5,12 @@
     "outDir": "dist"
   },
   "include": ["src/**/*.ts"],
+  "exclude": ["**/*.test.ts", "**/*.suite.ts"],
   "references": [
     { "path": "../core" },
     { "path": "../renderer-markdown" },
     { "path": "../renderer-html" },
     { "path": "../theme-default" },
-    { "path": "../transformer-highlight" },
-    { "path": "../preset" }
-  ],
-  "exclude": ["**/*.test.ts", "**/*.suite.ts"]
+    { "path": "../transformer-highlight" }
+  ]
 }

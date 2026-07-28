@@ -265,6 +265,7 @@ describe("public export surface", () => {
     ],
     "@tsumugu/renderer-markdown": ["createMarkdownRenderer"],
     "@tsumugu/renderer-html": ["createHtmlRenderer", "isFullDocument"],
+    "@tsumugu/preset": ["createPreset", "officialComposition"],
     "@tsumugu/theme-default": ["defaultTheme", "defaultThemeStylesheet"],
     "@tsumugu/transformer-highlight": [
       "createHighlightTransformer",

@@ -66,6 +66,7 @@ describe("workspace discovery", () => {
       "internal/tsconfig",
       "packages/cli",
       "packages/core",
+      "packages/preset",
       "packages/renderer-html",
       "packages/renderer-markdown",
       "packages/theme-default",

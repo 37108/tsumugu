@@ -20,6 +20,9 @@ importers:
       '@tsumugu/internal-tsconfig':
         specifier: workspace:*
         version: link:internal/tsconfig
+      '@tsumugu/preset':
+        specifier: workspace:*
+        version: link:packages/preset
       '@tsumugu/renderer-html':
         specifier: workspace:*
         version: link:packages/renderer-html
@@ -70,6 +73,9 @@ importers:
       '@tsumugu/core':
         specifier: workspace:*
         version: link:../core
+      '@tsumugu/preset':
+        specifier: workspace:*
+        version: link:../preset
       '@tsumugu/renderer-html':
         specifier: workspace:*
         version: link:../renderer-html
@@ -88,6 +94,28 @@ importers:
         version: link:../../internal/tsconfig
 
   packages/core:
+    devDependencies:
+      '@tsumugu/internal-tsconfig':
+        specifier: workspace:*
+        version: link:../../internal/tsconfig
+
+  packages/preset:
+    dependencies:
+      '@tsumugu/core':
+        specifier: workspace:*
+        version: link:../core
+      '@tsumugu/renderer-html':
+        specifier: workspace:*
+        version: link:../renderer-html
+      '@tsumugu/renderer-markdown':
+        specifier: workspace:*
+        version: link:../renderer-markdown
+      '@tsumugu/theme-default':
+        specifier: workspace:*
+        version: link:../theme-default
+      '@tsumugu/transformer-highlight':
+        specifier: workspace:*
+        version: link:../transformer-highlight
     devDependencies:
       '@tsumugu/internal-tsconfig':
         specifier: workspace:*

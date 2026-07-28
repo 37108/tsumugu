@@ -32,6 +32,7 @@
     "@tsumugu/core": "workspace:*",
     "@tsumugu/internal-tsconfig": "workspace:*",
     "@tsumugu/renderer-html": "workspace:*",
+    "@tsumugu/preset": "workspace:*",
     "@tsumugu/renderer-markdown": "workspace:*",
     "@tsumugu/theme-default": "workspace:*",
     "@tsumugu/transformer-highlight": "workspace:*",

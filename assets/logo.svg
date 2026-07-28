@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 208 44" width="208" height="44" role="img" aria-label="tsumugu">
+  <!--
+    The wordmark: the つ mark, then the name in the serif voice the
+    documentation itself uses. The type is left to the viewer's serif stack on
+    purpose - the same choice the theme makes, for the same reason: a wordmark
+    that has to download a font is a wordmark that renders late.
+  -->
+  <style>
+    path { stroke: #274177; }
+    text { fill: #1a1c22; }
+    @media (prefers-color-scheme: dark) {
+      path { stroke: #9db8e8; }
+      text { fill: #e7e5df; }
+    }
+  </style>
+  <path
+    d="M 9 15.5 C 14 12, 24 12, 27.2 16.2 C 30.4 20.6, 25.5 27.2, 14.5 28.2"
+    fill="none"
+    stroke-width="3.6"
+    stroke-linecap="round"
+  />
+  <text
+    x="44"
+    y="30"
+    font-family="Iowan Old Style, Palatino Linotype, Palatino, Georgia, serif"
+    font-size="26"
+    font-weight="600"
+    letter-spacing="0.5"
+  >tsumugu</text>
+</svg>

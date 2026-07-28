@@ -1,54 +1,98 @@
-# Tsumugu
+<p align="center">
+  <img src="assets/logo.svg" alt="tsumugu" width="260">
+</p>
 
-> A zero-config documentation server that turns plain HTML and Markdown files into a beautiful documentation experience for humans and AI.
+<p align="center">
+  A zero-config documentation server that turns plain Markdown and HTML files<br>
+  into a documentation experience for humans <em>and</em> AI.
+</p>
 
-**Status: Experimental / pre-alpha.** Nothing here is a stable API yet.
+<p align="center">
+  <a href="https://www.npmjs.com/package/tsumugu"><img alt="npm" src="https://img.shields.io/npm/v/tsumugu?color=274177&label=npm"></a>
+  <a href="https://github.com/37108/tsumugu/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/37108/tsumugu/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="LICENSE"><img alt="MIT" src="https://img.shields.io/badge/license-MIT-274177"></a>
+</p>
 
-Tsumugu is a documentation server first. It treats the file system as the source of truth, keeps documentation portable as plain files, and aims for a small core with strong boundaries and composable extensions.
-
-## Guiding principle
-
-> Small core. Strong boundaries. Composable extensions.
-
-## Try it
-
-Point Tsumugu at a directory of Markdown or HTML files:
+<br>
 
 ```bash
-pnpm build
-node packages/cli/dist/bin.js dev docs
+npx tsumugu dev docs
 ```
 
-It prints a localhost URL and serves the directory. With no argument it looks for `./docs`, then the current directory if that contains an index document.
+That is the whole setup. No configuration file, no build step, no framework —
+a directory of files becomes a site with navigation, search, and everything
+below, and your files stay ordinary files that outlive the tool.
 
-What works today:
+> 紡ぐ — _tsumugu_: to spin thread. Separate files, woven into one fabric.
 
-- Markdown and HTML sources, normalized into one Semantic AST;
-- routes derived from file paths, with `index` files standing for their directory;
-- a sidebar, table of contents and page shell built from the files that exist, with no sidebar configuration;
-- heading anchors, front-matter `title`, `description`, `order` and `hidden`;
-- a generated landing page when the root has no `index`, and a documentation-aware 404;
-- documentation-local images and downloads, served without a way out of the root;
-- diagnostics shown on the page they belong to, rather than only in the terminal;
-- syntax highlighting, as annotated tokens rather than trusted markup;
-- `documents.json`, `llms.txt`, `search.json` and `sitemap.xml`, generated from the same documents as the pages;
-- search, from an index split by heading, with a page that works without JavaScript;
-- watch mode: saving a file rebuilds what changed and reloads the open page;
-- `tsumugu build` for a static site with clean URLs, from the same pipeline.
+## What you get
 
-What is deliberately missing: configuration files, and any published API. See [the roadmap](docs/roadmap.md).
+|                   |                                                                                                                                                                                     |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Reading**       | typography-first theme, dark mode from the system preference, responsive from a phone up, WCAG 2.2 AA targets with the receipts in [`docs/accessibility.md`](docs/accessibility.md) |
+| **Navigation**    | sidebar and landing page derived from your directories, per-page table of contents that follows your reading position, stable heading anchors                                       |
+| **Search**        | ranked, per-section results as you type — and a real `/search` page when JavaScript is off                                                                                          |
+| **Code**          | Shiki highlighting in both colour schemes, a copy control on every block                                                                                                            |
+| **For machines**  | `documents.json`, `llms.txt`, `search.json` and `sitemap.xml`, generated from the same documents as the pages                                                                       |
+| **While writing** | watch mode with incremental rebuilds and live reload; broken links, missing anchors and front-matter typos reported _on the page they belong to_                                    |
+| **Shipping**      | `tsumugu build` writes the same site to static files with clean URLs                                                                                                                |
+
+## Security is a design constraint, not a page in the docs
+
+Documentation often has many authors, so **content does not execute**: author
+markup is parsed to a semantic tree and never emitted raw, every response
+carries `Content-Security-Policy: default-src 'none'`, the only scripts are
+two of Tsumugu's own — allowed by SHA-256 hash, so nothing else can run even
+if injected — and the server binds loopback until told otherwise. The full
+threat model, with the test that enforces each claim, is
+[`docs/security-model.md`](docs/security-model.md).
+
+## Conventions instead of configuration
+
+```text
+docs/
+├── index.md               →  /                       the home page names the site
+├── guide/
+│   ├── index.md           →  /guide                  a directory's own page
+│   └── getting-started.md →  /guide/getting-started
+├── reference/api.html     →  /reference/api          HTML is a first-class source
+└── images/diagram.svg     →  served beside the documents
+```
+
+Front matter covers the rest: `title`, `description`, `order`, `hidden`.
+There is deliberately no config file —
+[ADR 5](docs/decisions/0005-no-configuration-file.md) records why — and
+composing Tsumugu differently is code, documented in
+[`docs/composition.md`](docs/composition.md).
+
+## Examples
+
+[`examples/minimal`](examples/minimal) is one file.
+[`examples/handbook`](examples/handbook) shows sections, HTML beside Markdown,
+front matter, images and a hidden page. Both are served by the test suite on
+every commit, so they cannot quietly rot.
+
+## Status
+
+**Pre-alpha.** Everything works as described above and is tested — 930+ tests
+across unit, contract, integration, accessibility (axe-core), packaging and
+stress layers — but while the version starts with `0.`, any release may change
+anything. The packages version together and each release explains itself:
+[`docs/releasing.md`](docs/releasing.md).
 
 ## Development
 
-Requires Node.js 24 or newer. pnpm is pinned through the `packageManager` field.
+Node.js 24+, pnpm pinned via `packageManager`:
 
 ```bash
 pnpm install
-pnpm check
+pnpm check        # the same gate CI runs
+pnpm docs         # serve this repository's own documentation with itself
 ```
 
-Two example projects live in [`examples/`](examples/): `minimal/` is one file, `handbook/` has sections, an HTML page, front matter and a hidden document.
+Start with [`docs/index.md`](docs/index.md) — architecture, principles,
+decision records and the contribution workflow all hang off it.
 
-To compose Tsumugu yourself — a different theme, no highlighting, an extra transformer — see [docs/composition.md](docs/composition.md).
+## License
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the full command list, [docs/architecture/overview.md](docs/architecture/overview.md) for the pipeline, and [docs/architecture/workspaces.md](docs/architecture/workspaces.md) for the workspace layout and dependency rules.
+[MIT](LICENSE)

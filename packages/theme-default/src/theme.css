@@ -1,11 +1,24 @@
-/**
- * The default theme's stylesheet.
+/*
+ * The default theme's stylesheet — the authored source.
  *
- * GENERATED from `theme.css` by `scripts/build-styles.mjs` — edit the
- * CSS, then run `pnpm styles`. The authored file carries the reasoning;
- * this one carries the bytes the pages ship.
+ * Written in Tailwind's vocabulary and compiled by `pnpm styles` into
+ * `stylesheet.ts`, which is what ships. See the shell's `shell.css` for the
+ * shape of that arrangement.
+ *
+ * The scope rule is enforced by a test: every selector here stays inside the
+ * document content the theme owns. That constrains which utilities may be
+ * applied — anything that would emit a global @property fallback (border-*,
+ * shadow-*) is written as plain declarations instead, because a theme that
+ * styles `*` is a theme that styles the page around it.
+ *
+ * The direction is unchanged: sumi ink on washi paper, 藍 indigo as the one
+ * accent, the thread above each section heading as the signature.
  */
-export const stylesheet = `
+
+/* The default tokens, inlined: utilities compile to literal values, so no
+   :root emission reaches a stylesheet that must stay inside its own scope. */
+@import "tailwindcss/theme.css" theme(inline);
+
 .tsumugu-doc {
   --doc-ink: #1a1c22;
   --doc-ink-muted: #5a5f6b;
@@ -16,12 +29,17 @@ export const stylesheet = `
   --doc-surface: #f3f1e9;
   --doc-measure: 68ch;
   --doc-rhythm: 1.7;
-  --doc-serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Hiragino Mincho ProN",
+
+  --doc-serif:
+    "Iowan Old Style", "Palatino Linotype", Palatino, "Hiragino Mincho ProN",
     "Yu Mincho", Georgia, serif;
-  --doc-sans: system-ui, -apple-system, "Segoe UI", "Hiragino Kaku Gothic ProN",
+  --doc-sans:
+    system-ui, -apple-system, "Segoe UI", "Hiragino Kaku Gothic ProN",
     "Noto Sans JP", sans-serif;
-  --doc-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
+  --doc-mono:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
     monospace;
+
   color: var(--doc-ink);
   font-family: var(--doc-sans);
   font-size: 1.0625rem;
@@ -29,6 +47,12 @@ export const stylesheet = `
   max-width: var(--doc-measure);
   overflow-wrap: break-word;
 }
+
+/*
+ * Dark mode, matching the shell's palette exactly. The values are stated twice
+ * on purpose: a theme that read the shell's variables would be a theme that
+ * could not be replaced without replacing the shell.
+ */
 @media (prefers-color-scheme: dark) {
   .tsumugu-doc {
     --doc-ink: #e7e5df;
@@ -40,27 +64,42 @@ export const stylesheet = `
     --doc-surface: #1d2028;
   }
 }
+
 .tsumugu-doc > * + * {
   margin-block-start: 1.4em;
 }
-.tsumugu-doc h1, .tsumugu-doc h2, .tsumugu-doc h3, .tsumugu-doc h4, .tsumugu-doc h5, .tsumugu-doc h6 {
-  position: relative;
-  text-wrap: balance;
+
+.tsumugu-doc h1,
+.tsumugu-doc h2,
+.tsumugu-doc h3,
+.tsumugu-doc h4,
+.tsumugu-doc h5,
+.tsumugu-doc h6 {
+  @apply relative text-balance;
+  /* Plain rather than font-semibold: that utility drags a global @property
+     fallback into the output, and the theme's scope test rightly refuses a
+     stylesheet that touches "*". */
   font-weight: 600;
   font-family: var(--doc-serif);
   line-height: 1.25;
   letter-spacing: -0.01em;
+  /* Following an anchor lands with room above the heading, rather than flush
+     against the top of the window. */
   scroll-margin-top: 1.5rem;
 }
+
 .tsumugu-doc h1 {
   font-size: clamp(2rem, 1.6rem + 1.8vw, 2.75rem);
   margin-block-end: 0.6em;
 }
+
+/* The thread: one indigo rule marking where a section begins. */
 .tsumugu-doc h2 {
   font-size: 1.6rem;
   margin-block-start: 2.4em;
   padding-block-start: 0.9rem;
 }
+
 .tsumugu-doc h2::before {
   content: "";
   position: absolute;
@@ -70,62 +109,83 @@ export const stylesheet = `
   height: 2px;
   background: var(--doc-indigo);
 }
+
 .tsumugu-doc h3 {
   font-size: 1.28rem;
   margin-block-start: 2em;
 }
-.tsumugu-doc h4, .tsumugu-doc h5, .tsumugu-doc h6 {
+
+.tsumugu-doc h4,
+.tsumugu-doc h5,
+.tsumugu-doc h6 {
   font-size: 1.06rem;
   margin-block-start: 1.8em;
 }
+
+/*
+ * The permalink beside a heading: hidden until hovered or focused, always a
+ * real link in the tab order, always visible on a coarse pointer where hover
+ * does not exist.
+ */
 .tsumugu-anchor {
-  text-decoration-line: none;
-  opacity: 0%;
+  @apply no-underline opacity-0;
   color: var(--doc-indigo);
   font-family: var(--doc-mono);
   font-size: 0.8em;
   font-weight: 400;
   margin-inline-start: 0.4em;
 }
-.tsumugu-doc :is(h1, h2, h3, h4, h5, h6):hover .tsumugu-anchor, .tsumugu-anchor:focus-visible {
+
+.tsumugu-doc :is(h1, h2, h3, h4, h5, h6):hover .tsumugu-anchor,
+.tsumugu-anchor:focus-visible {
   opacity: 1;
 }
+
 @media (hover: none) {
   .tsumugu-anchor {
     opacity: 0.55;
   }
 }
+
 .tsumugu-doc a {
   color: var(--doc-indigo);
-  text-decoration-color: var(--doc-indigo);
-  @supports (color: color-mix(in lab, red, red)) {
-    text-decoration-color: color-mix(in srgb, var(--doc-indigo) 35%, transparent);
-  }
+  text-decoration-color: color-mix(in srgb, var(--doc-indigo) 35%, transparent);
   text-decoration-thickness: 0.08em;
   text-underline-offset: 0.18em;
   transition: color 160ms cubic-bezier(0.32, 0.72, 0, 1);
 }
+
 .tsumugu-doc a:hover {
   color: var(--doc-indigo-bright);
   text-decoration-color: currentColor;
 }
+
 .tsumugu-doc :focus-visible {
   border-radius: 2px;
   outline: 2px solid var(--doc-indigo);
   outline-offset: 3px;
 }
-.tsumugu-doc ul, .tsumugu-doc ol {
+
+.tsumugu-doc ul,
+.tsumugu-doc ol {
   padding-inline-start: 1.4em;
 }
+
 .tsumugu-doc li + li {
   margin-block-start: 0.4em;
 }
+
+/* A paragraph inside a list item is the item's own line, not a paragraph with
+   space around it. Without this a nested list reads as a page of gaps. */
 .tsumugu-doc li p {
   margin-block: 0.15em;
 }
-.tsumugu-doc li > ul, .tsumugu-doc li > ol {
+
+.tsumugu-doc li > ul,
+.tsumugu-doc li > ol {
   margin-block-start: 0.35em;
 }
+
 .tsumugu-doc blockquote {
   border-inline-start: 2px solid var(--doc-indigo);
   color: var(--doc-ink-muted);
@@ -133,6 +193,7 @@ export const stylesheet = `
   margin-inline: 0;
   padding-inline-start: 1.2em;
 }
+
 .tsumugu-doc code {
   background: var(--doc-surface);
   border-radius: 3px;
@@ -140,62 +201,83 @@ export const stylesheet = `
   font-size: 0.9em;
   padding: 0.12em 0.34em;
 }
+
 .tsumugu-doc pre {
-  overflow-x: auto;
+  @apply overflow-x-auto;
   background: var(--doc-surface);
   border: 1px solid var(--doc-rule);
   border-radius: 6px;
+  /* A long line scrolls inside the block; the page itself never scrolls
+     sideways, on any screen. */
   padding: 1rem 1.1rem;
 }
+
 .tsumugu-doc pre code {
-  padding: 0;
+  @apply p-0;
   background: none;
   font-size: 0.875rem;
   line-height: 1.6;
 }
+
+/*
+ * Highlighted tokens: each span carries both colours, the media query picks
+ * one, and a reader who switches their system theme with the page open sees
+ * the code change with everything else — no script decides after paint.
+ */
 .tsumugu-doc pre code span {
   color: var(--tsumugu-code, inherit);
 }
+
 @media (prefers-color-scheme: dark) {
   .tsumugu-doc pre code span {
     color: var(--tsumugu-code-dark, var(--tsumugu-code, inherit));
   }
 }
+
 .tsumugu-table-scroll {
-  overflow-x: auto;
+  @apply overflow-x-auto;
 }
+
 .tsumugu-doc table {
-  min-width: 100%;
-  border-collapse: collapse;
+  @apply min-w-full border-collapse;
   font-size: 0.95rem;
 }
+
 .tsumugu-doc :is(th, td) {
-  vertical-align: top;
+  @apply align-top;
   border-block-end: 1px solid var(--doc-rule);
   padding: 0.55rem 0.9rem 0.55rem 0;
   text-align: start;
 }
+
 .tsumugu-doc th {
   font-weight: 600;
   letter-spacing: 0.02em;
 }
+
 .tsumugu-doc img {
-  height: auto;
-  max-width: 100%;
+  @apply h-auto max-w-full;
 }
+
 .tsumugu-doc hr {
   border: 0;
   border-block-start: 1px solid var(--doc-rule);
   margin-block: 2.5em;
 }
-.tsumugu-doc [data-tsumugu-unsupported], .tsumugu-doc [data-tsumugu-raw-html] {
+
+/*
+ * Content a renderer could not represent, kept visible rather than dropped,
+ * and marked as unusual so a reader knows they are looking at source.
+ */
+.tsumugu-doc [data-tsumugu-unsupported],
+.tsumugu-doc [data-tsumugu-raw-html] {
   border-inline-start: 2px solid var(--doc-ink-muted);
   color: var(--doc-ink-muted);
   font-size: 0.85rem;
 }
+
 @media (prefers-reduced-motion: reduce) {
   .tsumugu-doc * {
     transition: none;
   }
 }
-`;

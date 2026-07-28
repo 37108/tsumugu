@@ -39,22 +39,23 @@ pnpm install
 pnpm check
 ```
 
-| Command                 | Behaviour                                             |
-| ----------------------- | ----------------------------------------------------- |
-| `pnpm format`           | formats every supported file with Prettier            |
-| `pnpm format:check`     | reports unformatted files without changing them       |
-| `pnpm lint`             | runs type-aware ESLint over the workspace             |
-| `pnpm lint:fix`         | applies the fixes ESLint can make safely              |
-| `pnpm build`            | compiles every package to `dist/`                     |
-| `pnpm typecheck`        | builds the packages, then type-checks `tests/`        |
-| `pnpm test`             | builds, then runs the test suite                      |
-| `pnpm test:watch`       | re-runs affected tests as files change                |
-| `pnpm test:coverage`    | builds, then runs the suite with coverage             |
-| `pnpm check:boundaries` | checks the dependency direction and export surface    |
-| `pnpm check`            | formatting, linting, types and tests — the local gate |
-| `pnpm docs`             | builds, then serves this repository's own `docs/`     |
-| `pnpm bench`            | measures build and rebuild cost on a generated site   |
-| `pnpm clean`            | removes build output                                  |
+| Command                 | Behaviour                                                              |
+| ----------------------- | ---------------------------------------------------------------------- |
+| `pnpm format`           | formats every supported file with Prettier                             |
+| `pnpm format:check`     | reports unformatted files without changing them                        |
+| `pnpm lint`             | runs type-aware ESLint over the workspace                              |
+| `pnpm lint:fix`         | applies the fixes ESLint can make safely                               |
+| `pnpm build`            | compiles every package to `dist/`                                      |
+| `pnpm typecheck`        | builds the packages, then type-checks `tests/`                         |
+| `pnpm test`             | builds, then runs the test suite                                       |
+| `pnpm test:watch`       | re-runs affected tests as files change                                 |
+| `pnpm test:coverage`    | builds, then runs the suite with coverage                              |
+| `pnpm check:boundaries` | checks the dependency direction and export surface                     |
+| `pnpm check`            | formatting, linting, types and tests — the local gate                  |
+| `pnpm docs`             | builds, then serves this repository's own `docs/`                      |
+| `pnpm bench`            | measures build and rebuild cost on a generated site                    |
+| `pnpm styles`           | recompiles the shell and theme stylesheets from their Tailwind sources |
+| `pnpm clean`            | removes build output                                                   |
 
 `pnpm docs` serves the documentation you are reading through Tsumugu itself, on
 localhost, with watch mode on: edit a file under `docs/` and the open page
@@ -65,6 +66,13 @@ a broken link or an untitled page in `docs/` fails the suite.
 `pnpm check` never modifies files: it uses `format:check` rather than `format`,
 so it can be run safely before committing and in CI. Use `pnpm format` and
 `pnpm lint:fix` to apply changes.
+
+The shell's and the default theme's stylesheets are authored in Tailwind's
+vocabulary (`shell.css`, `theme.css`) and compiled by `pnpm styles` into the
+TypeScript constants that ship — the output is still one inline stylesheet per
+owner, so the content-security policy and the zero-runtime-dependency rule are
+untouched. Edit the CSS, never the generated file; `tests/styles.test.ts`
+fails when the two drift.
 
 Prettier owns formatting and ESLint owns correctness. There is deliberately no
 overlap between them, so no rule needs to be disabled to keep the peace. Do not

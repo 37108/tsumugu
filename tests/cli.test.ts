@@ -158,9 +158,12 @@ describe("tsumugu binary", () => {
           child.once("exit", (code) => resolve(code));
         });
         child.kill("SIGTERM");
+
         // A clean shutdown, rather than the process being killed, is what
-        // releases the port for the next run.
-        expect(await exited).toBe(0);
+        // releases the port for the next run. Windows has no signals: Node
+        // terminates the process outright, so the graceful path — and its
+        // exit code — only exists elsewhere.
+        expect(await exited).toBe(process.platform === "win32" ? null : 0);
       }
     });
   });

@@ -1,0 +1,68 @@
+name: Pages
+
+# The project's own documentation, built by the project's own current code —
+# not the published packages — so the site always shows what main does.
+on:
+  push:
+    branches: [main]
+
+# deploy-pages needs the id-token to prove the deployment came from this
+# workflow, and pages: write to create it. Nothing here touches the
+# repository's contents.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deployment at a time, newest wins; an in-flight upload is safe to
+# supersede, unlike a package publish.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "24"
+
+jobs:
+  deploy:
+    name: Build and deploy the documentation
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+
+      - name: Install Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Tsumugu
+        run: pnpm run build
+
+      # A project site lives under /tsumugu/, which is what --base is for; the
+      # origin puts real absolute URLs into sitemap.xml.
+      - name: Build the documentation site
+        run: >-
+          node packages/cli/dist/bin.js build docs
+          --out dist-docs
+          --base /tsumugu
+          --origin https://37108.github.io
+
+      - name: Upload the site
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: dist-docs
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0

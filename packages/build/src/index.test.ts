@@ -234,6 +234,31 @@ describe("buildStatic", () => {
     expect(await listFiles(outDir)).not.toContain("important.txt");
   });
 
+  it("prefixes every written URL with the base path, for subpath hosts", async () => {
+    await build({ basePath: "/repo", origin: "https://name.github.io" });
+
+    const html = await readFile(
+      path.join(outDir, "guide", "setup", "index.html"),
+      "utf8",
+    );
+    const sitemap = await readFile(path.join(outDir, "sitemap.xml"), "utf8");
+    const search = await readFile(path.join(outDir, "search.json"), "utf8");
+
+    // Navigation, the search form, the client's base hint, the exports: all
+    // carry the prefix, while the files stay at the output root — the host
+    // adds the prefix, not the directory layout.
+    expect(html).toContain('href="/repo/guide/setup"');
+    expect(html).toContain('action="/repo/search"');
+    expect(html).toContain('name="tsumugu-base"');
+    expect(sitemap).toContain(
+      "<loc>https://name.github.io/repo/guide/setup</loc>",
+    );
+    const parsed = JSON.parse(search) as {
+      entries: readonly { url: string }[];
+    };
+    expect(parsed.entries[0]?.url.startsWith("/repo/")).toBe(true);
+  });
+
   it("reports a collision rather than overwriting", async () => {
     // A file called `llms.txt` in the documentation root wants the same output
     // path as the generated one.

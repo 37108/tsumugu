@@ -18,6 +18,7 @@ export interface BuildCommandOptions {
   readonly root?: string;
   readonly outDir?: string;
   readonly origin?: string;
+  readonly basePath?: string;
   readonly clean?: boolean;
 }
 
@@ -34,6 +35,7 @@ export function parseBuildOptions(
     root?: string;
     outDir?: string;
     origin?: string;
+    basePath?: string;
     clean?: boolean;
   } = {};
 
@@ -44,7 +46,8 @@ export function parseBuildOptions(
     if (
       argument === "--root" ||
       argument === "--out" ||
-      argument === "--origin"
+      argument === "--origin" ||
+      argument === "--base"
     ) {
       if (value === undefined) {
         return { ok: false, message: `${argument} needs a value.` };
@@ -53,6 +56,10 @@ export function parseBuildOptions(
         options.root = value;
       } else if (argument === "--out") {
         options.outDir = value;
+      } else if (argument === "--base") {
+        // Normalized once, here: one leading slash, no trailing one, so the
+        // rest of the pipeline can concatenate without thinking about it.
+        options.basePath = `/${value.replace(/^\/+|\/+$/gu, "")}`;
       } else {
         options.origin = value;
       }
@@ -77,7 +84,7 @@ export function parseBuildOptions(
 
     return {
       ok: false,
-      message: `Unknown option "${argument ?? ""}". Supported: --root, --out, --origin, --clean.`,
+      message: `Unknown option "${argument ?? ""}". Supported: --root, --out, --origin, --base, --clean.`,
     };
   }
 
@@ -94,6 +101,7 @@ export async function runBuild(
     root,
     outDir: path.resolve(options.outDir ?? defaultOutDir),
     ...(options.origin === undefined ? {} : { origin: options.origin }),
+    ...(options.basePath === undefined ? {} : { basePath: options.basePath }),
     ...(options.clean === undefined ? {} : { clean: options.clean }),
     siteName: siteNameFor(root),
     ...createPreset(),

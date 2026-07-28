@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { version } from "tsumugu-core";
 
 import { discoverRoot, parseDevOptions, siteNameFor } from "./dev.js";
-import { formatSize } from "./build.js";
+import { formatSize, parseBuildOptions } from "./build.js";
 import { exitCodes, run, usage } from "./index.js";
 import { formatForTerminal, styleFor } from "./terminal.js";
 
@@ -192,6 +192,15 @@ describe("formatForTerminal", () => {
         plain,
       ).split("\n")[0],
     ).toBe("1 warning");
+  });
+});
+
+describe("parseBuildOptions", () => {
+  it("normalizes the base path to one leading slash and no trailing one", () => {
+    for (const written of ["/repo", "repo", "repo/", "/repo/", "//repo//"]) {
+      const parsed = parseBuildOptions(["docs", "--base", written]);
+      expect(parsed.ok && parsed.options.basePath, written).toBe("/repo");
+    }
   });
 });
 

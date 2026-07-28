@@ -44,11 +44,11 @@ function link(url: string, label: string): InlineNode {
  * but it has nowhere to link to and pretending otherwise produces a link that
  * goes nowhere.
  */
-function itemToListItem(item: NavigationItem): ListItemNode {
+function itemToListItem(item: NavigationItem, basePath: string): ListItemNode {
   const label: InlineNode =
     item.route === undefined
       ? { type: "strong", children: [text(item.label)] }
-      : link(encodeRoutePath(item.route), item.label);
+      : link(`${basePath}${encodeRoutePath(item.route)}`, item.label);
 
   const line =
     item.description === undefined
@@ -65,23 +65,29 @@ function itemToListItem(item: NavigationItem): ListItemNode {
             {
               type: "list",
               ordered: false,
-              children: item.children.map(itemToListItem),
+              children: item.children.map((child) =>
+                itemToListItem(child, basePath),
+              ),
             },
           ],
   };
 }
 
-function navigationList(items: readonly NavigationItem[]): BlockNode {
+function navigationList(
+  items: readonly NavigationItem[],
+  basePath: string,
+): BlockNode {
   return {
     type: "list",
     ordered: false,
-    children: items.map(itemToListItem),
+    children: items.map((item) => itemToListItem(item, basePath)),
   };
 }
 
 export interface GeneratedHomeInput {
   readonly siteName: string;
   readonly navigation: readonly NavigationItem[];
+  readonly basePath?: string;
 }
 
 /**
@@ -117,7 +123,7 @@ export function generateHomeDocument(input: GeneratedHomeInput): DocumentNode {
         { type: "inline-code", value: "index.md" },
         text(" to the documentation root to write your own."),
       ),
-      navigationList(input.navigation),
+      navigationList(input.navigation, input.basePath ?? ""),
     ],
   };
 }
@@ -125,6 +131,7 @@ export function generateHomeDocument(input: GeneratedHomeInput): DocumentNode {
 export interface GeneratedNotFoundInput {
   readonly requestedPath: string;
   readonly navigation: readonly NavigationItem[];
+  readonly basePath?: string;
 }
 
 /**
@@ -156,7 +163,7 @@ export function generateNotFoundDocument(
 
   children.push(
     paragraph(text("These sections exist:")),
-    navigationList(input.navigation),
+    navigationList(input.navigation, input.basePath ?? ""),
   );
 
   return { type: "document", children };
@@ -165,6 +172,7 @@ export function generateNotFoundDocument(
 export interface GeneratedSearchInput {
   readonly query?: string;
   readonly navigation: readonly NavigationItem[];
+  readonly basePath?: string;
 }
 
 /**
@@ -204,7 +212,7 @@ export function generateSearchDocument(
   }
 
   if (input.navigation.length > 0) {
-    children.push(navigationList(input.navigation));
+    children.push(navigationList(input.navigation, input.basePath ?? ""));
   }
 
   return { type: "document", children };

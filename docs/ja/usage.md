@@ -1,0 +1,95 @@
+---
+title: 使い方
+description: インストールから執筆、配信、公開まで — ワークフロー全体を 1 ページで。
+order: 1
+---
+
+# 使い方
+
+このページの内容は [英語版](/usage) と同じです。
+
+## はじめる
+
+```bash
+npx tsumugu dev docs
+```
+
+`docs/` ディレクトリを localhost で配信し、URL を表示します。設定ファイルは
+存在せず、必要もありません。ルートは指定したディレクトリ（慣例では
+`./docs`）で、それ以外はすべてファイルから導かれます。
+
+## 書く
+
+ルーティングはファイルシステムをそのまま写し、3 つの形式が同じ
+パイプラインを通ります。
+
+```text
+docs/
+├── index.md          →  /            見出しがサイト名になります
+├── guide/
+│   ├── index.md      →  /guide       セクション自身のページ
+│   └── setup.md      →  /guide/setup
+├── api.html          →  /api         HTML は出力ではなく入力です
+├── notes.mdx         →  /notes       MDX は完全にパースし、決して実行しません
+└── images/x.svg      →  文書の隣からそのまま配信
+```
+
+文書ごとの設定は front matter がすべてです。
+
+```yaml
+---
+title: セットアップ # 省略時は最初の見出し、次にファイル名
+description: 一文の説明。 # 一覧・llms.txt・検索に表示
+order: 2 # 兄弟間での並び順
+hidden: true # どこにも載せないが、配信はされる
+---
+```
+
+`hiden` のようなタイプミスには「もしかして `hidden`?」という警告が
+出ます。MDX の式やコンポーネントは実行されず、書かれたとおりに表示
+されます — これはセキュリティ上の決定で、
+[ADR 6](/decisions/0006-mdx-without-execution) に記録されています。
+
+## 書いている間
+
+watch モードは既定で有効です。保存すると変更分だけが再ビルドされ、
+開いているページは自動で再読み込みされます。問題は**それが属するページの
+上に**表示されます — 壊れた内部リンク、存在しないアンカー、パースできない
+front matter が、ファイルと行番号つきで。再ビルド全体が失敗しても、
+最後に成功した版を配信し続けます。
+
+読者には、入力に応じてセクション単位でランキングされる検索、コード
+ブロックのコピーボタン、見出しアンカー、読んでいる位置に追従する目次が
+提供されます。すべて段階的です。JavaScript がなければ検索フォームは
+本物のページに送信され、それ以外は最初からサーバーレンダリングです。
+
+## 公開する
+
+```bash
+npx tsumugu build docs --out dist --origin https://docs.example.com
+```
+
+`dist/` はクリーン URL の静的サイトです — `/guide/setup` は
+`guide/setup/index.html` になります。ページと同じ文書から生成された
+`documents.json`、`llms.txt`、`search.json`、`sitemap.xml` も含まれます。
+ファイルを配れる場所ならどこでもホストできます。
+
+### GitHub Pages
+
+プロジェクトサイトは `/リポジトリ名/` 配下で配信されるため、`--base` を
+渡します。
+
+```bash
+npx tsumugu build docs --out dist \
+  --origin https://your-name.github.io --base /your-repo
+```
+
+ワークフローで自動化できます。このリポジトリ自身のドキュメントが、
+まさにこの形（`.github/workflows/pages.yml`）で公開されています。設定は
+一度だけ: **Settings → Pages → Source → GitHub Actions**。
+
+## 構成を変える
+
+CLI は差し替え可能な部品 — レンダラー・トランスフォーマー・テーマ — の
+一つの構成にすぎません。差し替えは CLI と同じ API に対する小さな
+スクリプトです。[Composition](/composition)（英語）を参照してください。

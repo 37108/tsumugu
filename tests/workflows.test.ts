@@ -42,6 +42,17 @@ function isRelease(workflow: Workflow): boolean {
   return workflow.name === releaseWorkflow;
 }
 
+/**
+ * The Pages workflow is the other exception: deploying needs `pages: write`
+ * and the id-token, it runs only on the default branch, and superseding an
+ * in-flight deployment is safe — the opposite of a package publish.
+ */
+const pagesWorkflow = ".github/workflows/pages.yml";
+
+function isPages(workflow: Workflow): boolean {
+  return workflow.name === pagesWorkflow;
+}
+
 beforeAll(async () => {
   const entries = await readdir(workflowsDirectory, { withFileTypes: true });
   const files = entries
@@ -143,10 +154,13 @@ describe("permissions", () => {
       ];
       expect(granted.length).toBeGreaterThan(0);
 
-      // The release workflow writes, and what it may write is stated exactly.
+      // The writing workflows are exceptions, and what each may write is
+      // stated exactly.
       const allowedToWrite = isRelease(workflow)
         ? new Set(["contents", "pull-requests", "id-token"])
-        : new Set<string>();
+        : isPages(workflow)
+          ? new Set(["pages", "id-token"])
+          : new Set<string>();
 
       for (const [line, scope, level] of granted) {
         if (level === "write" && allowedToWrite.has(scope ?? "")) {
@@ -163,7 +177,9 @@ describe("permissions", () => {
 
 describe("triggers", () => {
   it("runs on pull requests and on pushes to the default branch", () => {
-    for (const workflow of workflows.filter((entry) => !isRelease(entry))) {
+    for (const workflow of workflows.filter(
+      (entry) => !isRelease(entry) && !isPages(entry),
+    )) {
       expect(workflow.text).toMatch(/^\s*pull_request:/m);
       expect(workflow.text).toMatch(/^\s*push:/m);
       expect(workflow.text).toMatch(/branches:\s*\[main\]/);
@@ -171,11 +187,14 @@ describe("triggers", () => {
   });
 
   it("releases only from the default branch, never from a pull request", () => {
-    const release = workflows.find(isRelease);
-
-    // A release triggered by opening a pull request would publish a branch.
-    expect(release?.text).not.toMatch(/^\s*pull_request:/m);
-    expect(release?.text).toMatch(/branches:\s*\[main\]/);
+    for (const workflow of workflows.filter(
+      (entry) => isRelease(entry) || isPages(entry),
+    )) {
+      // A deployment triggered by opening a pull request would publish a
+      // branch.
+      expect(workflow.text).not.toMatch(/^\s*pull_request:/m);
+      expect(workflow.text).toMatch(/branches:\s*\[main\]/);
+    }
   });
 
   it("never cancels a release that may already be publishing", () => {

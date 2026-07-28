@@ -69,6 +69,9 @@ export const stylesheet = `
 .tsumugu-doc h5,
 .tsumugu-doc h6 {
   font-family: var(--doc-serif);
+  /* Following an anchor lands on the heading with room above it, rather than
+     with the heading flush against the top of the window. */
+  scroll-margin-top: 1.5rem;
   font-weight: 600;
   line-height: 1.25;
   letter-spacing: -0.01em;

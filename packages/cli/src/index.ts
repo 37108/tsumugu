@@ -35,7 +35,7 @@ export const exitCodes = {
  * screen listing commands that do not work is a help screen nobody trusts
  * twice.
  */
-export const usage = `tsumugu — a documentation server for plain files
+export const usage = `tsumugu: a documentation server for plain files
 
 Usage
   tsumugu dev [directory] [options]   serve documentation on localhost

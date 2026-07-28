@@ -29,6 +29,10 @@ export const shellStylesheet = `
   --ts-sans: system-ui, -apple-system, "Segoe UI", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
   --ts-serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Hiragino Mincho ProN", "Yu Mincho", Georgia, serif;
   --ts-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+  /* Stated rather than left to the browser, so form controls, scrollbars and
+     the space beyond the page match the page. */
+  color-scheme: light;
 }
 
 * {
@@ -40,6 +44,10 @@ body {
   color: var(--ts-ink);
   font-family: var(--ts-sans);
   margin: 0;
+  /* No 300ms wait before a tap becomes a click, and no grey flash over the
+     link that was tapped. */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   -webkit-text-size-adjust: 100%;
 }
 

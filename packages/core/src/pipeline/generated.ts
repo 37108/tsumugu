@@ -53,7 +53,7 @@ function itemToListItem(item: NavigationItem): ListItemNode {
   const line =
     item.description === undefined
       ? paragraph(label)
-      : paragraph(label, text(` — ${item.description}`));
+      : paragraph(label, text(`: ${item.description}`));
 
   return {
     type: "list-item",
@@ -99,10 +99,10 @@ export function generateHomeDocument(input: GeneratedHomeInput): DocumentNode {
         { type: "heading", depth: 1, children: [text(input.siteName)] },
         paragraph(
           text(
-            "This documentation root has no documents yet. Add a Markdown or HTML file to it — ",
+            "This documentation root has no documents yet. Add a Markdown or HTML file to it, then reload: ",
           ),
           { type: "inline-code", value: "index.md" },
-          text(" becomes this page — and reload."),
+          text(" becomes this page."),
         ),
       ],
     };

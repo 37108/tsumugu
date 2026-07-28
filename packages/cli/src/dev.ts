@@ -268,7 +268,7 @@ export function describeStartup(result: DevResult, root: string): string {
     lines.push(
       "",
       `No documents were found in ${root}.`,
-      `Add a Markdown or HTML file to it — index.md becomes the home page.`,
+      "Add a Markdown or HTML file to it: index.md becomes the home page.",
     );
   }
 

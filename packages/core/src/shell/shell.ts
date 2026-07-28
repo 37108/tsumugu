@@ -251,6 +251,9 @@ export function renderShell(input: ShellInput): ShellResult {
   );
 
   const head = fragment(
+    // The browser's own chrome, told what colour the page is, so a phone's
+    // status bar does not sit in a different palette to the page under it.
+    element("meta", { name: "theme-color", content: "#fcfbf8" }),
     ...(input.description === undefined
       ? []
       : [element("meta", { name: "description", content: input.description })]),

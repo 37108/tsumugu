@@ -42,7 +42,9 @@ beforeAll(async () => {
     execFile(
       "pnpm",
       ["licenses", "list", "--prod", "--json"],
-      { cwd: repositoryRoot },
+      // The shell is for Windows, where pnpm is a .cmd shim that Node
+      // refuses to spawn directly.
+      { cwd: repositoryRoot, shell: process.platform === "win32" },
       (error, stdout) => {
         if (error !== null) {
           reject(new Error(`pnpm licenses failed: ${error.message}`));

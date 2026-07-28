@@ -36,7 +36,17 @@ async function serveFixture(
   await withTemporaryDirectory(async (root) => {
     await writeFiles(root, files);
     running = await startDev({ root, port: 0 });
-    await run(running);
+
+    try {
+      await run(running);
+    } finally {
+      // Inside the directory's lifetime, deliberately: on Windows, deleting a
+      // directory that is still being watched crashes the process inside
+      // libuv, so the watcher must die before the directory does — even when
+      // the assertion above already failed. `afterEach` stays as a backstop.
+      await running.server.close();
+      running = undefined;
+    }
   });
 }
 

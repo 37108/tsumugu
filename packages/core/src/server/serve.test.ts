@@ -163,6 +163,28 @@ describe("serve", () => {
     errors.mockRestore();
   });
 
+  it("writes one response even when rendering fails after it started", async () => {
+    const errors = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+
+    // A page whose HTML is produced, then a failure: the response is already
+    // written, so the error must not try to write a second one.
+    const server = await start({
+      renderNotFound: (requested) => {
+        if (requested === "/late") {
+          throw new Error("after the fact");
+        }
+        return "<p>gone</p>";
+      },
+    });
+
+    expect((await fetch(`${server.url}late`)).status).toBe(500);
+    expect((await fetch(`${server.url}gone`)).status).toBe(404);
+
+    errors.mockRestore();
+  });
+
   it("explains a port that is already in use", async () => {
     const first = await start();
 

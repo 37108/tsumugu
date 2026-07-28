@@ -174,11 +174,21 @@ export function serve(options: ServeOptions): Promise<RunningServer> {
   const requestedPort = options.port ?? 0;
 
   const server: Server = createServer((request, response) => {
+    let answered = false;
+
     const send = (
       status: number,
       body: string | Uint8Array,
       contentType = "text/html; charset=utf-8",
     ): void => {
+      // A request gets one response. Without this, a failure *after* a response
+      // had already been written would try to write a second one, and Node
+      // throws — turning a handled error into an unhandled one.
+      if (answered) {
+        return;
+      }
+      answered = true;
+
       response.writeHead(status, {
         "content-type": contentType,
         // Development, not production: an edited file must show up on reload

@@ -4,6 +4,7 @@ import { version } from "@tsumugu/core";
 
 import { discoverRoot, parseDevOptions, siteNameFor } from "./dev.js";
 import { exitCodes, run, usage } from "./index.js";
+import { formatForTerminal, styleFor } from "./terminal.js";
 
 /**
  * Unit tests for argument handling.
@@ -133,5 +134,62 @@ describe("discoverRoot", () => {
 
     expect(result.ok).toBe(false);
     expect(result.ok ? "" : result.message).toContain("not a directory");
+  });
+});
+
+describe("styleFor", () => {
+  it("colours a terminal", () => {
+    expect(styleFor({ isTty: true, env: {} }).error("x")).not.toBe("x");
+  });
+
+  it("stays plain when the output is not a terminal", () => {
+    // A pipe, a log file and a CI transcript all want text that greps.
+    expect(styleFor({ isTty: false, env: {} }).error("x")).toBe("x");
+  });
+
+  it("obeys NO_COLOR over everything", () => {
+    expect(styleFor({ isTty: true, env: { NO_COLOR: "1" } }).bold("x")).toBe(
+      "x",
+    );
+  });
+
+  it("obeys FORCE_COLOR when there is no terminal", () => {
+    expect(
+      styleFor({ isTty: false, env: { FORCE_COLOR: "1" } }).bold("x"),
+    ).not.toBe("x");
+  });
+});
+
+describe("formatForTerminal", () => {
+  const plain = styleFor({ isTty: false, env: {} });
+
+  it("says nothing when there is nothing to say", () => {
+    expect(formatForTerminal([], plain)).toBe("");
+  });
+
+  it("counts by severity before listing", () => {
+    const text = formatForTerminal(
+      [
+        { code: "a/one", severity: "warning", message: "First." },
+        { code: "a/two", severity: "warning", message: "Second." },
+        { code: "b/one", severity: "error", message: "Third." },
+      ],
+      plain,
+    );
+
+    // One line says how much there is, so a wall of warnings is a choice to
+    // read rather than a wall.
+    expect(text.split("\n")[0]).toBe("1 error, 2 warnings");
+    expect(text).toContain("First.");
+    expect(text).toContain("Third.");
+  });
+
+  it("uses the singular for one", () => {
+    expect(
+      formatForTerminal(
+        [{ code: "a/one", severity: "warning", message: "Only." }],
+        plain,
+      ).split("\n")[0],
+    ).toBe("1 warning");
   });
 });

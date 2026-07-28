@@ -3,11 +3,13 @@ import { describeBuild, parseBuildOptions, runBuild } from "./build.js";
 import {
   describeStartup,
   describeUpdate,
+  describeUpdateFailure,
   discoverRoot,
   parseDevOptions,
   startDev,
 } from "./dev.js";
 import { exitCodes, run } from "./index.js";
+import { styleFor } from "./terminal.js";
 
 /**
  * The binary.
@@ -19,6 +21,9 @@ import { exitCodes, run } from "./index.js";
  */
 
 const argv = process.argv.slice(2);
+
+// Colour is decided once, from the stream it will be written to.
+const style = styleFor({ isTty: process.stdout.isTTY === true });
 
 if (argv[0] === "build") {
   const parsed = parseBuildOptions(argv.slice(1));
@@ -38,7 +43,7 @@ if (argv[0] === "build") {
           ...parsed.options,
           root: discovered.discovery.root,
         });
-        process.stdout.write(`${describeBuild(report)}\n`);
+        process.stdout.write(`${describeBuild(report, style)}\n`);
       } catch (cause) {
         process.stderr.write(
           `${cause instanceof Error ? cause.message : String(cause)}\n`,
@@ -69,17 +74,13 @@ if (argv[0] === "build") {
           ...parsed.options,
           root,
           onUpdate: (summary) => {
-            process.stdout.write(`${describeUpdate(summary)}\n`);
+            process.stdout.write(`${describeUpdate(summary, style)}\n`);
           },
           onUpdateFailed: (cause) => {
-            // A rebuild that failed leaves the last good site being served, so
-            // this is news rather than an emergency.
-            process.stderr.write(
-              `rebuild failed: ${cause instanceof Error ? cause.message : String(cause)}\n`,
-            );
+            process.stderr.write(`${describeUpdateFailure(cause, style)}\n`);
           },
         });
-        process.stdout.write(`${describeStartup(result, root)}\n`);
+        process.stdout.write(`${describeStartup(result, root, style)}\n`);
 
         // Stop cleanly on the signals a terminal actually sends, so the port is
         // released rather than held until the process is killed.

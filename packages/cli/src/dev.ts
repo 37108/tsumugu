@@ -5,7 +5,6 @@ import {
   createReloadChannel,
   createSite,
   reloadScript,
-  formatDiagnostics,
   serve,
   watchRoot,
   type DocumentDiagnostic,
@@ -14,6 +13,8 @@ import {
   type UpdateSummary,
 } from "@tsumugu/core";
 import { createPreset } from "@tsumugu/preset";
+
+import { formatForTerminal, styleFor, type TerminalStyle } from "./terminal.js";
 
 /**
  * The zero-config development command.
@@ -314,7 +315,10 @@ function currentDiagnostics(site: Site): readonly DocumentDiagnostic[] {
  * It says what changed rather than only that something did, because "updated"
  * on its own leaves the author wondering whether their file was the one.
  */
-export function describeUpdate(summary: UpdateSummary): string {
+export function describeUpdate(
+  summary: UpdateSummary,
+  style: TerminalStyle = styleFor(),
+): string {
   const documents =
     summary.rendered === 1
       ? "1 document"
@@ -322,7 +326,7 @@ export function describeUpdate(summary: UpdateSummary): string {
   const removed =
     summary.removed === 0 ? "" : `, ${String(summary.removed)} removed`;
 
-  return `rebuilt  ${documents}${removed}`;
+  return `${style.bold("rebuilt")}  ${documents}${removed}`;
 }
 
 /** Pages an author wrote, which is what "how many pages" means to them. */
@@ -333,12 +337,18 @@ function authoredPageCount(site: Site): number {
 }
 
 /** The startup message, as a string rather than written to a stream. */
-export function describeStartup(result: DevResult, root: string): string {
+export function describeStartup(
+  result: DevResult,
+  root: string,
+  style: TerminalStyle = styleFor(),
+): string {
   const lines = [
-    `tsumugu  ${result.server.url}`,
-    `  root   ${root}`,
-    `  pages  ${String(result.pageCount)}`,
-    `  watch  ${result.watching ? "on, pages reload themselves after a save" : "off"}`,
+    `${style.bold("tsumugu")}  ${style.accent(result.server.url)}`,
+    `${style.dim("  root  ")} ${root}`,
+    `${style.dim("  pages ")} ${String(result.pageCount)}`,
+    `${style.dim("  watch ")} ${
+      result.watching ? "on, pages reload themselves after a save" : "off"
+    }`,
   ];
 
   if (result.pageCount === 0) {
@@ -351,8 +361,27 @@ export function describeStartup(result: DevResult, root: string): string {
   }
 
   if (result.diagnostics.length > 0) {
-    lines.push("", formatDiagnostics(result.diagnostics));
+    lines.push("", formatForTerminal(result.diagnostics, style));
   }
 
   return lines.join("\n");
+}
+
+/**
+ * What is printed when a rebuild fails.
+ *
+ * The site being served is the last one that built, so this is news rather than
+ * an emergency, and the message says so: an author who has just saved a broken
+ * file should not have to wonder whether their server is still up.
+ */
+export function describeUpdateFailure(
+  cause: unknown,
+  style: TerminalStyle = styleFor(),
+): string {
+  const message = cause instanceof Error ? cause.message : String(cause);
+
+  return [
+    `${style.error("rebuild failed")}  ${message}`,
+    style.dim("  still serving the last version that built"),
+  ].join("\n");
 }

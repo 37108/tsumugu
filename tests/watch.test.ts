@@ -257,6 +257,44 @@ describe("watch mode", () => {
     });
   });
 
+  it("keeps serving the last version that built when the root disappears", async () => {
+    await withTemporaryDirectory(async (root) => {
+      await writeFiles(root, { "index.md": "# Still here\n" });
+      running = await startDev({ root, port: 0, watch: false });
+
+      await rm(root, { recursive: true, force: true });
+
+      // The update fails; the pages it would have replaced are untouched.
+      await expect(running.site.update()).rejects.toThrow();
+      const response = await fetch(running.server.url);
+
+      expect(response.status).toBe(200);
+      expect(await response.text()).toContain("Still here");
+    });
+  });
+
+  it("recovers once the mistake is fixed", async () => {
+    await withTemporaryDirectory(async (root) => {
+      await writeFiles(root, { "index.md": "# First\n" });
+      running = await startDev({ root, port: 0, watch: false });
+
+      await writeFile(
+        path.join(root, "index.md"),
+        "---\nnot: [valid yaml\n---\n\n# Broken\n",
+      );
+      await running.site.update();
+
+      // A document that cannot be parsed is a warning on that page, not a
+      // server that stops answering.
+      expect((await fetch(running.server.url)).status).toBe(200);
+
+      await writeFile(path.join(root, "index.md"), "# Fixed\n");
+      await running.site.update();
+
+      expect(await (await fetch(running.server.url)).text()).toContain("Fixed");
+    });
+  });
+
   it("releases the watcher when the server closes", async () => {
     await withTemporaryDirectory(async (root) => {
       await writeFiles(root, { "index.md": "# Home\n" });

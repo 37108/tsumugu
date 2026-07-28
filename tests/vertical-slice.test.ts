@@ -250,6 +250,54 @@ describe("problems a user will actually hit", () => {
     });
   });
 
+  it("reports a link to a page that does not exist, on the page that links it", async () => {
+    await serveFixture(
+      {
+        "index.md": "# Home\n\n[Gone](/gone) and [fine](/guide/setup).\n",
+        "guide/setup.md": "# Setup\n",
+      },
+      async ({ server, diagnostics }) => {
+        const html = await (await fetch(server.url)).text();
+
+        // On the page, where the person editing it will see it, and not only
+        // in the terminal they may have scrolled past.
+        expect(html).toContain("link/unknown-document");
+        expect(html).toContain("/gone");
+        expect(
+          diagnostics.filter((entry) => entry.code === "link/unknown-document"),
+        ).toHaveLength(1);
+      },
+    );
+  });
+
+  it("reports a link to a heading that is not there", async () => {
+    await serveFixture(
+      {
+        "index.md": "# Home\n\n[Install](/guide/setup#install)\n",
+        "guide/setup.md": "# Setup\n\n## Configure\n",
+      },
+      async ({ server }) => {
+        expect(await (await fetch(server.url)).text()).toContain(
+          "link/unknown-fragment",
+        );
+      },
+    );
+  });
+
+  it("says nothing about links that work", async () => {
+    await serveFixture(
+      {
+        "index.md":
+          "# Home\n\n[Setup](/guide/setup#configure), [site](https://example.com), [mail](mailto:a@example.com), [picture](/img/a.png)\n",
+        "guide/setup.md": "# Setup\n\n## Configure\n",
+        "img/a.png": "not really a png",
+      },
+      ({ diagnostics }) => {
+        expect(diagnostics).toEqual([]);
+      },
+    );
+  });
+
   it("rejects a traversal attempt as a bad request", async () => {
     await serveFixture({ "index.md": page }, async ({ server }) => {
       const response = await fetch(`${server.url}%2e%2e%2fetc%2fpasswd`, {

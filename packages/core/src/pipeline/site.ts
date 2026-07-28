@@ -13,6 +13,8 @@ import { findRouteCollisions, routeForSource } from "../routing/routes.js";
 import { diffSnapshots, type DocumentSnapshot } from "../scanner/events.js";
 import { createFileReader, reconcile } from "../scanner/reconcile.js";
 import { scan } from "../scanner/scan.js";
+import { collectReferences } from "../links/collect.js";
+import { validateDocumentLinks } from "../links/validate.js";
 import { renderShell } from "../shell/shell.js";
 import { renderWithTheme, type Theme } from "../theme/contract.js";
 import { serializeDocument } from "../theme/serialize.js";
@@ -146,6 +148,8 @@ interface PreparedDocument {
   /** The themed document body. */
   readonly body: VirtualNode;
   readonly tableOfContents: ReturnType<typeof buildTableOfContents>;
+  /** Where this document points, and what it can be pointed at. */
+  readonly references: ReturnType<typeof collectReferences>;
   readonly diagnostics: readonly DocumentDiagnostic[];
 }
 
@@ -234,6 +238,9 @@ export async function createSite(options: BuildOptions): Promise<Site> {
       body: themed.tree,
       tableOfContents:
         transformed === undefined ? [] : buildTableOfContents(root),
+      // Collected while the tree is in hand. Finding a project's links again
+      // after every edit would mean parsing every file again after every edit.
+      references: collectReferences(root),
       diagnostics: dedupeDiagnostics(diagnostics),
     };
   }
@@ -384,6 +391,33 @@ export async function createSite(options: BuildOptions): Promise<Site> {
       })),
     );
 
+    // Link validation is a property of the whole project, so it runs once the
+    // set of routes and heading identifiers is complete — and it runs over the
+    // references collected earlier rather than over the documents themselves,
+    // so an edit revalidates the project without re-reading it.
+    const headingsByRoute = new Map<RoutePath, ReadonlySet<string>>(
+      entries.map((entry) => [entry.route, entry.references.headingIds]),
+    );
+    const assets = new Set(scanned.assets);
+    const linkTarget = {
+      routes: headingsByRoute,
+      hasAsset: (candidate: string) => assets.has(candidate),
+    };
+
+    const linkDiagnostics = new Map<SourcePath, readonly DocumentDiagnostic[]>(
+      entries.map((entry) => [
+        entry.sourcePath,
+        validateDocumentLinks(
+          {
+            sourcePath: entry.sourcePath,
+            links: entry.references.links,
+            headingIds: entry.references.headingIds,
+          },
+          linkTarget,
+        ),
+      ]),
+    );
+
     const pages = new Map<RoutePath, Page>();
     for (const entry of entries) {
       const page = toHtml({
@@ -395,7 +429,10 @@ export async function createSite(options: BuildOptions): Promise<Site> {
         currentRoute: entry.route,
         tableOfContents: entry.tableOfContents,
         navigation: navigation.items,
-        diagnostics: entry.diagnostics,
+        diagnostics: dedupeDiagnostics([
+          ...entry.diagnostics,
+          ...(linkDiagnostics.get(entry.sourcePath) ?? []),
+        ]),
       });
 
       pages.set(entry.route, {

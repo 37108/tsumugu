@@ -106,6 +106,14 @@ Every code in the implementation appears here.
 | ---------------------------- | -------- | -------------------------------------------------------------------------------------- |
 | `navigation/duplicate-label` | warning  | two entries in the same section read identically; both pages still work and are linked |
 
+### `link/`
+
+| Code                    | Severity | When                                                                    |
+| ----------------------- | -------- | ----------------------------------------------------------------------- |
+| `link/unknown-document` | warning  | a link points at a route the project does not serve                     |
+| `link/unknown-fragment` | warning  | a link points at a heading identifier the target document does not have |
+| `link/missing-asset`    | warning  | a link points at a file that is not in the documentation root           |
+
 ### `metadata/`
 
 | Code                           | Severity | When                                                                  |

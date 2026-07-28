@@ -43,6 +43,7 @@ export type PipelineStage =
   | "document"
   | "routing"
   | "navigation"
+  | "links"
   | "metadata"
   | "renderer"
   | "transformer"

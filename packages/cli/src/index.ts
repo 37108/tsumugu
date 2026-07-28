@@ -48,7 +48,8 @@ Options for dev
   --port <port>        port to bind, 0 for any free port (default: 0)
 
 Without a directory, tsumugu serves ./docs, or the current directory when it
-contains an index document.
+contains an index document. Files are watched while dev runs: save a document
+and reload the page.
 `;
 
 /**
@@ -81,6 +82,7 @@ export function run(argv: readonly string[]): CliResult {
 
 export {
   describeStartup,
+  describeUpdate,
   discoverRoot,
   parseDevOptions,
   siteNameFor,

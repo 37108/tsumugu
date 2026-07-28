@@ -2,7 +2,7 @@ import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 
 import type { RoutePath } from "../document/paths.js";
-import type { Page } from "../pipeline/build.js";
+import type { Page } from "../pipeline/site.js";
 import { decodeRequestPath } from "../routing/routes.js";
 
 import { readAsset } from "./assets.js";
@@ -16,8 +16,35 @@ import { escapeText } from "../theme/serialize.js";
  * before it got here.
  */
 
-export interface ServeOptions {
+/**
+ * What the server needs to answer a request.
+ *
+ * The pipeline's build result satisfies this, which is the point: the server
+ * knows what a page is and nothing about how one is produced.
+ */
+export interface ServedSite {
   readonly pages: ReadonlyMap<RoutePath, Page>;
+  /**
+   * Renders the page for a request that resolved to no document.
+   *
+   * Supplied by the pipeline, so a missing page looks like the rest of the site
+   * and lists what does exist. Without it the server falls back to the plain
+   * page below, which is what a server composed without a pipeline gets.
+   */
+  readonly renderNotFound?: (requestedPath: string) => string;
+  /** Renders the page for a request path that could not be read at all. */
+  readonly renderBadRequest?: () => string;
+}
+
+export interface ServeOptions {
+  /**
+   * The site to serve, asked for once per request.
+   *
+   * A function rather than a value, so that a rebuilt site is served the moment
+   * it exists. Nothing has to tell the server that the project changed, and
+   * there is no window in which it serves pages that have been replaced.
+   */
+  readonly site: () => ServedSite;
   /**
    * Interface to bind. Defaults to loopback.
    *
@@ -27,16 +54,6 @@ export interface ServeOptions {
   readonly host?: string;
   /** Port, or 0 to let the operating system choose a free one. */
   readonly port?: number;
-  /**
-   * Renders the page for a request that resolved to no document.
-   *
-   * Supplied by the pipeline, so a missing page looks like the rest of the
-   * site and lists what does exist. Without it the server falls back to the
-   * plain page below, which is what a server composed without a pipeline gets.
-   */
-  readonly renderNotFound?: (requestedPath: string) => string;
-  /** Renders the page for a request path that could not be read at all. */
-  readonly renderBadRequest?: () => string;
   /**
    * Absolute path to the documentation root, enabling static assets.
    *
@@ -121,6 +138,7 @@ async function handle(
     contentType?: string,
   ) => void,
 ): Promise<void> {
+  const site = options.site();
   const withoutQuery = target.split(/[?#]/)[0] ?? "/";
   const route = decodeRequestPath(withoutQuery);
 
@@ -129,13 +147,13 @@ async function handle(
     // a client sent. It is a bad request, not a crash.
     send(
       400,
-      options.renderBadRequest?.() ??
+      site.renderBadRequest?.() ??
         page(400, "Bad request", "<p>That request path is not valid.</p>"),
     );
     return;
   }
 
-  const found = options.pages.get(route);
+  const found = site.pages.get(route);
   if (found !== undefined) {
     send(200, found.html);
     return;
@@ -151,7 +169,7 @@ async function handle(
     }
   }
 
-  send(404, options.renderNotFound?.(route) ?? notFound(route, options.pages));
+  send(404, site.renderNotFound?.(route) ?? notFound(route, site.pages));
 }
 
 /**

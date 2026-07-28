@@ -2,12 +2,15 @@ import { access, stat } from "node:fs/promises";
 import path from "node:path";
 
 import {
-  buildSite,
   createHeadingIdTransformer,
+  createSite,
   formatDiagnostics,
   serve,
+  watchRoot,
   type DocumentDiagnostic,
   type RunningServer,
+  type Site,
+  type UpdateSummary,
 } from "@tsumugu/core";
 import { createHtmlRenderer } from "@tsumugu/renderer-html";
 import { createMarkdownRenderer } from "@tsumugu/renderer-markdown";
@@ -27,10 +30,18 @@ export interface DevOptions {
   readonly root?: string;
   readonly host?: string;
   readonly port?: number;
+  /** Watch the root and rebuild on change. On unless turned off. */
+  readonly watch?: boolean;
+  /** Called after a rebuild triggered by a file change. */
+  readonly onUpdate?: (summary: UpdateSummary) => void;
+  /** Called when a rebuild failed, which leaves the last good site served. */
+  readonly onUpdateFailed?: (cause: unknown) => void;
 }
 
 export interface DevResult {
   readonly server: RunningServer;
+  /** The site being served, which rebuilds itself as files change. */
+  readonly site: Site;
   readonly diagnostics: readonly DocumentDiagnostic[];
   /** How many documents the project has. Generated pages are not counted. */
   readonly pageCount: number;
@@ -218,7 +229,7 @@ export function siteNameFor(root: string): string {
 export async function startDev(options: DevOptions = {}): Promise<DevResult> {
   const root = path.resolve(options.root ?? conventionalDirectory);
 
-  const built = await buildSite({
+  const site = await createSite({
     root,
     // Registration is explicit and ordered. Nothing is discovered from
     // node_modules, which is what keeps selection predictable.
@@ -232,27 +243,78 @@ export async function startDev(options: DevOptions = {}): Promise<DevResult> {
   });
 
   const server = await serve({
-    pages: built.pages,
+    // Asked per request, so an edit is served as soon as the rebuild finishes.
+    site: () => site.result,
     assetRoot: root,
-    renderNotFound: built.renderNotFound,
-    renderBadRequest: built.renderBadRequest,
     ...(options.host === undefined ? {} : { host: options.host }),
     ...(options.port === undefined ? {} : { port: options.port }),
   });
 
-  const pageDiagnostics = [...built.pages.values()].flatMap(
-    (page) => page.diagnostics,
-  );
+  // Rebuilds are serialized through one promise: a second burst of saves while
+  // a rebuild is running waits for it rather than racing it, so the site never
+  // reflects half of one edit and half of another.
+  let pending: Promise<void> = Promise.resolve();
+
+  const watcher =
+    options.watch === false
+      ? undefined
+      : watchRoot(root, () => {
+          pending = pending
+            .then(async () => {
+              const summary = await site.update();
+              options.onUpdate?.(summary);
+            })
+            .catch((cause: unknown) => {
+              options.onUpdateFailed?.(cause);
+            });
+        });
 
   return {
-    server,
-    diagnostics: [...built.diagnostics, ...pageDiagnostics],
+    server: {
+      ...server,
+      close: async () => {
+        watcher?.close();
+        await server.close();
+      },
+    },
+    site,
+    diagnostics: currentDiagnostics(site),
     // Generated pages are not counted: a project with no documents should be
     // told it has none, not told it has one it did not write.
-    pageCount: [...built.pages.values()].filter(
-      (page) => page.generated !== true,
-    ).length,
+    pageCount: authoredPageCount(site),
   };
+}
+
+/** Diagnostics from the project as a whole and from every page in it. */
+function currentDiagnostics(site: Site): readonly DocumentDiagnostic[] {
+  return [
+    ...site.result.diagnostics,
+    ...[...site.result.pages.values()].flatMap((page) => page.diagnostics),
+  ];
+}
+
+/**
+ * The line printed after a rebuild.
+ *
+ * It says what changed rather than only that something did, because "updated"
+ * on its own leaves the author wondering whether their file was the one.
+ */
+export function describeUpdate(summary: UpdateSummary): string {
+  const documents =
+    summary.rendered === 1
+      ? "1 document"
+      : `${String(summary.rendered)} documents`;
+  const removed =
+    summary.removed === 0 ? "" : `, ${String(summary.removed)} removed`;
+
+  return `rebuilt  ${documents}${removed}`;
+}
+
+/** Pages an author wrote, which is what "how many pages" means to them. */
+function authoredPageCount(site: Site): number {
+  return [...site.result.pages.values()].filter(
+    (page) => page.generated !== true,
+  ).length;
 }
 
 /** The startup message, as a string rather than written to a stream. */
@@ -261,6 +323,7 @@ export function describeStartup(result: DevResult, root: string): string {
     `tsumugu  ${result.server.url}`,
     `  root   ${root}`,
     `  pages  ${String(result.pageCount)}`,
+    "  watch  on, reload the page after saving",
   ];
 
   if (result.pageCount === 0) {

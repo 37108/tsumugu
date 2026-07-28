@@ -229,6 +229,7 @@ describe("public export surface", () => {
     "@tsumugu/core": [
       "buildSite",
       "createHeadingIdTransformer",
+      "createSite",
       "element",
       "formatDiagnostic",
       "formatDiagnostics",
@@ -241,9 +242,11 @@ describe("public export surface", () => {
       "text",
       "trustedHtml",
       "version",
+      "watchRoot",
     ],
     "@tsumugu/cli": [
       "describeStartup",
+      "describeUpdate",
       "discoverRoot",
       "exitCodes",
       "parseDevOptions",

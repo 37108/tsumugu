@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import {
   describeStartup,
+  describeUpdate,
   discoverRoot,
   parseDevOptions,
   startDev,
@@ -36,7 +37,20 @@ if (argv[0] === "dev") {
       const root = discovered.discovery.root;
 
       try {
-        const result = await startDev({ ...parsed.options, root });
+        const result = await startDev({
+          ...parsed.options,
+          root,
+          onUpdate: (summary) => {
+            process.stdout.write(`${describeUpdate(summary)}\n`);
+          },
+          onUpdateFailed: (cause) => {
+            // A rebuild that failed leaves the last good site being served, so
+            // this is news rather than an emergency.
+            process.stderr.write(
+              `rebuild failed: ${cause instanceof Error ? cause.message : String(cause)}\n`,
+            );
+          },
+        });
         process.stdout.write(`${describeStartup(result, root)}\n`);
 
         // Stop cleanly on the signals a terminal actually sends, so the port is

@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { RoutePath } from "../document/paths.js";
-import type { Page } from "../pipeline/build.js";
+import type { Page } from "../pipeline/site.js";
 
 import { serve, type RunningServer, type ServeOptions } from "./serve.js";
 
@@ -36,9 +36,16 @@ const pages = new Map<RoutePath, Page>([
 ]);
 
 async function start(
+  site: Partial<
+    Omit<ServeOptions["site"] extends () => infer S ? S : never, "pages">
+  > = {},
   overrides: Partial<ServeOptions> = {},
 ): Promise<RunningServer> {
-  running = await serve({ pages, port: 0, ...overrides });
+  running = await serve({
+    site: () => ({ pages, ...site }),
+    port: 0,
+    ...overrides,
+  });
   return running;
 }
 
@@ -59,7 +66,7 @@ describe("serve", () => {
   });
 
   it("binds an explicit host and port", async () => {
-    const server = await start({ host: "127.0.0.1", port: 0 });
+    const server = await start({}, { host: "127.0.0.1", port: 0 });
 
     expect(server.host).toBe("127.0.0.1");
   });
@@ -189,24 +196,28 @@ describe("serve", () => {
     const first = await start();
 
     await expect(
-      serve({ pages, port: first.port, host: "127.0.0.1" }),
+      serve({ site: () => ({ pages }), port: first.port, host: "127.0.0.1" }),
     ).rejects.toThrow(/already in use/u);
   });
 
   it("releases the port when it is closed", async () => {
-    const first = await serve({ pages, port: 0 });
+    const first = await serve({ site: () => ({ pages }), port: 0 });
     const port = first.port;
     await first.close();
 
     // Binding the same port again is the only proof that closing finished
     // rather than merely being requested.
-    const second = await serve({ pages, port, host: "127.0.0.1" });
+    const second = await serve({
+      site: () => ({ pages }),
+      port,
+      host: "127.0.0.1",
+    });
     expect(second.port).toBe(port);
     await second.close();
   });
 
   it("can be closed twice without failing", async () => {
-    const server = await serve({ pages, port: 0 });
+    const server = await serve({ site: () => ({ pages }), port: 0 });
     await server.close();
 
     await expect(server.close()).rejects.toThrow();

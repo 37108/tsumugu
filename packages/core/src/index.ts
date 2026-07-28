@@ -112,7 +112,22 @@ export type {
 export { createHeadingIdTransformer } from "./transformer/heading-ids.js";
 
 // The pipeline and the development server: what an entry point composes.
-export type { BuildOptions, BuildResult, Page } from "./pipeline/build.js";
-export { buildSite } from "./pipeline/build.js";
-export type { RunningServer, ServeOptions } from "./server/serve.js";
+export type {
+  BuildOptions,
+  BuildResult,
+  Page,
+  Site,
+  UpdateSummary,
+} from "./pipeline/site.js";
+export { buildSite, createSite } from "./pipeline/site.js";
+export type {
+  RunningServer,
+  ServedSite,
+  ServeOptions,
+} from "./server/serve.js";
 export { serve } from "./server/serve.js";
+
+// Watching, so a development entry point can rebuild without implementing its
+// own debounce over a platform's file-system events.
+export type { Watcher, WatchOptions } from "./scanner/watch.js";
+export { watchRoot } from "./scanner/watch.js";

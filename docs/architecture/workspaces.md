@@ -2,11 +2,11 @@
 
 ## Status
 
-This document describes the repository as it exists today. Tsumugu is pre-alpha
-and the document pipeline in
-[`docs/architecture/overview.md`](./overview.md) is not implemented yet, so the
-workspace graph is deliberately smaller than the component list in that
-document.
+This document describes the repository as it exists today. Tsumugu is pre-alpha,
+and the workspace graph is deliberately smaller than the component list in
+[`docs/architecture/overview.md`](./overview.md): the scanner, document model,
+routing, navigation, shell, serializer and server all live inside
+`@tsumugu/core` until a boundary has been demonstrated by working software.
 
 Workspaces are added when a boundary has been demonstrated by working software,
 not in anticipation of one. Creating a workspace for every conceptual component

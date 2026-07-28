@@ -25,6 +25,14 @@ A clear technical constitution, contribution model, and package-boundary policy 
 - additional source formats;
 - a general plugin runtime.
 
+## Status
+
+Milestones 0 to 4 are implemented on `main`: a directory of Markdown or HTML
+files is served with navigation, a table of contents, generated landing and
+error pages, static assets, and watch-driven incremental rebuilds with live
+reload. Milestone 5 (the CLI and preset) is partly done — `tsumugu dev` exists;
+configuration discovery and the official preset package do not.
+
 ## Milestone 1 — Thin Vertical Slice
 
 ### Hypothesis

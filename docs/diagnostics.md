@@ -100,6 +100,12 @@ Every code in the implementation appears here.
 | `routing/collision`  | error    | two or more files map to the same route                        |
 | `routing/unroutable` | error    | a source path could not be mapped to a route and is not served |
 
+### `navigation/`
+
+| Code                         | Severity | When                                                                                   |
+| ---------------------------- | -------- | -------------------------------------------------------------------------------------- |
+| `navigation/duplicate-label` | warning  | two entries in the same section read identically; both pages still work and are linked |
+
 ### `metadata/`
 
 | Code                           | Severity | When                                                                  |

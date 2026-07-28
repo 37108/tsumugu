@@ -42,6 +42,7 @@ export type PipelineStage =
   | "scanner"
   | "document"
   | "routing"
+  | "navigation"
   | "metadata"
   | "renderer"
   | "transformer"

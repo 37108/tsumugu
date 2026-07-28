@@ -89,6 +89,7 @@ export function run(argv: readonly string[]): CliResult {
 
 export {
   describeBuild,
+  formatSize,
   parseBuildOptions,
   runBuild,
   type BuildCommandOptions,

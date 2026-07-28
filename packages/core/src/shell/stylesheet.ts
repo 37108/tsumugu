@@ -437,10 +437,18 @@ li[data-severity="fatal"] .tsumugu-severity {
   }
 
   /* The disclosure is a narrow-screen affordance. With room for a sidebar the
-     list is simply the sidebar, and the control that opens it would be a
-     control that does nothing. */
-  .tsumugu-disclosure > summary {
-    display: none;
+     list is simply the sidebar — the summary disappears and the content is
+     forced visible whatever the open state. ::details-content is what makes
+     that possible; a browser without it keeps the summary as a working
+     toggle, which is the degraded state a navigation can afford. */
+  @supports selector(details::details-content) {
+    .tsumugu-disclosure > summary {
+      display: none;
+    }
+
+    .tsumugu-disclosure::details-content {
+      content-visibility: visible;
+    }
   }
 
   .tsumugu-sidebar,

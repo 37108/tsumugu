@@ -100,6 +100,23 @@ export async function runBuild(
   });
 }
 
+/**
+ * A size a person can read, in the `10 MB` shape `docs/testing.md` uses.
+ *
+ * Powers of 1024, one decimal above bytes, no locale formatting — the same
+ * project prints the same string on every machine.
+ */
+export function formatSize(bytes: number): string {
+  if (bytes < 1024) {
+    return `${String(bytes)} B`;
+  }
+  const kb = bytes / 1024;
+  if (kb < 1024) {
+    return `${kb.toFixed(1)} KB`;
+  }
+  return `${(kb / 1024).toFixed(1)} MB`;
+}
+
 /** What the terminal says when a build finishes. */
 export function describeBuild(
   report: StaticBuildReport,
@@ -109,6 +126,7 @@ export function describeBuild(
     `${style.bold("tsumugu")}  built ${String(report.pageCount)} pages`,
     `${style.dim("  out   ")} ${report.outDir}`,
     `${style.dim("  files ")} ${String(report.files.length)}`,
+    `${style.dim("  size  ")} ${formatSize(report.totalBytes)}`,
   ];
 
   if (report.diagnostics.length > 0) {

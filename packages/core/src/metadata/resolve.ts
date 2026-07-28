@@ -63,6 +63,7 @@ export const metadataCodes = {
   invalidDescription: "metadata/invalid-description",
   invalidOrder: "metadata/invalid-order",
   invalidHidden: "metadata/invalid-hidden",
+  unknownKeyTypo: "metadata/unknown-key-typo",
 } as const;
 
 /**
@@ -262,8 +263,98 @@ function resolveDescription(
  * Deterministic: the same inputs always produce the same result and the same
  * diagnostics.
  */
+/**
+ * Whether two keys differ by one slip of the fingers: a dropped, added or
+ * changed letter, or two adjacent letters swapped — the four shapes a typo
+ * actually takes.
+ */
+function isOneEditAway(candidate: string, known: string): boolean {
+  // Adjacent transposition: "titel" for "title". Same length, identical
+  // except for one swapped pair.
+  if (candidate.length === known.length) {
+    const mismatches: number[] = [];
+    for (let index = 0; index < candidate.length; index += 1) {
+      if (candidate[index] !== known[index]) {
+        mismatches.push(index);
+      }
+    }
+    if (
+      mismatches.length === 2 &&
+      mismatches[1] === (mismatches[0] ?? 0) + 1 &&
+      candidate[mismatches[0] ?? 0] === known[mismatches[1] ?? 0] &&
+      candidate[mismatches[1] ?? 0] === known[mismatches[0] ?? 0]
+    ) {
+      return true;
+    }
+  }
+
+  if (Math.abs(candidate.length - known.length) > 1) {
+    return false;
+  }
+
+  let i = 0;
+  let j = 0;
+  let edits = 0;
+
+  while (i < candidate.length && j < known.length) {
+    if (candidate[i] === known[j]) {
+      i += 1;
+      j += 1;
+      continue;
+    }
+    edits += 1;
+    if (edits > 1) {
+      return false;
+    }
+    if (candidate.length > known.length) {
+      i += 1;
+    } else if (candidate.length < known.length) {
+      j += 1;
+    } else {
+      i += 1;
+      j += 1;
+    }
+  }
+
+  return edits + (candidate.length - i) + (known.length - j) <= 1;
+}
+
+/**
+ * Warns when an unknown key is one letter away from a known one.
+ *
+ * `hiden: true` publishes the page its author meant to hide, silently, and
+ * that is the failure this exists to catch. A genuinely unknown key —
+ * `audience`, `owner` — stays silent, as the preserved-keys policy promises:
+ * distance is the evidence that the author was reaching for our word.
+ */
+function typoWarnings(
+  sources: MetadataSources,
+  diagnostics: DocumentDiagnostic[],
+): void {
+  for (const key of sources.metadata.values.keys()) {
+    if ((knownMetadataKeys as readonly string[]).includes(key)) {
+      continue;
+    }
+
+    const nearest = knownMetadataKeys.find((known) =>
+      isOneEditAway(key, known),
+    );
+    if (nearest !== undefined) {
+      diagnostics.push(
+        invalid(
+          metadataCodes.unknownKeyTypo,
+          sources.sourcePath,
+          `Front matter "${key}" is not a known key. Did you mean "${nearest}"?`,
+        ),
+      );
+    }
+  }
+}
+
 export function resolveMetadata(sources: MetadataSources): ResolvedMetadata {
   const diagnostics: DocumentDiagnostic[] = [];
+
+  typoWarnings(sources, diagnostics);
 
   const { title, titleSource } = resolveTitle(sources, diagnostics);
   const description = resolveDescription(sources, diagnostics);

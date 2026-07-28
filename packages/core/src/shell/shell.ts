@@ -289,9 +289,14 @@ export function renderShell(input: ShellInput): ShellResult {
             element(
               "nav",
               { class: "tsumugu-sidebar", "aria-label": "Documentation" },
+              // Closed by default: on a narrow screen a large project would
+              // otherwise put its whole navigation above the content. The
+              // wide layout forces the list visible through ::details-content,
+              // so the closed state only means anything where collapsing is
+              // wanted.
               element(
                 "details",
-                { class: "tsumugu-disclosure", open: true },
+                { class: "tsumugu-disclosure" },
                 element("summary", {}, text("Documentation")),
                 navigationList(input.navigation, trail, input.currentRoute),
               ),

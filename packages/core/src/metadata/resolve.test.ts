@@ -434,3 +434,47 @@ describe("compareForNavigation", () => {
     expect(sorted.map((item) => item.title)).toEqual(["A", "B"]);
   });
 });
+
+describe("typo detection", () => {
+  function resolved(entries: readonly (readonly [string, MetadataValue])[]) {
+    return resolveMetadata({
+      sourcePath: path,
+      metadata: toDocumentMetadata(entries),
+    });
+  }
+
+  it.each([
+    ["hiden", "hidden"],
+    ["titel", "title"],
+    ["oder", "order"],
+    ["descriptio", "description"],
+    ["hiddenn", "hidden"],
+  ])("suggests the known key for %j", (typo, known) => {
+    const result = resolved([[typo, true]]);
+
+    const warning = result.diagnostics.find(
+      (diagnostic) => diagnostic.code === metadataCodes.unknownKeyTypo,
+    );
+    expect(warning?.message).toContain(`"${typo}"`);
+    expect(warning?.message).toContain(`"${known}"`);
+  });
+
+  it("stays silent for keys that are not near any known one", () => {
+    // The preserved-keys policy: an author saying something Tsumugu has no
+    // feature for is not a mistake.
+    for (const key of ["audience", "owner", "draft", "tags"]) {
+      expect(
+        resolved([[key, "x"]]).diagnostics.map((entry) => entry.code),
+      ).not.toContain(metadataCodes.unknownKeyTypo);
+    }
+  });
+
+  it("does not warn about the known keys themselves", () => {
+    expect(
+      resolved([
+        ["title", "T"],
+        ["hidden", true],
+      ]).diagnostics,
+    ).toEqual([]);
+  });
+});

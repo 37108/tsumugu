@@ -109,11 +109,6 @@ Run these before a release, and after any change to the shell or the theme:
 
 Recorded rather than hidden:
 
-- **Narrow-screen navigation is a disclosure that starts open.** On a narrow
-  screen the sidebar is a `details` element, open by default, so a long project
-  puts a long list above the content. Collapsing it by default would need the
-  server to guess, or a script to remember. Tracked with the shell's follow-up
-  work.
 - **Contrast is not verified by an automated check**, for the reason above.
 - **Author content is not corrected.** A missing image alternative is reported
   only where a renderer can see it is missing; Tsumugu does not write one.

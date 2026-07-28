@@ -133,6 +133,45 @@ pre.append(button);
 }
 }
 
+// --- Table of contents: mark the section being read -------------------------
+// aria-current="location" is the accessible spelling of "you are here"; the
+// stylesheet colours whatever carries it. A scroll listener, throttled to one
+// frame, rather than an IntersectionObserver: a fast scroll can jump a heading
+// clean over any observation band without ever intersecting it, and an
+// observer that missed the jump leaves the wrong section marked.
+const toc=document.querySelector(".tsumugu-toc");
+if(toc){
+const links=new Map();
+for(const link of toc.querySelectorAll('a[href^="#"]')){
+links.set(decodeURIComponent(link.getAttribute("href").slice(1)),link);
+}
+const headings=[...links.keys()].map((id)=>document.getElementById(id)).filter(Boolean);
+if(headings.length){
+let current=null;
+let ticking=false;
+const update=()=>{
+ticking=false;
+// The reading line sits a third of the way down: the section being read is
+// the last heading above it. All reads, then one write.
+const line=window.innerHeight*0.33;
+let chosen=headings[0].id;
+for(const heading of headings){
+if(heading.getBoundingClientRect().top<=line)chosen=heading.id;
+}
+if(chosen===current)return;
+current=chosen;
+for(const[key,link]of links){
+if(key===chosen)link.setAttribute("aria-current","location");
+else link.removeAttribute("aria-current");
+}};
+const schedule=()=>{
+if(!ticking){ticking=true;requestAnimationFrame(update)}};
+window.addEventListener("scroll",schedule,{passive:true});
+window.addEventListener("resize",schedule,{passive:true});
+update();
+}
+}
+
 // --- Search ----------------------------------------------------------------
 const form=document.querySelector("[data-tsumugu-search]");
 if(!form)return;

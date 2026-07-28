@@ -360,6 +360,14 @@ body {
   color: var(--ts-indigo);
 }
 
+/* The section being read, marked by the page client the same way the sidebar
+   marks the current page: a thread beside it, not colour alone. */
+.tsumugu-toc a[aria-current="location"] {
+  box-shadow: inset 2px 0 0 var(--ts-indigo);
+  color: var(--ts-indigo);
+  padding-inline-start: 0.6rem;
+}
+
 .tsumugu-toc li ol {
   padding-inline-start: 0.9rem;
 }

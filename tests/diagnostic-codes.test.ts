@@ -22,6 +22,23 @@ const codePattern = /"([a-z][a-z-]*\/[a-z][a-z-]*)"/g;
 const fixturePrefixes = ["test/", "fake/"];
 
 /**
+ * Prefixes that make a string a media type rather than a diagnostic code.
+ *
+ * `image/png` has the shape of a code and is not one. The asset layer is full
+ * of them, and listing the top-level media types is more durable than listing
+ * every content type or excluding a file by name.
+ */
+const mediaTypePrefixes = [
+  "application/",
+  "audio/",
+  "font/",
+  "image/",
+  "multipart/",
+  "text/",
+  "video/",
+];
+
+/**
  * Strings that look like codes but are not.
  *
  * `stage/kebab-case` is the naming template the documentation states, written
@@ -49,7 +66,8 @@ beforeAll(async () => {
       const code = match[1];
       if (
         code !== undefined &&
-        !fixturePrefixes.some((p) => code.startsWith(p))
+        !fixturePrefixes.some((p) => code.startsWith(p)) &&
+        !mediaTypePrefixes.some((p) => code.startsWith(p))
       ) {
         found.add(code);
       }

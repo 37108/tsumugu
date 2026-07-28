@@ -1,9 +1,13 @@
-import { execFile } from "node:child_process";
+import { execFile, spawn, type ChildProcess } from "node:child_process";
 import { access, readFile } from "node:fs/promises";
 import path from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
 
 import { repositoryRoot } from "./helpers/paths.js";
+import {
+  withTemporaryDirectory,
+  writeFiles,
+} from "./helpers/temporary-directory.js";
 import { readWorkspaceManifests } from "./helpers/workspace-manifests.js";
 
 /**
@@ -24,25 +28,33 @@ interface CommandOutcome {
   readonly exitCode: number;
 }
 
-function runCli(args: readonly string[]): Promise<CommandOutcome> {
+function runCli(
+  args: readonly string[],
+  cwd?: string,
+): Promise<CommandOutcome> {
   return new Promise((resolve, reject) => {
     // process.execPath is used instead of the linked `tsumugu` bin so the test
     // does not depend on PATH or on the shell shims pnpm generates on Windows.
-    execFile(process.execPath, [binPath, ...args], (error, stdout, stderr) => {
-      if (error === null) {
-        resolve({ stdout, stderr, exitCode: 0 });
-        return;
-      }
-      if (typeof error.code === "number") {
-        resolve({ stdout, stderr, exitCode: error.code });
-        return;
-      }
-      reject(
-        new Error(`could not execute the tsumugu binary at ${binPath}`, {
-          cause: error,
-        }),
-      );
-    });
+    execFile(
+      process.execPath,
+      [binPath, ...args],
+      { ...(cwd === undefined ? {} : { cwd }) },
+      (error, stdout, stderr) => {
+        if (error === null) {
+          resolve({ stdout, stderr, exitCode: 0 });
+          return;
+        }
+        if (typeof error.code === "number") {
+          resolve({ stdout, stderr, exitCode: error.code });
+          return;
+        }
+        reject(
+          new Error(`could not execute the tsumugu binary at ${binPath}`, {
+            cause: error,
+          }),
+        );
+      },
+    );
   });
 }
 
@@ -94,7 +106,7 @@ describe("tsumugu binary", () => {
 
     expect(outcome.exitCode).toBe(1);
     expect(outcome.stdout).toBe("");
-    expect(outcome.stderr).toContain("Usage: tsumugu --version");
+    expect(outcome.stderr).toContain("tsumugu dev");
   });
 
   it("rejects unknown arguments without writing to stdout", async () => {
@@ -102,7 +114,7 @@ describe("tsumugu binary", () => {
 
     expect(outcome.exitCode).toBe(1);
     expect(outcome.stdout).toBe("");
-    expect(outcome.stderr).toContain("Usage: tsumugu --version");
+    expect(outcome.stderr).toContain("tsumugu dev");
   });
 
   it("rejects --version combined with other arguments", async () => {
@@ -111,4 +123,80 @@ describe("tsumugu binary", () => {
     expect(outcome.exitCode).toBe(1);
     expect(outcome.stdout).toBe("");
   });
+
+  it("prints help on stdout and succeeds", async () => {
+    const outcome = await runCli(["--help"]);
+
+    expect(outcome.exitCode).toBe(0);
+    expect(outcome.stdout).toContain("tsumugu dev [directory]");
+    expect(outcome.stderr).toBe("");
+  });
+
+  it("serves a documentation directory and stops on SIGTERM", async () => {
+    await withTemporaryDirectory(async (directory) => {
+      await writeFiles(directory, { "docs/index.md": "# Served\n" });
+
+      const child = spawn(process.execPath, [binPath, "dev", "--port", "0"], {
+        cwd: directory,
+      });
+
+      try {
+        const startup = await firstOutput(child);
+
+        // The URL is printed only after the port is actually bound, so the
+        // address in the terminal is one that already works.
+        const url = /http:\/\/127\.0\.0\.1:\d+\//u.exec(startup)?.[0];
+        expect(url, startup).toBeDefined();
+        expect(startup).toContain("pages  1");
+
+        const response = await fetch(url ?? "");
+        expect(response.status).toBe(200);
+        expect(await response.text()).toContain("Served");
+      } finally {
+        const exited = new Promise<number | null>((resolve) => {
+          child.once("exit", (code) => resolve(code));
+        });
+        child.kill("SIGTERM");
+        // A clean shutdown, rather than the process being killed, is what
+        // releases the port for the next run.
+        expect(await exited).toBe(0);
+      }
+    });
+  });
+
+  it("explains a directory that is not there without starting a server", async () => {
+    const outcome = await runCli(["dev", "./definitely-not-here"]);
+
+    expect(outcome.exitCode).toBe(1);
+    expect(outcome.stdout).toBe("");
+    expect(outcome.stderr).toContain("not a directory");
+  });
+
+  it("says what to do when there is no documentation to find", async () => {
+    await withTemporaryDirectory(async (directory) => {
+      const outcome = await runCli(["dev"], directory);
+
+      expect(outcome.exitCode).toBe(1);
+      expect(outcome.stderr).toContain("No documentation was found");
+    });
+  });
 });
+
+/** The startup output, up to the first newline-terminated chunk. */
+function firstOutput(child: ChildProcess): Promise<string> {
+  return new Promise((resolve, reject) => {
+    let seen = "";
+    child.stdout?.on("data", (chunk: Buffer) => {
+      seen += chunk.toString("utf8");
+      if (seen.includes("\n")) {
+        resolve(seen);
+      }
+    });
+    child.stderr?.on("data", (chunk: Buffer) => {
+      reject(
+        new Error(`tsumugu dev wrote to stderr: ${chunk.toString("utf8")}`),
+      );
+    });
+    child.once("error", reject);
+  });
+}

@@ -26,6 +26,9 @@ importers:
       '@tsumugu/renderer-markdown':
         specifier: workspace:*
         version: link:packages/renderer-markdown
+      '@tsumugu/theme-default':
+        specifier: workspace:*
+        version: link:packages/theme-default
       '@types/node':
         specifier: ^24.13.2
         version: 24.13.2
@@ -55,6 +58,15 @@ importers:
       '@tsumugu/core':
         specifier: workspace:*
         version: link:../core
+      '@tsumugu/renderer-html':
+        specifier: workspace:*
+        version: link:../renderer-html
+      '@tsumugu/renderer-markdown':
+        specifier: workspace:*
+        version: link:../renderer-markdown
+      '@tsumugu/theme-default':
+        specifier: workspace:*
+        version: link:../theme-default
     devDependencies:
       '@tsumugu/internal-tsconfig':
         specifier: workspace:*
@@ -112,6 +124,16 @@ importers:
       '@types/mdast':
         specifier: ^4.0.4
         version: 4.0.4
+
+  packages/theme-default:
+    dependencies:
+      '@tsumugu/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@tsumugu/internal-tsconfig':
+        specifier: workspace:*
+        version: link:../../internal/tsconfig
 
 packages:
 

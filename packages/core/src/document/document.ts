@@ -83,6 +83,13 @@ export interface LoadedDocument {
 export interface RenderedDocument extends Omit<LoadedDocument, "stage"> {
   readonly stage: "rendered";
   readonly root: DocumentNode;
+  /**
+   * The title a full HTML document declared in its `<title>`.
+   *
+   * Separate from `metadata` because it sits at its own level of the shared
+   * title precedence: below front matter, above the first heading.
+   */
+  readonly htmlTitle?: string;
 }
 
 /** Any stage of a document. Narrow on `stage` to reach the fields it has. */

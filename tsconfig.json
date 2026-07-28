@@ -9,6 +9,7 @@
     { "path": "./packages/core" },
     { "path": "./packages/cli" },
     { "path": "./packages/renderer-markdown" },
-    { "path": "./packages/renderer-html" }
+    { "path": "./packages/renderer-html" },
+    { "path": "./packages/theme-default" }
   ]
 }

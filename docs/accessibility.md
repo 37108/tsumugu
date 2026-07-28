@@ -17,10 +17,12 @@ inventing what it cannot know.
 These hold for every page, and each is enforced by a test rather than by
 intention:
 
-- **No JavaScript is required.** Navigation, the table of contents and the
-  layout are all server-rendered. The one script Tsumugu ships is live reload in
-  the development server; nothing on the page depends on it. See
-  [ADR 3](decisions/0003-live-reload-script-policy.md).
+- **No JavaScript is required to read.** Navigation, the table of contents and
+  the layout are all server-rendered. Tsumugu ships two scripts, each allowed by
+  its hash: search, and live reload in the development server. Without them the
+  page still reads, and the search field still submits to a real page. See
+  [ADR 3](decisions/0003-live-reload-script-policy.md) and
+  [ADR 4](decisions/0004-client-side-search.md).
 - **Landmarks are present and named.** One `header`, one `main`, one `footer`,
   and up to two `nav` landmarks, named "Documentation" and "On this page". An
   empty region is not rendered at all: an empty navigation landmark wastes the
@@ -93,6 +95,9 @@ Run these before a release, and after any change to the shell or the theme:
   and wide tables scroll inside their own boxes.
 - **Reduced motion and forced colours.** With the system setting on, nothing
   animates. In a forced-colours mode, text and focus indicators remain visible.
+- **Search by keyboard.** Tab to the field, type, walk the results with the
+  arrow keys, follow one with Enter, dismiss with Escape. Focus stays in the
+  field throughout, and the result count is announced.
 - **Content that is not tidy.** A page with no headings, a page with one very
   long heading, a document with deeply nested lists, a table with many columns.
 

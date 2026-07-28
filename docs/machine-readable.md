@@ -10,6 +10,7 @@ Tsumugu serves three generated files alongside the pages:
 | ----------------- | ---------- | ------------------------------------------------------ |
 | `/documents.json` | JSON       | tools and agents that need the corpus without scraping |
 | `/llms.txt`       | plain text | a language model that needs a map of the site          |
+| `/search.json`    | JSON       | the search client in the page, and anything else       |
 | `/sitemap.xml`    | XML        | search engines                                         |
 
 All three come from the same documents, routes and metadata the pages come
@@ -43,6 +44,17 @@ A hidden document is in the corpus because a tool asking what the project
 contains should get the truth. It is out of `llms.txt` and the sitemap because
 appearing in either is a recommendation to read or index the page, which is the
 opposite of what `hidden` asks for.
+
+## Search
+
+`/search.json` is the same corpus split by heading: one entry per section, each
+addressing `route#fragment`, carrying that section's text. It is text rather
+than tokens, because tokenizing here would fix a matching strategy into a file
+that the browser, a build and any future server-side search would all have to
+agree with.
+
+Hidden, generated and unrenderable documents are excluded. What consumes it is
+described in [ADR 4](decisions/0004-client-side-search.md).
 
 ## Ordering and stability
 

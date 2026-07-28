@@ -31,10 +31,11 @@ What works today:
 - documentation-local images and downloads, served without a way out of the root;
 - diagnostics shown on the page they belong to, rather than only in the terminal;
 - syntax highlighting, as annotated tokens rather than trusted markup;
-- `documents.json`, `llms.txt` and `sitemap.xml`, generated from the same documents as the pages;
+- `documents.json`, `llms.txt`, `search.json` and `sitemap.xml`, generated from the same documents as the pages;
+- search, from an index split by heading, with a page that works without JavaScript;
 - watch mode: saving a file rebuilds what changed and reloads the open page.
 
-What is deliberately missing: search, static build output, configuration files, and any published API. See [the roadmap](docs/roadmap.md).
+What is deliberately missing: static build output, configuration files, and any published API. See [the roadmap](docs/roadmap.md).
 
 ## Development
 

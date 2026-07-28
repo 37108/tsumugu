@@ -7,6 +7,7 @@ import { encodeRoutePath } from "../routing/routes.js";
 import { element, fragment, text, trustedHtml } from "../theme/virtual-tree.js";
 import type { VirtualNode } from "../theme/virtual-tree.js";
 
+import { searchScript } from "./search-script.js";
 import { shellStylesheet } from "./stylesheet.js";
 
 /**
@@ -37,6 +38,13 @@ export interface ShellInput {
   readonly content: VirtualNode;
   /** Problems with this page, shown to the person editing it. */
   readonly diagnostics: readonly DocumentDiagnostic[];
+  /**
+   * Whether to render the search field.
+   *
+   * The field is only shown when a search index exists, because a search box
+   * that finds nothing is worse than no search box.
+   */
+  readonly search?: boolean;
   /** The theme's own stylesheet, placed after the shell's. */
   readonly themeStylesheet?: string;
   /**
@@ -57,6 +65,62 @@ export interface ShellResult {
 
 /** The id the skip link and the main landmark agree on. */
 const mainId = "tsumugu-content";
+
+/**
+ * The search field.
+ *
+ * A real form, addressed to a real page: with no script it submits to
+ * `/search`, which lists every document. With the script it becomes a combobox
+ * that filters as you type. Either way the control does something, which is the
+ * difference between progressive enhancement and a decorative input.
+ *
+ * The ARIA here is the combobox pattern, and it is written out rather than
+ * generated: focus stays on the input, the listbox is owned by it, and the
+ * highlighted option is named by `aria-activedescendant` — which the script
+ * sets, because it is the only thing that knows which option that is.
+ */
+function searchField(): VirtualNode {
+  const inputId = "tsumugu-search-input";
+  const listId = "tsumugu-search-results";
+  const statusId = "tsumugu-search-status";
+
+  return element(
+    "form",
+    {
+      class: "tsumugu-search",
+      "data-tsumugu-search": "true",
+      role: "search",
+      action: "/search",
+      method: "get",
+    },
+    element(
+      "label",
+      { class: "tsumugu-visually-hidden", for: inputId },
+      text("Search the documentation"),
+    ),
+    element("input", {
+      id: inputId,
+      name: "q",
+      type: "search",
+      placeholder: "Search…",
+      autocomplete: "off",
+      spellcheck: "false",
+      role: "combobox",
+      "aria-expanded": "false",
+      "aria-controls": listId,
+      "aria-autocomplete": "list",
+    }),
+    element("ul", { id: listId, role: "listbox", hidden: true }),
+    // Announced rather than shown: a sighted reader can see the results
+    // appear, and a screen-reader user cannot.
+    element("p", {
+      id: statusId,
+      class: "tsumugu-visually-hidden",
+      role: "status",
+      "aria-live": "polite",
+    }),
+  );
+}
 
 function navigationList(
   items: readonly NavigationItem[],
@@ -218,6 +282,7 @@ export function renderShell(input: ShellInput): ShellResult {
           { class: "tsumugu-brand", href: "/" },
           text(input.siteName),
         ),
+        ...(input.search === true ? [searchField()] : []),
       ),
       ...(hasNavigation
         ? [
@@ -255,6 +320,32 @@ export function renderShell(input: ShellInput): ShellResult {
         element("p", {}, text(`${input.siteName} · built with Tsumugu`)),
       ),
     ),
+    // Last in the body, not in the head: a script in the head runs before the
+    // elements it is about exist, and would quietly find nothing.
+    ...(input.search === true
+      ? [
+          element(
+            "script",
+            {},
+            trustedHtml(
+              searchScript,
+              "Tsumugu's own search client, allowed by its hash in the content security policy",
+            ),
+          ),
+        ]
+      : []),
+    ...(input.script === undefined
+      ? []
+      : [
+          element(
+            "script",
+            {},
+            trustedHtml(
+              input.script,
+              "Tsumugu's own development script, allowed by its hash in the content security policy",
+            ),
+          ),
+        ]),
   );
 
   const head = fragment(
@@ -291,18 +382,6 @@ export function renderShell(input: ShellInput): ShellResult {
             trustedHtml(
               input.themeStylesheet,
               "the registered theme's own stylesheet, supplied by the composition root",
-            ),
-          ),
-        ]),
-    ...(input.script === undefined
-      ? []
-      : [
-          element(
-            "script",
-            {},
-            trustedHtml(
-              input.script,
-              "Tsumugu's own development script, allowed by its hash in the content security policy",
             ),
           ),
         ]),

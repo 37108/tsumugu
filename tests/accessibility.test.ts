@@ -2,7 +2,7 @@
 import axe, { type AxeResults, type Result } from "axe-core";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { startDev, type DevResult } from "@tsumugu/cli";
+import { startDev, type DevResult } from "tsumugu";
 
 import {
   withTemporaryDirectory,

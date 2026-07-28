@@ -3,11 +3,11 @@ import {
   type Renderer,
   type Theme,
   type Transformer,
-} from "@tsumugu/core";
-import { createHtmlRenderer } from "@tsumugu/renderer-html";
-import { createMarkdownRenderer } from "@tsumugu/renderer-markdown";
-import { defaultTheme } from "@tsumugu/theme-default";
-import { createHighlightTransformer } from "@tsumugu/transformer-highlight";
+} from "tsumugu-core";
+import { createHtmlRenderer } from "tsumugu-renderer-html";
+import { createMarkdownRenderer } from "tsumugu-renderer-markdown";
+import { defaultTheme } from "tsumugu-theme-default";
+import { createHighlightTransformer } from "tsumugu-transformer-highlight";
 
 /**
  * The official composition.
@@ -27,11 +27,11 @@ import { createHighlightTransformer } from "@tsumugu/transformer-highlight";
  *
  * | Stage | Registered | Why |
  * | --- | --- | --- |
- * | renderer | `@tsumugu/renderer-markdown` | Markdown is what most documentation is written in |
- * | renderer | `@tsumugu/renderer-html` | HTML is a first-class source, not only an output |
+ * | renderer | `tsumugu-renderer-markdown` | Markdown is what most documentation is written in |
+ * | renderer | `tsumugu-renderer-html` | HTML is a first-class source, not only an output |
  * | transformer | heading identifiers | an anchor is a link people share; every page needs them |
  * | transformer | syntax highlighting | documentation contains code, and unhighlighted code is harder to read |
- * | theme | `@tsumugu/theme-default` | a zero-config tool has to produce something readable without CSS |
+ * | theme | `tsumugu-theme-default` | a zero-config tool has to produce something readable without CSS |
  *
  * ## Order
  *

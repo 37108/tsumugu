@@ -86,9 +86,14 @@ afterAll(async () => {
 
 /** The tarball a package produced, found by its name rather than its version. */
 function tarballFor(manifest: WorkspaceManifest): readonly string[] {
+  // Matched up to the version digit, because bare "tsumugu-" is also the
+  // prefix of every other package's tarball.
   const prefix = `${manifest.name.replace("@", "").replace("/", "-")}-`;
   const [, files] =
-    [...contents.entries()].find(([file]) => file.startsWith(prefix)) ?? [];
+    [...contents.entries()].find(
+      ([file]) =>
+        file.startsWith(prefix) && /^\d/u.test(file.slice(prefix.length)),
+    ) ?? [];
 
   if (files === undefined) {
     throw new Error(`no tarball was produced for ${manifest.name}`);

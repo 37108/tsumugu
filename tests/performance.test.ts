@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { createSite } from "@tsumugu/core";
-import { createPreset } from "@tsumugu/preset";
+import { createSite } from "tsumugu-core";
+import { createPreset } from "tsumugu-preset";
 
 import {
   withTemporaryDirectory,

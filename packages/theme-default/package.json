@@ -1,5 +1,5 @@
 {
-  "name": "@tsumugu/theme-default",
+  "name": "tsumugu-theme-default",
   "version": "0.1.0",
   "type": "module",
   "description": "The default Tsumugu theme. Renders Semantic AST nodes as accessible, readable HTML with a stylesheet it owns.",
@@ -32,7 +32,7 @@
     "clean": "tsc --build --clean"
   },
   "dependencies": {
-    "@tsumugu/core": "workspace:*"
+    "tsumugu-core": "workspace:*"
   },
   "devDependencies": {
     "@tsumugu/internal-tsconfig": "workspace:*"

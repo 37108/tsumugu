@@ -71,7 +71,7 @@ overlap between them, so no rule needs to be disabled to keep the peace. Do not
 add stylistic lint rules.
 
 Individual packages expose `build`, `typecheck` and `lint`, so a single package
-can be checked with `pnpm --filter @tsumugu/core run lint`.
+can be checked with `pnpm --filter tsumugu-core run lint`.
 
 `docs/architecture/workspaces.md` describes the workspace layout, the allowed
 dependency direction, and the toolchain versions. `docs/testing.md` describes

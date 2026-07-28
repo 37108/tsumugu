@@ -9,7 +9,7 @@ import {
   type SemanticNode,
   type Theme,
   type VirtualNode,
-} from "@tsumugu/core";
+} from "tsumugu-core";
 
 import { stylesheet } from "./stylesheet.js";
 

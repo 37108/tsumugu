@@ -12,7 +12,7 @@ currently shows that block as code — lossless, but not a diagram.
 
 ## Proposal
 
-A **transformer**, `@tsumugu/transformer-mermaid`, that rewrites
+A **transformer**, `tsumugu-transformer-mermaid`, that rewrites
 `code-block[language=mermaid]` nodes into an SVG carried by the AST — rendered
 at build time, on the server, so the reader receives an image and no script.
 

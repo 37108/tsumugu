@@ -1,4 +1,4 @@
-import type { LoadedDocument, RenderResult, Renderer } from "@tsumugu/core";
+import type { LoadedDocument, RenderResult, Renderer } from "tsumugu-core";
 import type { Element, Nodes as HastNode, RootContent } from "hast";
 import { fromHtml } from "hast-util-from-html";
 

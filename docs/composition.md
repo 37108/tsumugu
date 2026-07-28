@@ -3,7 +3,7 @@
 ## What zero configuration means
 
 Running `tsumugu dev` with no configuration file is not the absence of
-decisions. It is one composition, written down in `@tsumugu/preset`:
+decisions. It is one composition, written down in `tsumugu-preset`:
 
 | Stage       | Registered                                             |
 | ----------- | ------------------------------------------------------ |
@@ -26,8 +26,8 @@ Core has no `defineConfig`. Composing a site _is_ calling `createSite` with the
 stages you want:
 
 ```ts
-import { createSite, serve } from "@tsumugu/core";
-import { createPreset } from "@tsumugu/preset";
+import { createSite, serve } from "tsumugu-core";
+import { createPreset } from "tsumugu-preset";
 
 const site = await createSite({
   root: "/absolute/path/to/docs",
@@ -108,7 +108,7 @@ The build refuses to write into a directory it did not create. Pass `--clean` if
 you mean it. A directory from a previous build is emptied first, so a page you
 deleted does not survive in the deployment.
 
-Programmatically it is `buildStatic` from `@tsumugu/build`, taking the same
+Programmatically it is `buildStatic` from `tsumugu-build`, taking the same
 composition as `createSite`.
 
 ## What a transformer may do

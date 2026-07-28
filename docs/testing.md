@@ -127,9 +127,9 @@ than how well it is tested, and it would reward writing tests for trivial code
 over hard code.
 
 Coverage is measured on **source files**, but a cross-package import resolves
-through the dependency's built `dist/`. So a test in `@tsumugu/cli` that imports
-`@tsumugu/core` does not attribute coverage to `packages/core/src`. This is why
-`@tsumugu/core` currently reports zero: its single export is exercised only
+through the dependency's built `dist/`. So a test in `tsumugu` that imports
+`tsumugu-core` does not attribute coverage to `packages/core/src`. This is why
+`tsumugu-core` currently reports zero: its single export is exercised only
 through the compiled CLI. Test a package's code from inside that package, and
 the numbers stay meaningful.
 

@@ -6,7 +6,7 @@ This document describes the repository as it exists today. Tsumugu is pre-alpha,
 and the workspace graph is deliberately smaller than the component list in
 [`docs/architecture/overview.md`](./overview.md): the scanner, document model,
 routing, navigation, shell, serializer and server all live inside
-`@tsumugu/core` until a boundary has been demonstrated by working software.
+`tsumugu-core` until a boundary has been demonstrated by working software.
 
 Workspaces are added when a boundary has been demonstrated by working software,
 not in anticipation of one. Creating a workspace for every conceptual component
@@ -18,14 +18,14 @@ not yet validated.
 ```text
 tsumugu/
 ├── packages/                  publishable-intent packages
-│   ├── core/                  @tsumugu/core
-│   ├── cli/                   @tsumugu/cli
-│   ├── renderer-markdown/     @tsumugu/renderer-markdown
-│   ├── renderer-html/         @tsumugu/renderer-html
-│   ├── theme-default/         @tsumugu/theme-default
-│   ├── transformer-highlight/ @tsumugu/transformer-highlight
-│   ├── preset/                @tsumugu/preset
-│   └── build/                 @tsumugu/build
+│   ├── core/                  tsumugu-core
+│   ├── cli/                   tsumugu
+│   ├── renderer-markdown/     tsumugu-renderer-markdown
+│   ├── renderer-html/         tsumugu-renderer-html
+│   ├── theme-default/         tsumugu-theme-default
+│   ├── transformer-highlight/ tsumugu-transformer-highlight
+│   ├── preset/                tsumugu-preset
+│   └── build/                 tsumugu-build
 ├── internal/          internal-only workspaces, never published
 │   └── tsconfig/      @tsumugu/internal-tsconfig
 └── tests/             repository-level tests
@@ -43,20 +43,20 @@ Unit tests are colocated with the code they cover, under
 Dependencies point towards core. Core never points back.
 
 ```text
-                        @tsumugu/cli
+                        tsumugu
                              │
                              ▼
-                       @tsumugu/preset
+                       tsumugu-preset
                              │
    ┌───────────────┬─────────┴──────────┬────────────────────────┐
    ▼               ▼                    ▼                        ▼
 renderer-markdown  renderer-html   theme-default    transformer-highlight
    └───────────────┴─────────┬──────────┴────────────────────────┘
                              ▼
-                       @tsumugu/core
+                       tsumugu-core
 ```
 
-`@tsumugu/preset` is the composition root: it is the one package that decides
+`tsumugu-preset` is the composition root: it is the one package that decides
 which renderers, which transformers and which theme an ordinary project gets.
 The CLI parses a command line and prints to a terminal; core composes what it is
 handed and chooses nothing. That is what keeps a different set of choices
@@ -64,7 +64,7 @@ possible without changing either of them. See
 [`docs/composition.md`](../composition.md).
 
 Each renderer holds every type of its own parser: mdast never leaves
-`@tsumugu/renderer-markdown`, hast never leaves `@tsumugu/renderer-html`. Core
+`tsumugu-renderer-markdown`, hast never leaves `tsumugu-renderer-html`. Core
 and themes see only the Semantic AST, so either parser can be replaced without
 either of them changing — which is what makes HTML a first-class input rather
 than a second format bolted on.
@@ -73,7 +73,7 @@ The rules the repository commits to, taken from
 [`docs/architecture/overview.md`](./overview.md) and
 [`docs/principles.md`](../principles.md):
 
-- `@tsumugu/core` must not depend on the CLI, themes, renderers, the build
+- `tsumugu-core` must not depend on the CLI, themes, renderers, the build
   adapter, search, or AI packages. Those are consumers of core, not parts of it.
 - The CLI composes public packages. Nothing depends on the CLI.
 - Workspace dependency cycles are forbidden.
@@ -104,13 +104,13 @@ reads every source file, because an import can bypass the manifest entirely.
 Five rules, each reported separately with the file, the line, the source and
 target packages, and what was violated:
 
-| Rule                       | Catches                                                             |
-| -------------------------- | ------------------------------------------------------------------- |
-| `deep-import`              | `@tsumugu/core/src/…`, a path that does not exist after publication |
-| `escaping-relative-import` | `../../core/src/…`, the same thing spelled relatively               |
-| `internal-dependency`      | a publishable package importing an `internal/` workspace            |
-| `forbidden-edge`           | core importing the CLI, a theme, a renderer, build, search or AI    |
-| `undeclared-dependency`    | an import that resolves only because pnpm installed it nearby       |
+| Rule                       | Catches                                                            |
+| -------------------------- | ------------------------------------------------------------------ |
+| `deep-import`              | `tsumugu-core/src/…`, a path that does not exist after publication |
+| `escaping-relative-import` | `../../core/src/…`, the same thing spelled relatively              |
+| `internal-dependency`      | a publishable package importing an `internal/` workspace           |
+| `forbidden-edge`           | core importing the CLI, a theme, a renderer, build, search or AI   |
+| `undeclared-dependency`    | an import that resolves only because pnpm installed it nearby      |
 
 Specifiers are extracted with TypeScript's own `preProcessFile` rather than a
 regular expression, so `import type`, `export … from` and dynamic `import()` are
@@ -123,7 +123,7 @@ public API being earned rather than accumulated.
 
 ### Type-only dependencies
 
-A type-only import is still a dependency. `import type { Foo } from "@tsumugu/x"`
+A type-only import is still a dependency. `import type { Foo } from "tsumugu-x"`
 must be declared exactly like a value import, and the boundary rules treat the
 two identically.
 

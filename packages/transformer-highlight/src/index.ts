@@ -5,7 +5,7 @@ import type {
   SemanticNode,
   TransformContext,
   Transformer,
-} from "@tsumugu/core";
+} from "tsumugu-core";
 import { bundledLanguages, codeToTokens, type BundledLanguage } from "shiki";
 
 /**

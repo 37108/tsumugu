@@ -1,5 +1,5 @@
 {
-  "name": "@tsumugu/cli",
+  "name": "tsumugu",
   "version": "0.1.0",
   "type": "module",
   "description": "Tsumugu command-line interface. Composes public packages and is never depended on by them.",
@@ -35,13 +35,13 @@
     "clean": "tsc --build --clean"
   },
   "dependencies": {
-    "@tsumugu/build": "workspace:*",
-    "@tsumugu/core": "workspace:*",
-    "@tsumugu/preset": "workspace:*",
-    "@tsumugu/renderer-html": "workspace:*",
-    "@tsumugu/renderer-markdown": "workspace:*",
-    "@tsumugu/theme-default": "workspace:*",
-    "@tsumugu/transformer-highlight": "workspace:*"
+    "tsumugu-build": "workspace:*",
+    "tsumugu-core": "workspace:*",
+    "tsumugu-preset": "workspace:*",
+    "tsumugu-renderer-html": "workspace:*",
+    "tsumugu-renderer-markdown": "workspace:*",
+    "tsumugu-theme-default": "workspace:*",
+    "tsumugu-transformer-highlight": "workspace:*"
   },
   "devDependencies": {
     "@tsumugu/internal-tsconfig": "workspace:*"

@@ -9,7 +9,7 @@ order: 1
 Install it:
 
 ```bash
-npm install --save-dev @tsumugu/cli
+npm install --save-dev tsumugu
 ```
 
 Then serve a directory:

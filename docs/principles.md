@@ -134,7 +134,7 @@ Renderers, transformers, and themes are registered explicitly. A plugin is a pac
 
 ### Counterexample
 
-Automatically loading every package matching `@tsumugu/plugin-*` from `node_modules`.
+Automatically loading every package matching `tsumugu-plugin-*` from `node_modules`.
 
 ## One job per stage
 

@@ -13,7 +13,7 @@ security model refuses.
 
 ## Proposal
 
-`@tsumugu/renderer-openapi`: a renderer package, exactly like the Markdown and
+`tsumugu-renderer-openapi`: a renderer package, exactly like the Markdown and
 HTML ones.
 
 - **Claims** `openapi.json` / `openapi.yaml` (and `*.openapi.{json,yaml}`) via

@@ -1,7 +1,7 @@
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { startDev, type DevResult } from "@tsumugu/cli";
+import { startDev, type DevResult } from "tsumugu";
 
 import { repositoryRoot } from "./helpers/paths.js";
 

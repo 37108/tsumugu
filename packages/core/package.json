@@ -1,5 +1,5 @@
 {
-  "name": "@tsumugu/core",
+  "name": "tsumugu-core",
   "version": "0.1.0",
   "type": "module",
   "description": "Tsumugu core. Owns the document pipeline composition and must not depend on the CLI, themes, renderers, or build adapters.",

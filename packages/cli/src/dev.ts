@@ -11,8 +11,8 @@ import {
   type RunningServer,
   type Site,
   type UpdateSummary,
-} from "@tsumugu/core";
-import { createPreset } from "@tsumugu/preset";
+} from "tsumugu-core";
+import { createPreset } from "tsumugu-preset";
 
 import { formatForTerminal, styleFor, type TerminalStyle } from "./terminal.js";
 

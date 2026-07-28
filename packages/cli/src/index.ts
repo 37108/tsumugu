@@ -1,4 +1,4 @@
-import { version } from "@tsumugu/core";
+import { version } from "tsumugu-core";
 
 /**
  * The outcome of a CLI invocation.

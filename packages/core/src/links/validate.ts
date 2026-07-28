@@ -221,8 +221,8 @@ export function validateDocumentLinks(
           linkCodes.unknownDocument,
           document.sourcePath,
           link,
-          `"${link.url}" points outside the documentation root.`,
-          "A link that climbs above the root has no route, because nothing above the root is served.",
+          `"${link.url}" points above the documentation root, so this server cannot serve it.`,
+          "The link still works where the file is read as part of the repository. Move the target inside the root, or link to it by URL, to make it work in both places.",
         ),
       );
       continue;

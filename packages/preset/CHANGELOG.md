@@ -1,5 +1,16 @@
 # tsumugu-preset
 
+## 0.3.0
+
+### Patch Changes
+
+- Updated dependencies [de762cf]
+  - tsumugu-core@0.3.0
+  - tsumugu-renderer-html@0.3.0
+  - tsumugu-renderer-markdown@0.3.0
+  - tsumugu-theme-default@0.3.0
+  - tsumugu-transformer-highlight@0.3.0
+
 ## 0.2.0
 
 ### Patch Changes

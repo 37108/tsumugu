@@ -32,7 +32,7 @@
   },
   "dependencies": {
     "@tsumugu/core": "workspace:*",
-    "shiki": "^3.14.0"
+    "shiki": "^4.3.1"
   },
   "devDependencies": {
     "@tsumugu/internal-tsconfig": "workspace:*"

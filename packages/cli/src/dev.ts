@@ -2,7 +2,6 @@ import { access, stat } from "node:fs/promises";
 import path from "node:path";
 
 import {
-  createHeadingIdTransformer,
   createReloadChannel,
   createSite,
   reloadScript,
@@ -14,10 +13,7 @@ import {
   type Site,
   type UpdateSummary,
 } from "@tsumugu/core";
-import { createHtmlRenderer } from "@tsumugu/renderer-html";
-import { createMarkdownRenderer } from "@tsumugu/renderer-markdown";
-import { defaultTheme } from "@tsumugu/theme-default";
-import { createHighlightTransformer } from "@tsumugu/transformer-highlight";
+import { createPreset } from "@tsumugu/preset";
 
 /**
  * The zero-config development command.
@@ -249,16 +245,10 @@ export async function startDev(options: DevOptions = {}): Promise<DevResult> {
 
   const site = await createSite({
     root,
-    // Registration is explicit and ordered. Nothing is discovered from
-    // node_modules, which is what keeps selection predictable.
-    renderers: [createMarkdownRenderer(), createHtmlRenderer()],
-    // Anchors are what make a section linkable, so every project gets them by
-    // default. A project that wants different ones registers a different
-    // transformer here rather than configuring this one.
-    // Order is registration order and it matters: anchors first, so a heading
-    // is addressable whatever happens later, then highlighting.
-    transformers: [createHeadingIdTransformer(), createHighlightTransformer()],
-    theme: defaultTheme,
+    // Which renderers, transformers and theme a project gets is the preset's
+    // decision, not the CLI's. The CLI parses a command line and prints to a
+    // terminal; a programmatic consumer composes the same preset without it.
+    ...createPreset(),
     siteName: siteNameFor(root),
     ...(reloading ? { script: reloadScript } : {}),
   });

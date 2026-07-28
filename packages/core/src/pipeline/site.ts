@@ -122,6 +122,13 @@ export interface ExportOutput {
 export interface BuildResult {
   readonly pages: ReadonlyMap<RoutePath, Page>;
   /**
+   * Files in the root that are not documents, relative and POSIX-separated.
+   *
+   * The server reads them on demand; a static build copies them. Both need to
+   * know what they are without walking the tree a second time.
+   */
+  readonly assets: readonly string[];
+  /**
    * Machine-readable outputs, by request path.
    *
    * Generated from the same documents the pages are, which is what "human and
@@ -235,6 +242,7 @@ export async function createSite(options: BuildOptions): Promise<Site> {
 
   let result: BuildResult = {
     pages: new Map(),
+    assets: [],
     exports: new Map(),
     renderNotFound: () => "",
     renderBadRequest: () => "",
@@ -582,6 +590,7 @@ export async function createSite(options: BuildOptions): Promise<Site> {
 
     result = {
       pages,
+      assets: scanned.assets,
       exports: new Map<string, ExportOutput>([
         [
           "/documents.json",

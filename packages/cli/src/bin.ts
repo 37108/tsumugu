@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { describeBuild, parseBuildOptions, runBuild } from "./build.js";
 import {
   describeStartup,
   describeUpdate,
@@ -19,7 +20,34 @@ import { exitCodes, run } from "./index.js";
 
 const argv = process.argv.slice(2);
 
-if (argv[0] === "dev") {
+if (argv[0] === "build") {
+  const parsed = parseBuildOptions(argv.slice(1));
+
+  if (!parsed.ok) {
+    process.stderr.write(`${parsed.message}\n`);
+    process.exitCode = exitCodes.usage;
+  } else {
+    const discovered = await discoverRoot(parsed.options.root);
+
+    if (!discovered.ok) {
+      process.stderr.write(`${discovered.message}\n`);
+      process.exitCode = exitCodes.usage;
+    } else {
+      try {
+        const report = await runBuild({
+          ...parsed.options,
+          root: discovered.discovery.root,
+        });
+        process.stdout.write(`${describeBuild(report)}\n`);
+      } catch (cause) {
+        process.stderr.write(
+          `${cause instanceof Error ? cause.message : String(cause)}\n`,
+        );
+        process.exitCode = exitCodes.startup;
+      }
+    }
+  }
+} else if (argv[0] === "dev") {
   const parsed = parseDevOptions(argv.slice(1));
 
   if (!parsed.ok) {

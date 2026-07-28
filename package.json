@@ -24,11 +24,13 @@
     "test:watch": "pnpm run build && vitest",
     "test:coverage": "pnpm run build && vitest run --coverage",
     "docs": "pnpm run build && node packages/cli/dist/bin.js dev docs",
+    "docs:build": "pnpm run build && node packages/cli/dist/bin.js build docs --out dist-docs --origin https://tsumugu.dev",
     "check:boundaries": "pnpm run build && vitest run tests/boundaries.test.ts tests/workspace.test.ts",
     "check": "pnpm run build && pnpm run format:check && pnpm run lint && pnpm run typecheck && vitest run"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
+    "@tsumugu/build": "workspace:*",
     "@tsumugu/cli": "workspace:*",
     "@tsumugu/core": "workspace:*",
     "@tsumugu/internal-tsconfig": "workspace:*",

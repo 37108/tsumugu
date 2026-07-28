@@ -24,7 +24,8 @@ tsumugu/
 │   ├── renderer-html/         @tsumugu/renderer-html
 │   ├── theme-default/         @tsumugu/theme-default
 │   ├── transformer-highlight/ @tsumugu/transformer-highlight
-│   └── preset/                @tsumugu/preset
+│   ├── preset/                @tsumugu/preset
+│   └── build/                 @tsumugu/build
 ├── internal/          internal-only workspaces, never published
 │   └── tsconfig/      @tsumugu/internal-tsconfig
 └── tests/             repository-level tests

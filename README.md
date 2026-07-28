@@ -33,9 +33,10 @@ What works today:
 - syntax highlighting, as annotated tokens rather than trusted markup;
 - `documents.json`, `llms.txt`, `search.json` and `sitemap.xml`, generated from the same documents as the pages;
 - search, from an index split by heading, with a page that works without JavaScript;
-- watch mode: saving a file rebuilds what changed and reloads the open page.
+- watch mode: saving a file rebuilds what changed and reloads the open page;
+- `tsumugu build` for a static site with clean URLs, from the same pipeline.
 
-What is deliberately missing: static build output, configuration files, and any published API. See [the roadmap](docs/roadmap.md).
+What is deliberately missing: configuration files, and any published API. See [the roadmap](docs/roadmap.md).
 
 ## Development
 

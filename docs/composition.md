@@ -88,6 +88,29 @@ const site = await createSite({
 Order is registration order, everywhere, and it is visible in the array you
 wrote. Nothing sorts itself by a priority number.
 
+## Building instead of serving
+
+`tsumugu build [directory] --out dist --origin https://your.site` writes what
+the server would have answered:
+
+```text
+dist/
+├── index.html
+├── guide/setup/index.html      the URL stays /guide/setup
+├── documents.json  llms.txt  search.json  sitemap.xml
+└── images/diagram.png
+```
+
+Clean URLs are deliberate: the published address is the one `tsumugu dev`
+answered, so a link, an anchor or a bookmark cannot differ between the two.
+
+The build refuses to write into a directory it did not create. Pass `--clean` if
+you mean it. A directory from a previous build is emptied first, so a page you
+deleted does not survive in the deployment.
+
+Programmatically it is `buildStatic` from `@tsumugu/build`, taking the same
+composition as `createSite`.
+
 ## What a transformer may do
 
 A transformer receives a Semantic AST and returns one. It cannot reach the

@@ -1,6 +1,6 @@
 {
   "name": "tsumugu-transformer-highlight",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "type": "module",
   "description": "Syntax highlighting for Tsumugu, as a Semantic AST transformer. Annotates code blocks with tokens; renders nothing itself.",
   "license": "MIT",

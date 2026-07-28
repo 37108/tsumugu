@@ -1,5 +1,12 @@
 # tsumugu-build
 
+## 0.3.1
+
+### Patch Changes
+
+- Updated dependencies [bd52a0b]
+  - tsumugu-core@0.3.1
+
 ## 0.3.0
 
 ### Minor Changes

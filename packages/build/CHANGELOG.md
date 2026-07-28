@@ -1,5 +1,21 @@
 # tsumugu-build
 
+## 0.3.0
+
+### Minor Changes
+
+- de762cf: `tsumugu build --base /repo` publishes under a subpath, which is what a
+  GitHub Pages project site is. Navigation, the search form and index, the
+  generated pages, root-relative links the authors wrote, and every
+  machine-readable export carry the prefix; routes stay unprefixed internally,
+  and the page client reads the base from one meta tag so its hash never
+  changes.
+
+### Patch Changes
+
+- Updated dependencies [de762cf]
+  - tsumugu-core@0.3.0
+
 ## 0.2.0
 
 ### Minor Changes

@@ -1,5 +1,12 @@
 # tsumugu-transformer-highlight
 
+## 0.3.0
+
+### Patch Changes
+
+- Updated dependencies [de762cf]
+  - tsumugu-core@0.3.0
+
 ## 0.2.0
 
 ### Patch Changes

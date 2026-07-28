@@ -136,7 +136,13 @@ describe("publication safety", () => {
   it("publishes every package with public access", () => {
     for (const manifest of manifests.filter((entry) => !entry.isPrivate)) {
       const publishConfig = manifest.fields.get("publishConfig");
-      expect(publishConfig, manifest.id).toEqual({ access: "public" });
+      // The registry is stated because the machines this publishes from may
+      // have their own default — a proxy, a mirror — and a publish that lands
+      // wherever the environment points is not a release.
+      expect(publishConfig, manifest.id).toEqual({
+        access: "public",
+        registry: "https://registry.npmjs.org/",
+      });
     }
   });
 

@@ -39,6 +39,9 @@ const routes = [
   "architecture/overview",
   "architecture/semantic-ast",
   "decisions/0003-live-reload-script-policy",
+  "documents.json",
+  "llms.txt",
+  "sitemap.xml",
 ];
 
 describe("Tsumugu's own documentation", () => {
@@ -48,10 +51,22 @@ describe("Tsumugu's own documentation", () => {
     for (const route of routes) {
       const response = await fetch(`${running.server.url}${route}`);
       expect(response.status, route).toBe(200);
-      expect(response.headers.get("content-type"), route).toBe(
-        "text/html; charset=utf-8",
-      );
     }
+  });
+
+  it("serves its own machine-readable outputs", async () => {
+    running = await startDev({ root: docsRoot, port: 0, watch: false });
+
+    const corpus = (await (
+      await fetch(`${running.server.url}documents.json`)
+    ).json()) as { readonly documents: readonly { readonly title: string }[] };
+
+    expect(corpus.documents.length).toBeGreaterThan(10);
+    expect(
+      (await (await fetch(`${running.server.url}llms.txt`)).text()).startsWith(
+        "# Tsumugu",
+      ),
+    ).toBe(true);
   });
 
   it("reports nothing wrong with the project's own documentation", async () => {

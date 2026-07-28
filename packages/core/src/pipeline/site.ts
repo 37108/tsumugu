@@ -3,7 +3,7 @@ import {
   dedupeDiagnostics,
   type DocumentDiagnostic,
 } from "../document/diagnostics.js";
-import type { LoadedDocument } from "../document/document.js";
+import type { LoadedDocument, SourceFormat } from "../document/document.js";
 import type { DocumentId, RoutePath, SourcePath } from "../document/paths.js";
 import { resolveMetadata, type ResolvedMetadata } from "../metadata/resolve.js";
 import { buildTableOfContents } from "../navigation/table-of-contents.js";
@@ -13,6 +13,12 @@ import { findRouteCollisions, routeForSource } from "../routing/routes.js";
 import { diffSnapshots, type DocumentSnapshot } from "../scanner/events.js";
 import { createFileReader, reconcile } from "../scanner/reconcile.js";
 import { scan } from "../scanner/scan.js";
+import { documentsJson, llmsTxt, sitemapXml } from "../exports/outputs.js";
+import {
+  sortRecords,
+  toRecord,
+  type DocumentRecord,
+} from "../exports/records.js";
 import { collectReferences } from "../links/collect.js";
 import { validateDocumentLinks } from "../links/validate.js";
 import { renderShell } from "../shell/shell.js";
@@ -99,8 +105,27 @@ export interface Page {
   readonly generated?: boolean;
 }
 
+/** A generated file that is not a page: JSON, plain text, XML. */
+export interface ExportOutput {
+  readonly contentType: string;
+  /**
+   * Produces the body.
+   *
+   * A function of the origin, because a sitemap has to say where the site is
+   * published and only the server knows what it answered on.
+   */
+  readonly render: (origin: string) => string;
+}
+
 export interface BuildResult {
   readonly pages: ReadonlyMap<RoutePath, Page>;
+  /**
+   * Machine-readable outputs, by request path.
+   *
+   * Generated from the same documents the pages are, which is what "human and
+   * AI from one source" has to mean to be worth saying.
+   */
+  readonly exports: ReadonlyMap<string, ExportOutput>;
   /**
    * Renders the page for a request that resolved to no document.
    *
@@ -142,7 +167,10 @@ export interface Site {
 interface PreparedDocument {
   readonly sourcePath: SourcePath;
   readonly route: RoutePath;
+  readonly format: SourceFormat;
   readonly metadata: ResolvedMetadata;
+  /** The transformed AST, kept for the machine-readable exports. */
+  readonly root?: DocumentNode;
   /** Identifies the exact content this was produced from. */
   readonly contentHash: string;
   /** The themed document body. */
@@ -197,6 +225,7 @@ export async function createSite(options: BuildOptions): Promise<Site> {
 
   let result: BuildResult = {
     pages: new Map(),
+    exports: new Map(),
     renderNotFound: () => "",
     renderBadRequest: () => "",
     diagnostics: [],
@@ -242,7 +271,9 @@ export async function createSite(options: BuildOptions): Promise<Site> {
     return {
       sourcePath: document.sourcePath,
       route: document.route,
+      format: document.format,
       metadata,
+      ...(transformed === undefined ? {} : { root: transformed.root }),
       contentHash: document.contentHash,
       body: themed.tree,
       tableOfContents:
@@ -462,22 +493,86 @@ export async function createSite(options: BuildOptions): Promise<Site> {
     // A project whose root has no index document still has a home page: one
     // listing what it does have. An authored index always wins, because the
     // generated page is a default rather than a policy.
+    const generatedRecords: DocumentRecord[] = [];
+
     if (!pages.has(rootRoute)) {
+      const generatedHome = generateHomeDocument({
+        siteName,
+        navigation: navigation.items,
+      });
+
+      generatedRecords.push(
+        toRecord({
+          route: rootRoute,
+          title: siteName,
+          hidden: false,
+          generated: true,
+          renderable: true,
+          root: generatedHome,
+        }),
+      );
+
       pages.set(rootRoute, {
         route: rootRoute,
         title: siteName,
-        html: renderGenerated(
-          generateHomeDocument({ siteName, navigation: navigation.items }),
-          siteName,
-          navigation.items,
-        ),
+        html: renderGenerated(generatedHome, siteName, navigation.items),
         diagnostics: [],
         generated: true,
       });
     }
 
+    const records = sortRecords([
+      ...entries.map((entry) =>
+        toRecord({
+          route: entry.route,
+          sourcePath: entry.sourcePath,
+          format: entry.format,
+          title: entry.metadata.title,
+          ...(entry.metadata.description === undefined
+            ? {}
+            : { description: entry.metadata.description }),
+          hidden: entry.metadata.hidden,
+          generated: false,
+          renderable: entry.root !== undefined,
+          ...(entry.root === undefined ? {} : { root: entry.root }),
+          contentHash: entry.contentHash,
+        }),
+      ),
+      ...generatedRecords,
+    ]);
+
+    const site = {
+      name: siteName,
+      ...(home?.metadata.description === undefined
+        ? {}
+        : { description: home.metadata.description }),
+    };
+
     result = {
       pages,
+      exports: new Map<string, ExportOutput>([
+        [
+          "/documents.json",
+          {
+            contentType: "application/json; charset=utf-8",
+            render: () => documentsJson(records, site),
+          },
+        ],
+        [
+          "/llms.txt",
+          {
+            contentType: "text/plain; charset=utf-8",
+            render: () => llmsTxt(records, site),
+          },
+        ],
+        [
+          "/sitemap.xml",
+          {
+            contentType: "application/xml; charset=utf-8",
+            render: (origin) => sitemapXml(records, origin),
+          },
+        ],
+      ]),
       renderNotFound: (requestedPath) =>
         renderGenerated(
           generateNotFoundDocument({

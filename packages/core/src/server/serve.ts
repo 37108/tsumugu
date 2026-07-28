@@ -2,7 +2,7 @@ import { createServer, type Server, type ServerResponse } from "node:http";
 import type { AddressInfo } from "node:net";
 
 import type { RoutePath } from "../document/paths.js";
-import type { Page } from "../pipeline/site.js";
+import type { ExportOutput, Page } from "../pipeline/site.js";
 import { decodeRequestPath } from "../routing/routes.js";
 
 import { readAsset } from "./assets.js";
@@ -29,6 +29,14 @@ import { escapeText } from "../theme/serialize.js";
  */
 export interface ServedSite {
   readonly pages: ReadonlyMap<RoutePath, Page>;
+  /**
+   * Machine-readable outputs, by request path.
+   *
+   * Answered after pages and after files: a document, and a file an author put
+   * in the root, both win over a generated one. Somebody who committed their
+   * own `llms.txt` meant it.
+   */
+  readonly exports?: ReadonlyMap<string, ExportOutput>;
   /**
    * Renders the page for a request that resolved to no document.
    *
@@ -162,6 +170,7 @@ function notFound(route: string, pages: ReadonlyMap<RoutePath, Page>): string {
 async function handle(
   target: string,
   options: ServeOptions,
+  origin: string,
   response: ServerResponse,
   send: (
     status: number,
@@ -206,6 +215,12 @@ async function handle(
       send(200, asset.bytes, asset.contentType);
       return;
     }
+  }
+
+  const generated = site.exports?.get(route);
+  if (generated !== undefined) {
+    send(200, generated.render(origin), generated.contentType);
+    return;
   }
 
   send(404, site.renderNotFound?.(route) ?? notFound(route, site.pages));
@@ -256,7 +271,11 @@ export function serve(options: ServeOptions): Promise<RunningServer> {
       response.end(body);
     };
 
-    handle(request.url ?? "/", options, response, send).catch(
+    // The address this request arrived on, so a generated sitemap says where
+    // the site actually is rather than where it might be published.
+    const origin = `http://${request.headers.host ?? `${host}:${String(requestedPort)}`}`;
+
+    handle(request.url ?? "/", options, origin, response, send).catch(
       (cause: unknown) => {
         // Reaching here is a bug in Tsumugu rather than a problem with the
         // project, so the reader gets a page that says so and nothing else. A

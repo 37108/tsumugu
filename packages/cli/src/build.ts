@@ -1,10 +1,10 @@
 import path from "node:path";
 
 import { buildStatic, type StaticBuildReport } from "@tsumugu/build";
-import { formatDiagnostics } from "@tsumugu/core";
 import { createPreset } from "@tsumugu/preset";
 
 import { siteNameFor } from "./dev.js";
+import { formatForTerminal, styleFor, type TerminalStyle } from "./terminal.js";
 
 /**
  * The `build` command.
@@ -101,15 +101,18 @@ export async function runBuild(
 }
 
 /** What the terminal says when a build finishes. */
-export function describeBuild(report: StaticBuildReport): string {
+export function describeBuild(
+  report: StaticBuildReport,
+  style: TerminalStyle = styleFor(),
+): string {
   const lines = [
-    `tsumugu  built ${String(report.pageCount)} pages`,
-    `  out    ${report.outDir}`,
-    `  files  ${String(report.files.length)}`,
+    `${style.bold("tsumugu")}  built ${String(report.pageCount)} pages`,
+    `${style.dim("  out   ")} ${report.outDir}`,
+    `${style.dim("  files ")} ${String(report.files.length)}`,
   ];
 
   if (report.diagnostics.length > 0) {
-    lines.push("", formatDiagnostics(report.diagnostics));
+    lines.push("", formatForTerminal(report.diagnostics, style));
   }
 
   return lines.join("\n");

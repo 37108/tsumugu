@@ -165,6 +165,13 @@ export interface UpdateSummary {
  *
  * `result` is a fresh value after every update, so a server holding the site
  * always answers from the current pages without being told to reload anything.
+ *
+ * **A failed update changes nothing.** The new result is assigned once, at the
+ * end, after every page has been produced; anything that throws on the way
+ * there leaves the previous result in place. So a documentation root that
+ * disappears while the server is running, or a transformer that throws on a
+ * half-saved file, costs the reader nothing: they keep the last version that
+ * built, and the terminal says why it has not moved.
  */
 export interface Site {
   readonly result: BuildResult;
@@ -372,6 +379,17 @@ export async function createSite(options: BuildOptions): Promise<Site> {
 
   async function update(): Promise<UpdateSummary> {
     const scanned = await scan({ root: options.root });
+
+    // The one fatal condition the diagnostics model defines: the root cannot be
+    // read. There is no partial result worth building from it, and replacing a
+    // working site with an empty one would turn a directory somebody moved for
+    // a moment into a site that lost every page.
+    const fatal = scanned.diagnostics.find(
+      (diagnostic) => diagnostic.severity === "fatal",
+    );
+    if (fatal !== undefined) {
+      throw new Error(fatal.message, { cause: fatal });
+    }
 
     const routes = new Map<string, RoutePath>();
     const routing: DocumentDiagnostic[] = [];

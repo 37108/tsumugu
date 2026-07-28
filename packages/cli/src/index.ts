@@ -94,8 +94,15 @@ export {
   type BuildCommandOptions,
 } from "./build.js";
 export {
+  formatForTerminal,
+  styleFor,
+  type ColourOptions,
+  type TerminalStyle,
+} from "./terminal.js";
+export {
   describeStartup,
   describeUpdate,
+  describeUpdateFailure,
   discoverRoot,
   parseDevOptions,
   siteNameFor,

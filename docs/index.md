@@ -17,6 +17,7 @@ The project is **experimental and pre-alpha**. Nothing here is a stable API.
 - [Design principles](principles.md) — the constraints every decision is measured against.
 - [Architecture overview](architecture/overview.md) — the pipeline, stage by stage.
 - [Composition](composition.md) — what zero configuration includes, and how to change it.
+- [Development mode](development-mode.md) — watching, reloading, and what happens when a save is wrong.
 - [Roadmap](roadmap.md) — what is built, what is next, and what is deliberately absent.
 
 ## Reference

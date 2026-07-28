@@ -90,6 +90,29 @@ function sourceOf(conversion: Conversion, node: MdastNode): string {
  * A gap in Tsumugu is not a mistake by the author, so the original text is
  * preserved rather than dropped, and a warning explains what happened.
  */
+/**
+ * Why a node the AST has no shape for is being preserved rather than rendered.
+ *
+ * MDX nodes get their own sentence, because "construct mdxFlowExpression is
+ * not represented" reads like a gap where a policy is: expressions and
+ * components are code, and documentation content does not execute — see
+ * `docs/decisions/0006-mdx-without-execution.md`.
+ */
+function reasonFor(node: MdastNode): string {
+  switch (node.type as string) {
+    case "mdxFlowExpression":
+    case "mdxTextExpression":
+      return "MDX expressions are not executed; the expression is shown as written";
+    case "mdxJsxFlowElement":
+    case "mdxJsxTextElement":
+      return "JSX components are not executed; the markup is shown as written";
+    case "mdxjsEsm":
+      return "MDX imports and exports are not executed; the statement is shown as written";
+    default:
+      return `Markdown construct "${node.type}" is not represented yet`;
+  }
+}
+
 function unsupported(
   conversion: Conversion,
   node: MdastNode,
@@ -260,14 +283,7 @@ function block(conversion: Conversion, node: MdastNode): BlockNode[] {
       ];
 
     default:
-      return [
-        unsupported(
-          conversion,
-          node,
-          `Markdown construct "${node.type}" is not represented yet`,
-          "block",
-        ),
-      ];
+      return [unsupported(conversion, node, reasonFor(node), "block")];
   }
 }
 
@@ -350,14 +366,7 @@ function inline(conversion: Conversion, node: MdastNode): InlineNode[] {
       ];
 
     default:
-      return [
-        unsupported(
-          conversion,
-          node,
-          `Markdown construct "${node.type}" is not represented yet`,
-          "inline",
-        ),
-      ];
+      return [unsupported(conversion, node, reasonFor(node), "inline")];
   }
 }
 

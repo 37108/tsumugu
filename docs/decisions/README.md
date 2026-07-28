@@ -32,13 +32,14 @@ been tidied is history that lies.
 
 ## Index
 
-| ADR                                            | Decision                                                               |
-| ---------------------------------------------- | ---------------------------------------------------------------------- |
-| [1](0001-runtime-and-package-compatibility.md) | Node 24+, ESM only, TypeScript builds to `dist/`                       |
-| [2](0002-canonical-document-model.md)          | documents are staged immutable values with branded path types          |
-| [3](0003-live-reload-script-policy.md)         | one hash-pinned script for live reload, development only               |
-| [4](0004-client-side-search.md)                | the page client (search, copy) ships on every page, by hash            |
-| [5](0005-no-configuration-file.md)             | no configuration file; composition is code, conventions are documented |
+| ADR                                            | Decision                                                                         |
+| ---------------------------------------------- | -------------------------------------------------------------------------------- |
+| [1](0001-runtime-and-package-compatibility.md) | Node 24+, ESM only, TypeScript builds to `dist/`                                 |
+| [2](0002-canonical-document-model.md)          | documents are staged immutable values with branded path types                    |
+| [3](0003-live-reload-script-policy.md)         | one hash-pinned script for live reload, development only                         |
+| [4](0004-client-side-search.md)                | the page client (search, copy) ships on every page, by hash                      |
+| [5](0005-no-configuration-file.md)             | no configuration file; composition is code, conventions are documented           |
+| [6](0006-mdx-without-execution.md)             | `.mdx` is a source format; its expressions, components and imports never execute |
 
 `tests/decisions.test.ts` checks that every record in this directory appears in
 the index and that every index entry resolves to a file.

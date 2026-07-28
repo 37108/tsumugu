@@ -47,13 +47,13 @@
     "@tsumugu/transformer-highlight": "workspace:*",
     "@types/jsdom": "^28.0.3",
     "@types/node": "^24.13.2",
-    "@vitest/coverage-v8": "^4.1.9",
+    "@vitest/coverage-v8": "^4.1.10",
     "axe-core": "^4.12.1",
     "eslint": "^10.6.0",
     "jsdom": "^29.1.1",
     "prettier": "^3.9.4",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.62.1",
-    "vitest": "^4.1.9"
+    "typescript-eslint": "^8.63.0",
+    "vitest": "^4.1.10"
   }
 }

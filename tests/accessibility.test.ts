@@ -19,7 +19,7 @@ import {
  * contrast below the threshold. It cannot tell whether a page makes sense when
  * it is read aloud, whether the reading order matches the visual one, or
  * whether an anchor's name is useful rather than merely present. Those are the
- * manual review in `docs/accessibility.md`, and this file is not a substitute
+ * manual review in `docs/designs/accessibility.md`, and this file is not a substitute
  * for it.
  *
  * The pages are built by the server and parsed into a real DOM, so what is

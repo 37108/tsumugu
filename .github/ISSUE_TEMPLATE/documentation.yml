@@ -7,7 +7,7 @@ body:
     attributes:
       label: Which page
       description: The file under docs/, or the URL on the served site.
-      placeholder: docs/composition.md
+      placeholder: docs/designs/composition.md
     validations:
       required: true
   - type: textarea

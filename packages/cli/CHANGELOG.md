@@ -28,7 +28,7 @@
 
 - 91060dc: The sidebar disclosure starts closed on narrow screens (the wide layout is
   unaffected), `tsumugu build` reports the size of what it wrote, and front
-  matter keys one slip away from a known key — `hiden`, `titel` — get a warning
+  matter keys one slip away from a known key (`hiden`, `titel`) get a warning
   naming the key they were probably reaching for.
 
 ### Patch Changes
@@ -56,7 +56,7 @@
   `tsumugu build` writes the same site to a directory with clean URLs.
 
   Nothing here is a stable API. While the version starts with `0.`, any release
-  may change anything: see `docs/releasing.md`.
+  may change anything: see `docs/designs/releasing.md`.
 
 ### Patch Changes
 

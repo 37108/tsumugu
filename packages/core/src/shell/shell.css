@@ -44,7 +44,7 @@
 /*
  * Dark mode: the same design in the other direction rather than an inversion
  * of it. Every pair clears the project's 4.5:1 target, recorded in
- * docs/accessibility.md. A preference, not a toggle.
+ * docs/designs/accessibility.md. A preference, not a toggle.
  */
 @media (prefers-color-scheme: dark) {
   :root {

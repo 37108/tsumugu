@@ -32,7 +32,7 @@
   `tsumugu build` writes the same site to a directory with clean URLs.
 
   Nothing here is a stable API. While the version starts with `0.`, any release
-  may change anything: see `docs/releasing.md`.
+  may change anything: see `docs/designs/releasing.md`.
 
 ### Patch Changes
 

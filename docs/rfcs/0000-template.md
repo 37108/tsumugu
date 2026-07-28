@@ -1,3 +1,7 @@
+---
+hidden: true
+---
+
 # RFC N: Title
 
 - **Status:** Draft | Accepted | Rejected
@@ -16,7 +20,7 @@ public. State what the proposal deliberately does not cover.
 
 ## Fit
 
-Which principles in `docs/principles.md` this leans on, and which it strains.
+Which principles in `docs/designs/principles.md` this leans on, and which it strains.
 A proposal that strains none is usually restating the status quo.
 
 ## Alternatives
@@ -25,5 +29,5 @@ The nearest designs not proposed, each with the reason it lost.
 
 ## Evidence
 
-What has to be true for this to be accepted — usage, a prototype, a benchmark —
-and how much of it exists now.
+What has to be true for this to be accepted, such as usage, a prototype, or a
+benchmark, and how much of it exists now.

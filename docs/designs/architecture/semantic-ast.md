@@ -1,4 +1,4 @@
-# Semantic Document AST
+# Semantic document AST
 
 ## Status
 
@@ -9,9 +9,9 @@ it and shown which parts were right.
 ## What it is for
 
 This is the boundary where Markdown and HTML stop being different things.
-Renderers produce it, transformers rewrite it, themes read it, and everything
-downstream — navigation, tables of contents, search, link checking, the
-machine-readable exports — reads this rather than a parser's output.
+Renderers produce it, transformers rewrite it, and themes read it. Navigation,
+tables of contents, search, link checking, and machine-readable exports all use
+this tree instead of a parser's output.
 
 Two failure modes shaped the design.
 
@@ -23,7 +23,7 @@ becomes a second-class input, which contradicts
 
 So nodes describe what a piece of a document **means**, never how a browser lays
 it out. There is no `div`, no `span`, no `br`, no `section`. A theme owns
-presentation; the AST owns meaning.
+presentation. The AST owns meaning.
 
 ## Structure
 
@@ -37,9 +37,8 @@ Children are typed by position rather than left open:
 - **Block nodes** stand on their own in a document's flow.
 - **Inline nodes** appear within a line of prose.
 
-A paragraph's children are inline; a document's children are block. A list item
-holds **blocks**, not inlines — that is what makes a nested list, or a code
-block inside a list, representable at all.
+A paragraph's children are inline, while a document's children are block. A
+list item holds block nodes so it can contain a nested list or code block.
 
 `raw-html` and `unsupported` appear in both unions and carry a `placement` field
 saying which position they are in, because preserved source can be either.
@@ -48,48 +47,48 @@ saying which position they are in, because preserved source can be either.
 
 Every node may carry an optional `range` (`{ start, end }` of
 `{ line, column, offset }`). It is optional because not every parser tracks
-positions and a node synthesised by a transformer has no source; diagnostics
+positions, and a node synthesised by a transformer has no source. Diagnostics
 degrade to file-level rather than becoming impossible.
 
 | Node             | Required                       | Optional   | Children     |
 | ---------------- | ------------------------------ | ---------- | ------------ |
-| `document`       | —                              | —          | block        |
-| `heading`        | `depth` (1–6)                  | —          | inline       |
-| `paragraph`      | —                              | —          | inline       |
-| `text`           | `value`                        | —          | leaf         |
-| `emphasis`       | —                              | —          | inline       |
-| `strong`         | —                              | —          | inline       |
-| `inline-code`    | `value`                        | —          | leaf         |
+| `document`       | none                           | none       | block        |
+| `heading`        | `depth` (1-6)                  | none       | inline       |
+| `paragraph`      | none                           | none       | inline       |
+| `text`           | `value`                        | none       | leaf         |
+| `emphasis`       | none                           | none       | inline       |
+| `strong`         | none                           | none       | inline       |
+| `inline-code`    | `value`                        | none       | leaf         |
 | `code-block`     | `value`                        | `language` | leaf         |
 | `list`           | `ordered`                      | `start`    | `list-item`  |
-| `list-item`      | —                              | —          | block        |
+| `list-item`      | none                           | none       | block        |
 | `link`           | `url`                          | `title`    | inline       |
 | `image`          | `url`, `alt`                   | `title`    | leaf         |
-| `blockquote`     | —                              | —          | block        |
-| `thematic-break` | —                              | —          | leaf         |
-| `table`          | `align`                        | —          | `table-row`  |
-| `table-row`      | `header`                       | —          | `table-cell` |
-| `table-cell`     | —                              | —          | inline       |
-| `raw-html`       | `value`, `trust`, `placement`  | —          | leaf         |
-| `unsupported`    | `reason`, `value`, `placement` | —          | leaf         |
+| `blockquote`     | none                           | none       | block        |
+| `thematic-break` | none                           | none       | leaf         |
+| `table`          | `align`                        | none       | `table-row`  |
+| `table-row`      | `header`                       | none       | `table-cell` |
+| `table-cell`     | none                           | none       | inline       |
+| `raw-html`       | `value`, `trust`, `placement`  | none       | leaf         |
+| `unsupported`    | `reason`, `value`, `placement` | none       | leaf         |
 
 Several fields are worth the explanation:
 
 **`heading.depth`** is the document's outline level, not a font size. It is what
 navigation, the table of contents and assistive technology depend on.
 
-**`image.alt` is required**, and an empty string is meaningful — it marks the
-image decorative. Making it optional would let a renderer omit it by accident,
+**`image.alt` is required.** An empty string marks a decorative image. Making
+the field optional would let a renderer omit it by accident,
 which is the single most common accessibility failure in generated
 documentation.
 
 **`link.url` is whatever the author wrote.** Resolving relative links and
-rejecting dangerous URL schemes happen later, deliberately: a node that silently
+rejecting dangerous URL schemes happen later. A node that silently
 dropped a link would hide the problem from the diagnostics that should report
 it.
 
 **`code-block.language`** is unnormalized, as written. Highlighting is a
-transformer's job; this only records what the document said.
+transformer's job. This field only records what the document said.
 
 **`table-row.header`** is document meaning rather than a `thead` wrapper,
 because it is what a screen reader and a data export both need, independently of
@@ -127,16 +126,13 @@ the construct properly without the content having been lost in the meantime.
 
 ## Helpers
 
-Three, because three pieces of knowledge would otherwise be restated everywhere:
+Three helpers keep node-shape knowledge in one place:
 
-- `childrenOf(node)` — the children of any node, or an empty list. Centralised
-  so traversal, validation and transformers do not each re-encode which nodes
-  have children.
-- `visit(root, visitor)` — depth-first in document order, which is what a table
-  of contents, a heading outline and a search index all need. Returning
-  `"skip"` leaves a subtree unvisited. Ancestors are passed nearest-first.
-- `textContent(node)` — the readable text of a subtree, used by heading
-  identifiers, table-of-contents entries and search extracts.
+- `childrenOf(node)` returns the node's children or an empty list.
+- `visit(root, visitor)` walks depth-first in document order. Returning
+  `"skip"` leaves a subtree unvisited, and ancestors are passed nearest-first.
+- `textContent(node)` returns the readable text used for heading identifiers,
+  table-of-contents entries, and search extracts.
 
 There are deliberately no construction helpers. Object literals with the node
 types are already checked by the compiler, and a builder API would be a public
@@ -149,9 +145,9 @@ express: heading depth in range, a start number only on an ordered list, every
 table row matching the declared column count, alternative text present, a link
 having a destination.
 
-These are the mistakes a renderer actually makes, because a renderer assembles
-nodes from untyped parser output, and they surface far from their cause — a
-malformed tree becomes a confusing theme failure three stages later. All
+These are the mistakes a renderer actually makes because it assembles nodes
+from untyped parser output. Without validation, a malformed tree becomes a
+confusing theme failure three stages later. All
 problems are collected rather than throwing on the first, since a renderer that
 produces one bad node usually produces several.
 
@@ -167,8 +163,8 @@ For internal consumers, during pre-alpha:
   consumer to decide what the new node means for it, rather than silently
   dropping it.
 - **A new node must preserve meaning existing nodes cannot express.** Not
-  because an input parser emits a matching token. Footnotes, definition lists
-  and admonitions are all plausible; none of them are here yet, and each needs a
+  because an input parser emits a matching token. Footnotes, definition lists,
+  and admonitions are all plausible, but each needs a
   reason beyond "the parser has one".
 - **Fields may become required.** Nothing here is a compatibility commitment
   yet.

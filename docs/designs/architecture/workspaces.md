@@ -1,10 +1,10 @@
-# Workspace Layout and Dependency Direction
+# Workspace layout and dependency direction
 
 ## Status
 
 This document describes the repository as it exists today. Tsumugu is pre-alpha,
 and the workspace graph is deliberately smaller than the component list in
-[`docs/architecture/overview.md`](./overview.md): the scanner, document model,
+[`docs/designs/architecture/index.md`](./): the scanner, document model,
 routing, navigation, shell, serializer and server all live inside
 `tsumugu-core` until a boundary has been demonstrated by working software.
 
@@ -33,7 +33,7 @@ tsumugu/
 ```
 
 Unit tests are colocated with the code they cover, under
-`packages/*/src/**/*.test.ts`. See [`docs/testing.md`](../testing.md).
+`packages/*/src/**/*.test.ts`. See [`docs/designs/testing.md`](../testing.md).
 
 `pnpm-workspace.yaml` maps exactly to those two roots: `packages/*` and
 `internal/*`.
@@ -61,17 +61,17 @@ which renderers, which transformers and which theme an ordinary project gets.
 The CLI parses a command line and prints to a terminal; core composes what it is
 handed and chooses nothing. That is what keeps a different set of choices
 possible without changing either of them. See
-[`docs/composition.md`](../composition.md).
+[`docs/designs/composition.md`](../composition.md).
 
 Each renderer holds every type of its own parser: mdast never leaves
 `tsumugu-renderer-markdown`, hast never leaves `tsumugu-renderer-html`. Core
 and themes see only the Semantic AST, so either parser can be replaced without
-either of them changing — which is what makes HTML a first-class input rather
-than a second format bolted on.
+changing them. HTML therefore remains a first-class input instead of a second
+format bolted on.
 
 The rules the repository commits to, taken from
-[`docs/architecture/overview.md`](./overview.md) and
-[`docs/principles.md`](../principles.md):
+[`docs/designs/architecture/index.md`](./) and
+[`docs/designs/principles.md`](../principles.md):
 
 - `tsumugu-core` must not depend on the CLI, themes, renderers, the build
   adapter, search, or AI packages. Those are consumers of core, not parts of it.
@@ -96,7 +96,7 @@ Two layers, because a boundary can be broken in two different places.
 **The manifests.** [`tests/workspace.test.ts`](https://github.com/37108/tsumugu/blob/main/tests/workspace.test.ts)
 reads every `package.json` and checks the declared graph: privacy, explicit
 `exports`, the `workspace:` protocol, the absence of cycles, and core's
-forbidden targets. This is where a mistake becomes permanent — once a package is
+forbidden targets. This is where a mistake becomes permanent. Once a package is
 published, a dependency edge cannot be withdrawn without a breaking change.
 
 **The imports.** [`tests/boundaries.test.ts`](https://github.com/37108/tsumugu/blob/main/tests/boundaries.test.ts)
@@ -118,7 +118,7 @@ all covered while an import-shaped string inside a comment is not.
 
 The same file also pins the **public export surface** of each publishable
 package. Adding a runtime export fails the test until the new name is listed
-deliberately, which is what [`docs/principles.md`](../principles.md) means by a
+deliberately, which is what [`docs/designs/principles.md`](../principles.md) means by a
 public API being earned rather than accumulated.
 
 ### Type-only dependencies
@@ -144,9 +144,9 @@ Every workspace, including the two under `packages/`, is currently marked
 `"private": true`. Nothing is published to npm during pre-alpha. Release and
 versioning configuration is tracked in issue #49.
 
-The packages under `packages/` still carry full publication metadata —
-`exports`, `files`, `license`, `repository`, `engines`, and `"type": "module"` —
-so that the public surface is explicit and testable before the first release
+The packages under `packages/` still carry full publication metadata:
+`exports`, `files`, `license`, `repository`, `engines`, and `"type": "module"`.
+This keeps the public surface explicit and testable before the first release
 rather than assembled at release time.
 
 The `internal/` naming convention is doubly encoded: the directory and the
@@ -155,18 +155,17 @@ test, so an internal workspace cannot quietly become publishable.
 
 ## Toolchain
 
-| Tool       | Version    | Note                                        |
-| ---------- | ---------- | ------------------------------------------- |
-| Node.js    | `>=24.0.0` | Node.js 24 "Krypton" is the Active LTS line |
-| pnpm       | `11.10.0`  | pinned through `packageManager`             |
-| TypeScript | `^6.0.3`   | ESM-only, strict, project references        |
-| Vitest     | `^4.1.9`   | `vitest.config.ts`; see `docs/testing.md`   |
+| Tool       | Version    | Note                                              |
+| ---------- | ---------- | ------------------------------------------------- |
+| Node.js    | `>=24.0.0` | Node.js 24 "Krypton" is the Active LTS line       |
+| pnpm       | `11.10.0`  | pinned through `packageManager`                   |
+| TypeScript | `^6.0.3`   | ESM-only, strict, project references              |
+| Vitest     | `^4.1.9`   | `vitest.config.ts`; see `docs/designs/testing.md` |
 
-These are the versions the repository requires today. The full compatibility
-policy — the supported operating systems, the module-format decision, the
-upgrade and deprecation process, and the position on Bun and Deno — is in
-[`docs/compatibility.md`](../compatibility.md), with the reasoning recorded in
-[ADR 0001](../decisions/0001-runtime-and-package-compatibility.md).
+These are the versions the repository requires today. The supported operating
+systems, module format, upgrade policy, and position on Bun and Deno are in
+[`docs/designs/compatibility.md`](../compatibility.md), with the reasoning recorded in
+[ADR 0001](../../decisions/0001-runtime-and-package-compatibility.md).
 
 TypeScript 7, the native compiler, was evaluated and not adopted for this
 foundation: at the time of writing its first stable release was eighteen days
@@ -213,21 +212,21 @@ test is the package build project that deliberately excludes it.
 
 All commands run from the repository root.
 
-| Command                 | Behaviour                                             |
-| ----------------------- | ----------------------------------------------------- |
-| `pnpm install`          | installs the workspace, using the committed lockfile  |
-| `pnpm format`           | formats every supported file with Prettier            |
-| `pnpm format:check`     | reports unformatted files without changing them       |
-| `pnpm lint`             | runs type-aware ESLint over the workspace             |
-| `pnpm lint:fix`         | applies the fixes ESLint can make safely              |
-| `pnpm build`            | `tsc --build`, emits `dist/` for each package         |
-| `pnpm typecheck`        | builds the packages, then type-checks `tests/`        |
-| `pnpm test`             | builds, then runs Vitest                              |
-| `pnpm test:watch`       | re-runs affected tests as files change                |
-| `pnpm test:coverage`    | builds, then runs the suite with coverage             |
-| `pnpm check:boundaries` | builds, then checks the dependency and export rules   |
-| `pnpm check`            | formatting, linting, types and tests — the local gate |
-| `pnpm clean`            | removes build output and TypeScript build info        |
+| Command                 | Behaviour                                            |
+| ----------------------- | ---------------------------------------------------- |
+| `pnpm install`          | installs the workspace, using the committed lockfile |
+| `pnpm format`           | formats every supported file with Prettier           |
+| `pnpm format:check`     | reports unformatted files without changing them      |
+| `pnpm lint`             | runs type-aware ESLint over the workspace            |
+| `pnpm lint:fix`         | applies the fixes ESLint can make safely             |
+| `pnpm build`            | `tsc --build`, emits `dist/` for each package        |
+| `pnpm typecheck`        | builds the packages, then type-checks `tests/`       |
+| `pnpm test`             | builds, then runs Vitest                             |
+| `pnpm test:watch`       | re-runs affected tests as files change               |
+| `pnpm test:coverage`    | builds, then runs the suite with coverage            |
+| `pnpm check:boundaries` | builds, then checks the dependency and export rules  |
+| `pnpm check`            | formatting, linting, types and tests; the local gate |
+| `pnpm clean`            | removes build output and TypeScript build info       |
 
 `pnpm test` builds first on purpose. `tests/cli.test.ts` executes the emitted
 `packages/cli/dist/bin.js` in a child process, so it can only pass against real
@@ -257,9 +256,9 @@ keeps the two tools from fighting.
 formatting rules are no longer part of the recommended sets, and no stylistic
 rule is enabled here, so there is no overlap to disable.
 
-ESLint uses `recommendedTypeChecked` from typescript-eslint. The problems worth
-catching in this codebase — floating promises, misused promises, unsafe `any`
-flow — are invisible without type information, so the non-type-checked preset
+ESLint uses `recommendedTypeChecked` from typescript-eslint. Floating promises,
+misused promises, and unsafe `any` flow are invisible without type information,
+so the non-type-checked preset
 would not be enough. Import ordering is **not** enforced: it is a stylistic
 concern that Prettier does not touch, and adding a plugin for it would spend a
 dependency on diff aesthetics rather than correctness. Unused code is caught

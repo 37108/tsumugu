@@ -10,7 +10,7 @@ import {
 
 /**
  * Import-level enforcement of the dependency rules in
- * `docs/architecture/workspaces.md`.
+ * `docs/designs/architecture/workspaces.md`.
  *
  * `tests/workspace.test.ts` checks the package manifests. That catches a
  * declared edge, but not an import that bypasses the declaration: a deep import
@@ -220,7 +220,7 @@ describe("public export surface", () => {
   /**
    * The runtime exports each publishable package is allowed to expose.
    *
-   * Adding a name here is a deliberate act. `docs/principles.md` treats a
+   * Adding a name here is a deliberate act. `docs/designs/principles.md` treats a
    * public API as something earned through real usage, and an export added for
    * convenience becomes a compatibility commitment the moment it is published.
    */
@@ -229,7 +229,7 @@ describe("public export surface", () => {
     // existed outside it. A theme cannot be written without the Virtual Tree
     // builders, and an entry point cannot compose a pipeline it cannot call —
     // so each of these was added because something real could not exist
-    // otherwise, which is what "earned" means in docs/principles.md.
+    // otherwise, which is what "earned" means in docs/designs/principles.md.
     "tsumugu-core": [
       "buildSite",
       "createHeadingIdTransformer",

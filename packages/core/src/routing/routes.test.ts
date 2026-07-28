@@ -71,7 +71,7 @@ describe("routeForSource", () => {
 
   it("keeps filename prefixes", () => {
     // Deciding that "01-" is ordering rather than identity is the exact
-    // counterexample in docs/principles.md. Renaming the file is the explicit,
+    // counterexample in docs/designs/principles.md. Renaming the file is the explicit,
     // visible way to change the URL.
     expect(routeOf("01-install.md")).toBe("/01-install");
     expect(routeOf("guide/02_configure.md")).toBe("/guide/02_configure");

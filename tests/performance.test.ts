@@ -18,7 +18,7 @@ import {
  *
  * That is the property incremental rebuilding actually promises. Real numbers
  * come from `pnpm run bench`, run by a person on a machine they can name, and
- * are recorded in `docs/performance.md`.
+ * are recorded in `docs/designs/performance.md`.
  */
 
 /** A project with enough documents that "all of them" is visibly wrong. */

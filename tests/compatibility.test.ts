@@ -10,7 +10,7 @@ import {
 } from "./helpers/workspace-manifests.js";
 
 /**
- * Enforcement for the compatibility policy in `docs/compatibility.md`.
+ * Enforcement for the compatibility policy in `docs/designs/compatibility.md`.
  *
  * A policy that only exists in prose drifts away from the manifests it
  * describes. These constants are the single place the policy is written down in
@@ -139,7 +139,7 @@ describe("documentation", () => {
 
   beforeAll(async () => {
     policy = await readFile(
-      path.join(repositoryRoot, "docs", "compatibility.md"),
+      path.join(repositoryRoot, "docs", "designs", "compatibility.md"),
       "utf8",
     );
   });

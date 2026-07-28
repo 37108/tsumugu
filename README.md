@@ -19,34 +19,33 @@
 npx tsumugu dev docs
 ```
 
-That is the whole setup. No configuration file, no build step, no framework —
-a directory of files becomes a site with navigation, search, and everything
-below, and your files stay ordinary files that outlive the tool.
+That is the whole setup. Tsumugu turns the directory into a site with
+navigation and search. The source files remain ordinary files that work without
+Tsumugu.
 
-> 紡ぐ — _tsumugu_: to spin thread. Separate files, woven into one fabric.
+> 紡ぐ (_tsumugu_): to spin thread. Separate files woven into one fabric.
 
 ## What you get
 
-|                   |                                                                                                                                                                                     |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Reading**       | typography-first theme, dark mode from the system preference, responsive from a phone up, WCAG 2.2 AA targets with the receipts in [`docs/accessibility.md`](docs/accessibility.md) |
-| **Navigation**    | sidebar and landing page derived from your directories, per-page table of contents that follows your reading position, stable heading anchors                                       |
-| **Search**        | ranked, per-section results as you type — and a real `/search` page when JavaScript is off                                                                                          |
-| **Code**          | Shiki highlighting in both colour schemes, a copy control on every block                                                                                                            |
-| **For machines**  | `documents.json`, `llms.txt`, `search.json` and `sitemap.xml`, generated from the same documents as the pages                                                                       |
-| **While writing** | watch mode with incremental rebuilds and live reload; broken links, missing anchors and front-matter typos reported _on the page they belong to_                                    |
-| **Shipping**      | `tsumugu build` writes the same site to static files with clean URLs                                                                                                                |
-| **Formats**       | `.md`, `.mdx` and `.html` through one semantic pipeline — MDX parses fully and executes never ([ADR 6](docs/decisions/0006-mdx-without-execution.md))                               |
+|                   |                                                                                                                                                                                                     |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Reading**       | typography-first theme, dark mode from the system preference, responsive from a phone up, WCAG 2.2 AA targets with the receipts in [`docs/designs/accessibility.md`](docs/designs/accessibility.md) |
+| **Navigation**    | sidebar and landing page derived from your directories, per-page table of contents that follows your reading position, stable heading anchors                                                       |
+| **Search**        | ranked, per-section results as you type, with a real `/search` page when JavaScript is off                                                                                                          |
+| **Code**          | Shiki highlighting in both colour schemes, a copy control on every block                                                                                                                            |
+| **For machines**  | `documents.json`, `llms.txt`, `search.json` and `sitemap.xml`, generated from the same documents as the pages                                                                                       |
+| **While writing** | watch mode with incremental rebuilds and live reload; broken links, missing anchors and front-matter typos reported _on the page they belong to_                                                    |
+| **Shipping**      | `tsumugu build` writes the same site to static files with clean URLs                                                                                                                                |
+| **Formats**       | `.md`, `.mdx` and `.html` through one semantic pipeline; MDX is parsed without execution ([ADR 6](docs/decisions/0006-mdx-without-execution.md))                                                    |
 
 ## Security is a design constraint, not a page in the docs
 
-Documentation often has many authors, so **content does not execute**: author
-markup is parsed to a semantic tree and never emitted raw, every response
-carries `Content-Security-Policy: default-src 'none'`, the only scripts are
-two of Tsumugu's own — allowed by SHA-256 hash, so nothing else can run even
-if injected — and the server binds loopback until told otherwise. The full
-threat model, with the test that enforces each claim, is
-[`docs/security-model.md`](docs/security-model.md).
+Documentation often has many authors, so **content does not execute**. Tsumugu
+parses author markup into a semantic tree and never emits it raw. Every response
+carries `Content-Security-Policy: default-src 'none'`. The two client scripts
+are allowed by SHA-256 hash, and the development server binds to loopback by
+default. The full threat model and its checks are in
+[`docs/designs/security-model.md`](docs/designs/security-model.md).
 
 ## Conventions instead of configuration
 
@@ -61,10 +60,9 @@ docs/
 ```
 
 Front matter covers the rest: `title`, `description`, `order`, `hidden`.
-There is deliberately no config file —
-[ADR 5](docs/decisions/0005-no-configuration-file.md) records why — and
-composing Tsumugu differently is code, documented in
-[`docs/composition.md`](docs/composition.md).
+There is no configuration file. [ADR 5](docs/decisions/0005-no-configuration-file.md)
+records the reason. To compose Tsumugu differently, use the API described in
+[`docs/designs/composition.md`](docs/designs/composition.md).
 
 ## Examples
 
@@ -75,11 +73,11 @@ every commit, so they cannot quietly rot.
 
 ## Status
 
-**Pre-alpha.** Everything works as described above and is tested — 930+ tests
-across unit, contract, integration, accessibility (axe-core), packaging and
-stress layers — but while the version starts with `0.`, any release may change
-anything. The packages version together and each release explains itself:
-[`docs/releasing.md`](docs/releasing.md).
+**Pre-alpha.** The repository has more than 930 unit, contract, integration,
+accessibility, packaging, and stress tests. While the version starts with `0.`,
+any release may change the public API. The packages share one version, and each
+release is documented in
+[`docs/designs/releasing.md`](docs/designs/releasing.md).
 
 ## Development
 
@@ -91,8 +89,8 @@ pnpm check        # the same gate CI runs
 pnpm docs         # serve this repository's own documentation with itself
 ```
 
-Start with [`docs/index.md`](docs/index.md) — architecture, principles,
-decision records and the contribution workflow all hang off it.
+Start with [`docs/index.md`](docs/index.md). It links to the usage guides,
+design documents, decisions, and RFCs.
 
 ## License
 

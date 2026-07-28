@@ -1,3 +1,8 @@
+---
+title: Accessibility
+order: 1
+---
+
 # Accessibility
 
 ## The target
@@ -17,34 +22,25 @@ inventing what it cannot know.
 These hold for every page, and each is enforced by a test rather than by
 intention:
 
-- **No JavaScript is required to read.** Navigation, the table of contents and
-  the layout are all server-rendered. Tsumugu ships two scripts, each allowed by
-  its hash: search, and live reload in the development server. Without them the
-  page still reads, and the search field still submits to a real page. See
-  [ADR 3](decisions/0003-live-reload-script-policy.md) and
-  [ADR 4](decisions/0004-client-side-search.md).
-- **Landmarks are present and named.** One `header`, one `main`, one `footer`,
-  and up to two `nav` landmarks, named "Documentation" and "On this page". An
-  empty region is not rendered at all: an empty navigation landmark wastes the
-  time of the reader least able to skip it.
-- **A skip link comes first** in the tab order and moves focus to `main`.
-- **The current page is announced**, through `aria-current="page"` rather than
-  through colour alone.
-- **Heading levels are the document's own.** The theme renders the level the
-  source declared; it never renumbers to suit a design.
-- **Every heading anchor has its own name** — "Link to Install the CLI", not
-  "hash".
-- **Scrollable regions are focusable.** A code block and a wide table each
-  scroll inside their own box, with `tabindex="0"` so a keyboard can scroll
-  them, and the page itself never scrolls sideways.
-- **Table header cells carry `scope`**, so a screen reader can announce the
-  column a value belongs to.
-- **Focus is always visible**, through `:focus-visible` with an outline in the
-  accent colour and an offset. No rule removes an outline without replacing it.
-- **Reduced motion is respected.** The only transitions are colour changes, and
-  `prefers-reduced-motion: reduce` removes them.
-- **Both colour schemes are shipped**, following the reader's system preference,
-  with no control that could disagree with it.
+- Pages remain readable without JavaScript. Navigation, the table of contents,
+  and the layout are server-rendered. Tsumugu ships two hash-allowed scripts for
+  search and development live reload. Without them, the search field submits to
+  a real page. See
+  [ADR 3](../decisions/0003-live-reload-script-policy.md) and
+  [ADR 4](../decisions/0004-client-side-search.md).
+- Each page has one `header`, one `main`, one `footer`, and up to two named
+  `nav` landmarks. Empty regions are omitted.
+- The skip link is first in the tab order and moves focus to `main`.
+- `aria-current="page"` announces the current page without relying on colour.
+- The theme renders the heading level declared by the source.
+- Each heading anchor has a useful name, such as "Link to Install the CLI".
+- Code blocks and wide tables scroll inside focusable regions with
+  `tabindex="0"`, while the page itself does not scroll sideways.
+- Table header cells carry `scope`.
+- `:focus-visible` gives focused elements an outline and offset. No rule removes
+  an outline without replacing it.
+- `prefers-reduced-motion: reduce` removes the colour transitions.
+- Both colour schemes follow the reader's system preference.
 
 ## Colour and contrast
 
@@ -101,8 +97,7 @@ Run these before a release, and after any change to the shell or the theme:
   nothing is worse than no button.
 - **The table of contents follows the reading position.** As the page scrolls,
   the section under the reading line carries `aria-current="location"` and the
-  indigo thread. Without the script the list is still a working set of links —
-  the marker is enhancement, not navigation.
+  indigo thread. Without the script, the list remains a working set of links.
 - **Search by keyboard.** Tab to the field, type, walk the results with the
   arrow keys, follow one with Enter, dismiss with Escape. Focus stays in the
   field throughout, and the result count is announced.

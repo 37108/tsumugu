@@ -17,7 +17,7 @@
 
 - 91060dc: The sidebar disclosure starts closed on narrow screens (the wide layout is
   unaffected), `tsumugu build` reports the size of what it wrote, and front
-  matter keys one slip away from a known key — `hiden`, `titel` — get a warning
+  matter keys one slip away from a known key (`hiden`, `titel`) get a warning
   naming the key they were probably reaching for.
 - 42d86f2: The table of contents marks the section being read. The page client sets
   `aria-current="location"` on the entry whose heading last crossed the reading
@@ -43,4 +43,4 @@
   `tsumugu build` writes the same site to a directory with clean URLs.
 
   Nothing here is a stable API. While the version starts with `0.`, any release
-  may change anything: see `docs/releasing.md`.
+  may change anything: see `docs/designs/releasing.md`.

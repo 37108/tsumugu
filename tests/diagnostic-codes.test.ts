@@ -6,7 +6,7 @@ import { repositoryRoot, toPosixPath } from "./helpers/paths.js";
 import { listFiles } from "./helpers/temporary-directory.js";
 
 /**
- * Diagnostic codes are a contract, and `docs/diagnostics.md` is where it is
+ * Diagnostic codes are a contract, and `docs/designs/diagnostics.md` is where it is
  * written down.
  *
  * Callers match on codes rather than on message text, so a code that exists but
@@ -76,7 +76,7 @@ beforeAll(async () => {
 
   usedCodes = [...found].sort();
   documentation = await readFile(
-    path.join(repositoryRoot, "docs", "diagnostics.md"),
+    path.join(repositoryRoot, "docs", "designs", "diagnostics.md"),
     "utf8",
   );
 });
@@ -103,7 +103,7 @@ describe("diagnostic codes", () => {
 
     expect(
       undocumented,
-      `these codes are produced but missing from docs/diagnostics.md: ${undocumented.join(", ")}`,
+      `these codes are produced but missing from docs/designs/diagnostics.md: ${undocumented.join(", ")}`,
     ).toEqual([]);
   });
 

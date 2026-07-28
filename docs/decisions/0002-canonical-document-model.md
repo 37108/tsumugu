@@ -3,7 +3,7 @@
 - **Status:** Accepted
 - **Date:** 2026-07-26
 - **Supersedes:** none
-- **Related:** issue #7, [`docs/architecture/overview.md`](../architecture/overview.md)
+- **Related:** issue #7, [`docs/designs/architecture/index.md`](../designs/architecture/)
 
 ## Context
 
@@ -53,7 +53,7 @@ and compare it; that is not possible if stages mutate in place.
 ### Identity is the normalized source path
 
 `DocumentId` is derived from `SourcePath` and is therefore stable across every
-edit to a file's contents — which is exactly what caches and change events need.
+edit to a file's contents, which is exactly what caches and change events need.
 
 A rename produces a different identity: the old document disappears and a new
 one appears. Recognising that those two events describe one file moving is a
@@ -70,7 +70,7 @@ and used as a cache key without asking which platform produced it.
 `path.relative` produces backslashes on Windows, so both separators are accepted
 as input and only `/` is ever stored.
 
-Normalization repairs exactly one thing — a leading `./`. Anything else that
+Normalization repairs exactly one thing: a leading `./`. Anything else that
 would change what the path refers to is rejected rather than repaired. Silently
 rewriting a user's path is how a file ends up served from somewhere they did not
 put it.
@@ -86,8 +86,8 @@ Constructors return a result rather than throwing. Invalid input is _expected_:
 these values come from a user's directory, not from Tsumugu. A file that cannot
 be represented becomes a diagnostic, not an exception that ends the process.
 
-The mapping from a source path to a route — index files, extension removal,
-trailing slashes, collisions — is deliberately **not** part of this decision.
+The mapping from a source path to a route is not part of this decision. That
+includes index files, extension removal, trailing slashes, and collisions.
 This model defines what a route is and what makes one valid; the routing rules
 define how one is produced.
 
@@ -113,8 +113,9 @@ problem that should stop the process is not a property of one document.
 Diagnostics sort deterministically and deduplicate, because stages may run
 concurrently and the same underlying failure is often noticed more than once.
 
-This is the smallest shape the model needs. The full diagnostics design — stable
-codes, source ranges, remediation hints, causal chains, stage attribution — is a
+This is the smallest shape the model needs. The full diagnostics design,
+including stable codes, source ranges, remediation hints, causal chains, and
+stage attribution, is a
 separate piece of work, and this shape is expected to grow into it rather than
 be replaced.
 
@@ -125,8 +126,8 @@ time first, because both are already known from the directory listing; hashing
 every file on every change would make a scan cost proportional to the size of
 the project rather than the size of the edit.
 
-The comparison can report a false "changed" — a same-size edit inside the
-timestamp granularity — which costs a re-read. It cannot report a false
+The comparison can report a false "changed" for a same-size edit inside the
+timestamp granularity. That costs a re-read, but it cannot report a false
 "unchanged" for an edit that alters size or timestamp, which is the damaging
 direction.
 
@@ -134,7 +135,7 @@ direction.
 
 Nothing here is exported from `tsumugu-core`. Its public surface remains a
 single `version` constant. The model will be used by the renderers, the router
-and the server first; which subset deserves to be public is a question those
+and the server first. Which subset deserves to be public is a question those
 consumers answer, not one this decision should pre-empt.
 
 ## Consequences
@@ -188,7 +189,7 @@ Rejected: identifiers and cache keys would then depend on the checkout
 directory, so two developers would produce different data for the same project.
 
 **Plain strings for paths and routes.** Less ceremony. Rejected: the failure it
-prevents — a route used as a file path — is a security bug, and it is
+prevents, such as a route used as a file path, is a security bug and is
 indistinguishable from correct code by inspection.
 
 **Rejecting unknown metadata keys.** Would give a strict, well-defined schema

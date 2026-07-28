@@ -1,5 +1,6 @@
 ---
 description: What Tsumugu trusts, what it refuses, and the review to repeat before each release.
+order: 3
 ---
 
 # Security model
@@ -10,24 +11,23 @@ against the implementation before the first pre-alpha release.
 
 ## Trust boundaries
 
-Three parties, three levels of trust:
+Tsumugu distinguishes the operator, document authors, and readers:
 
 | Party                        | Trusted with                                                                         |
 | ---------------------------- | ------------------------------------------------------------------------------------ |
-| the person running `tsumugu` | everything — it is their machine and their command                                   |
+| the person running `tsumugu` | everything, because it is their machine and command                                  |
 | the documentation's authors  | content, not code: their words are served, their markup and scripts are not executed |
 | whoever can reach the port   | nothing                                                                              |
 
 The interesting boundary is the middle one. Documentation often arrives from
-many hands — contributors, vendored files, generated output — and a
+many hands, including contributors, vendored files, and generated output. A
 documentation tool that runs its content turns every writer into a code owner.
 So: **content does not execute**, and the mechanisms below are all enforcement
 of that one sentence.
 
 ## What enforces it
 
-Each claim names its test, because a security property without a test is a
-security opinion.
+Each claim below names the test or implementation that enforces it.
 
 - **Author markup is never emitted.** HTML sources are parsed to the Semantic
   AST; markup with no semantic equivalent is preserved as _escaped text_, and
@@ -45,7 +45,7 @@ security opinion.
 - **Requests cannot leave the root.** Routes are branded types whose
   constructors reject traversal, request paths are decoded _before_ validation
   so `%2e%2e%2f` cannot hide, and assets are resolved through `realpath` and
-  compared against the resolved root — so a symlink pointing outside is
+  compared against the resolved root, so a symlink pointing outside is
   refused by where it points, not how it is spelled. Dotfiles are refused
   outright, which keeps `.env` and `.git` unreachable by default.
   (`packages/core/src/document/paths.test.ts`,
@@ -61,7 +61,7 @@ security opinion.
 - **The supply chain is slowed and pinned.** Dependencies wait 21 days before
   installation (`minimumReleaseAge`), CI actions are pinned to commit SHAs, CI
   needs no secrets, and publishing uses short-lived trusted-publishing
-  credentials — there is no long-lived npm token to steal.
+  credentials. There is no long-lived npm token to steal.
   (`tests/workflows.test.ts`)
 
 ## What is out of scope
@@ -94,8 +94,8 @@ Before each release, walk this list against the diff since the last one:
 5. Did a dependency arrive? CONTRIBUTING.md's justification list applies, and
    `pnpm audit` should be quiet.
 
-The first pass of this review — 2026-07-28, covering everything up to the
-static build — found one deviation worth recording: the sitemap placeholder
+The first pass of this review, on 2026-07-28, covered everything up to the
+static build. It found one deviation worth recording: the sitemap placeholder
 origin (`example.invalid`) is emitted into build output when no origin is
 given. It is accompanied by a diagnostic and is deliberate; an origin invented
 silently would be worse.

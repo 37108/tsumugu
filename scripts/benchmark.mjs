@@ -12,7 +12,7 @@ import { createPreset } from "tsumugu-preset";
  * Numbers here are not a promise. They exist so that a change that makes
  * Tsumugu an order of magnitude slower is visible as an order of magnitude,
  * rather than as "it feels slower now". Run it before and after a change to the
- * pipeline; record the result in docs/performance.md when the shape changes.
+ * pipeline; record the result in docs/designs/performance.md when the shape changes.
  *
  *   node scripts/benchmark.mjs [documentCount]
  */

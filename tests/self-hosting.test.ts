@@ -32,12 +32,14 @@ const docsRoot = path.join(repositoryRoot, "docs");
 /** Representative routes: one of each shape the project's documentation has. */
 const routes = [
   "",
-  "principles",
-  "composition",
-  "accessibility",
-  "diagnostics",
-  "architecture/overview",
-  "architecture/semantic-ast",
+  "how-to-use",
+  "japanese/about",
+  "designs/principles",
+  "designs/composition",
+  "designs/accessibility",
+  "designs/diagnostics",
+  "designs/architecture",
+  "designs/architecture/semantic-ast",
   "decisions/0003-live-reload-script-policy",
   "documents.json",
   "llms.txt",
@@ -87,10 +89,23 @@ describe("Tsumugu's own documentation", () => {
     running = await startDev({ root: docsRoot, port: 0, watch: false });
     const html = await (await fetch(running.server.url)).text();
 
-    expect(html).toContain('href="/architecture/overview"');
+    expect(html).toContain('href="/what-is-tsumugu">What is Tsumugu</a>');
+    expect(html).toContain('href="/how-to-use">How to Use</a>');
+    expect(html).toContain(
+      'href="/japanese">Japanese Contents</a><ul><li><a href="/japanese/about">紡ぐとは</a></li><li><a href="/japanese/how-to-use">使い方</a>',
+    );
+    expect(html).toContain(
+      'href="/designs">Designs</a><ul><li><a href="/designs/accessibility">Accessibility</a>',
+    );
+    expect(html).toContain('href="/designs/architecture"');
+    expect(html).toContain('href="/designs/security-model">Security model</a>');
+    expect(html).toContain('href="/designs/testing">Testing</a>');
+    expect(html).toContain('href="/decisions">Decisions</a>');
+    expect(html).toContain('href="/rfcs">RFCs</a>');
     expect(html).toContain(
       'href="/decisions/0001-runtime-and-package-compatibility"',
     );
+    expect(html).not.toContain('href="/rfcs/0000-template"');
     // The authored index replaced the generated landing page.
     expect(html).not.toContain("to write your own");
   });

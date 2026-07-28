@@ -15,7 +15,7 @@ import type { Nodes as MdastNode, Parent as MdastParent } from "mdast";
  * This file is the whole reason the Markdown renderer is its own package.
  * Every mdast type is imported here and nowhere else, so the parser can be
  * replaced without a single change to core or to a theme — which is what
- * `docs/architecture/overview.md` means when it says parser objects must not
+ * `docs/designs/architecture/index.md` means when it says parser objects must not
  * leak.
  */
 

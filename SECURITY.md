@@ -58,6 +58,6 @@ Opening an unfamiliar documentation repository may involve parsing untrusted con
 
 No supported release line exists yet. This section will be updated before the first public pre-alpha release.
 
-The threat model — what is defended, what is out of scope, and the review
-repeated before each release — is documented in
-[`docs/security-model.md`](docs/security-model.md).
+The threat model covers what is defended, what is out of scope, and the review
+repeated before each release. It is documented in
+[`docs/designs/security-model.md`](docs/designs/security-model.md).

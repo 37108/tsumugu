@@ -6,9 +6,8 @@ description: What Tsumugu costs, how it is measured, and which numbers are allow
 
 ## What is measured, and why
 
-Tsumugu's product claim is feedback speed: a save should be on the screen before
-the reader has looked back at the browser. That makes three numbers worth
-tracking, and only three:
+Tsumugu measures the time from a save to a rebuilt page. The benchmark tracks
+the initial build, an unchanged rebuild, and a one-document rebuild:
 
 | Measurement              | Why it matters                                          |
 | ------------------------ | ------------------------------------------------------- |
@@ -16,7 +15,7 @@ tracking, and only three:
 | rebuild, nothing changed | the floor: what a save costs when nothing needs redoing |
 | rebuild, one document    | what a save actually costs                              |
 
-Everything else — the search index, the exports — is measured because it is
+The search index and exports are also measured because they are
 cheap to measure, not because it is close to mattering.
 
 ## Running it
@@ -28,7 +27,7 @@ pnpm run bench 1000      # a larger project
 
 The fixture is generated: documents with front matter, headings, a code block, a
 table and a link to another document, spread over ten directories. That shape is
-deliberate — a thousand empty files would measure the file system rather than
+deliberate. A thousand empty files would measure the file system rather than
 the pipeline.
 
 ## Baselines
@@ -48,7 +47,7 @@ highlighting. Rebuilds are dominated by the scan, which is one `stat` per file.
 
 ## What makes a rebuild cheap
 
-Three caches, each keyed on something that cannot lie about staleness:
+Tsumugu uses three caches with explicit invalidation keys:
 
 - **The loaded document**, invalidated by size and modification time. An
   unchanged file is not read.
@@ -60,7 +59,7 @@ Three caches, each keyed on something that cannot lie about staleness:
 
 That last one is why editing one document in a thousand-page project costs
 milliseconds rather than seconds. Before it existed, every page was serialized
-again on every save, because every page carries the navigation — 2.8 seconds per
+again on every save because every page carries the navigation. At 2.8 seconds per
 keystroke-and-save at a thousand documents. The benchmark is what found it.
 
 ## Guardrail
@@ -69,7 +68,7 @@ keystroke-and-save at a thousand documents. The benchmark is what found it.
 changes nothing is not substantially cheaper than the first build. The threshold
 is deliberately loose: a test that asserts milliseconds on shared CI hardware
 fails for reasons that have nothing to do with the change under review. It
-catches the shape of a regression — "rebuilds stopped being incremental" — not
+catches the shape of a regression, such as rebuilds no longer being incremental, rather than
 its size.
 
 Real numbers come from `pnpm run bench`, run by a person, on a machine they can

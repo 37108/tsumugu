@@ -9,19 +9,19 @@ Tsumugu is intentionally conservative about architecture and public APIs. The pr
 Please read:
 
 - `README.md`
-- `docs/principles.md`
-- `docs/architecture/overview.md`
-- `docs/architecture/workspaces.md`
-- `docs/compatibility.md`
-- `docs/testing.md`
-- `docs/diagnostics.md`
-- `docs/accessibility.md`
-- `docs/composition.md`
-- `docs/machine-readable.md`
-- `docs/releasing.md`
-- `docs/development-mode.md`
-- `docs/performance.md`
-- `docs/security-model.md`
+- `docs/designs/principles.md`
+- `docs/designs/architecture/index.md`
+- `docs/designs/architecture/workspaces.md`
+- `docs/designs/compatibility.md`
+- `docs/designs/testing.md`
+- `docs/designs/diagnostics.md`
+- `docs/designs/accessibility.md`
+- `docs/designs/composition.md`
+- `docs/designs/machine-readable.md`
+- `docs/designs/releasing.md`
+- `docs/designs/development-mode.md`
+- `docs/designs/performance.md`
+- `docs/designs/security-model.md`
 - the relevant Architecture Decision Records in `docs/decisions/`
 
 ## Development status
@@ -51,7 +51,7 @@ pnpm check
 | `pnpm test:watch`       | re-runs affected tests as files change                                 |
 | `pnpm test:coverage`    | builds, then runs the suite with coverage                              |
 | `pnpm check:boundaries` | checks the dependency direction and export surface                     |
-| `pnpm check`            | formatting, linting, types and tests — the local gate                  |
+| `pnpm check`            | formatting, linting, types and tests; the local gate                   |
 | `pnpm docs`             | builds, then serves this repository's own `docs/`                      |
 | `pnpm bench`            | measures build and rebuild cost on a generated site                    |
 | `pnpm styles`           | recompiles the shell and theme stylesheets from their Tailwind sources |
@@ -60,8 +60,8 @@ pnpm check
 `pnpm docs` serves the documentation you are reading through Tsumugu itself, on
 localhost, with watch mode on: edit a file under `docs/` and the open page
 reloads. It is the fastest way to see what a change to the pipeline does to a
-real project, and `tests/self-hosting.test.ts` runs the same thing in CI —
-a broken link or an untitled page in `docs/` fails the suite.
+real project. `tests/self-hosting.test.ts` runs the same thing in CI. A broken
+link or an untitled page in `docs/` fails the suite.
 
 `pnpm check` never modifies files: it uses `format:check` rather than `format`,
 so it can be run safely before committing and in CI. Use `pnpm format` and
@@ -69,7 +69,7 @@ so it can be run safely before committing and in CI. Use `pnpm format` and
 
 The shell's and the default theme's stylesheets are authored in Tailwind's
 vocabulary (`shell.css`, `theme.css`) and compiled by `pnpm styles` into the
-TypeScript constants that ship — the output is still one inline stylesheet per
+TypeScript constants that ship. The output is still one inline stylesheet per
 owner, so the content-security policy and the zero-runtime-dependency rule are
 untouched. Edit the CSS, never the generated file; `tests/styles.test.ts`
 fails when the two drift.
@@ -81,8 +81,8 @@ add stylistic lint rules.
 Individual packages expose `build`, `typecheck` and `lint`, so a single package
 can be checked with `pnpm --filter tsumugu-core run lint`.
 
-`docs/architecture/workspaces.md` describes the workspace layout, the allowed
-dependency direction, and the toolchain versions. `docs/testing.md` describes
+`docs/designs/architecture/workspaces.md` describes the workspace layout, the allowed
+dependency direction, and the toolchain versions. `docs/designs/testing.md` describes
 the test layers, where each kind of test belongs, and the file-system helpers.
 
 ## Continuous integration
@@ -93,8 +93,8 @@ the command that failed. Linux runs every gate; macOS and Windows run the build
 and tests, which are the parts that can behave differently per platform.
 
 If `pnpm check` passes locally, CI should agree. When it does not, the
-difference is almost always a path assumption or a line ending — see
-`docs/testing.md`.
+difference is almost always a path assumption or a line ending. See
+`docs/designs/testing.md`.
 
 ## Contribution workflow
 
@@ -103,7 +103,7 @@ difference is almost always a path assumption or a line ending — see
 3. Keep each pull request focused on one coherent change.
 4. Add or update tests for behavioral changes.
 5. Update documentation when behavior, architecture, or user-facing expectations change.
-6. Add a changeset when the change affects a publishable package: `pnpm changeset`. See [`docs/releasing.md`](docs/releasing.md).
+6. Add a changeset when the change affects a publishable package: `pnpm changeset`. See [`docs/designs/releasing.md`](docs/designs/releasing.md).
 
 ## Design expectations
 
@@ -122,8 +122,8 @@ Contributions should preserve these principles:
 
 Before adding a new concept, configuration field, extension category, hook, or public export, explain why existing composition cannot solve the problem.
 
-The ADR process lives in [`docs/decisions/README.md`](docs/decisions/README.md);
-the RFC process in [`docs/rfcs/README.md`](docs/rfcs/README.md).
+The ADR process lives in [`docs/decisions/index.md`](docs/decisions/index.md);
+the RFC process in [`docs/rfcs/index.md`](docs/rfcs/index.md).
 
 ## When an RFC is required
 
@@ -144,7 +144,8 @@ Internal refactors, bug fixes, tests, documentation corrections, and behavior-pr
 
 ## Public API policy
 
-Public APIs are earned, not merely designed.
+An API becomes public only after implementation and usage evidence show that
+the boundary holds.
 
 The expected progression is:
 

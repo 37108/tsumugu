@@ -3,7 +3,7 @@
 - **Status:** Accepted
 - **Date:** 2026-07-26
 - **Supersedes:** none
-- **Related:** issue #2, [`docs/compatibility.md`](../compatibility.md)
+- **Related:** issue #2, [`docs/designs/compatibility.md`](../designs/compatibility.md)
 
 ## Context
 
@@ -73,7 +73,7 @@ and the policy is checked against the manifests by `tests/compatibility.test.ts`
   Node.js supports it on every version in the supported range.
 - Claiming Windows support before Windows CI exists is a commitment the
   repository cannot currently verify. This is stated explicitly in
-  `docs/compatibility.md` rather than presented as a tested guarantee, and is
+  `docs/designs/compatibility.md` rather than presented as a tested guarantee, and is
   tracked in issues #5 and #72.
 
 ### Follow-up required

@@ -1,4 +1,9 @@
-# Architecture Overview
+---
+title: Architecture
+order: 2
+---
+
+# Architecture
 
 ## Status
 

@@ -1,3 +1,9 @@
+---
+title: RFCs
+description: Proposals that need agreement or evidence before implementation.
+order: 5
+---
+
 # RFCs
 
 An RFC proposes a change that needs agreement before code: a new or breaking
@@ -16,7 +22,7 @@ lands.
    last RFC.
 2. Open a pull request containing only the RFC. Discussion happens on that
    pull request.
-3. It merges as **Accepted** or **Rejected** — a rejected RFC merges too,
+3. It merges as **Accepted** or **Rejected**; a rejected RFC merges too,
    because the reasons against something are worth as much as the reasons for
    the things that exist.
 4. A **Draft** may merge when the design is worth recording but the evidence to

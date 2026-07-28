@@ -22,7 +22,7 @@ import {
 
 /**
  * Package name patterns `tsumugu-core` must never depend on, taken from
- * `docs/architecture/overview.md`: dependencies point towards core, never away
+ * `docs/designs/architecture/index.md`: dependencies point towards core, never away
  * from it.
  */
 const forbiddenCoreDependencies: readonly {

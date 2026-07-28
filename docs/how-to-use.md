@@ -1,12 +1,12 @@
 ---
-title: Using Tsumugu
-description: Install, write, serve, and ship a documentation site — the whole workflow on one page.
+title: How to Use
+description: Install Tsumugu, write documentation, run the local server, and build a static site.
 order: 1
 ---
 
-# Using Tsumugu
+# How to Use
 
-Everything on this page also exists [in Japanese](/ja/usage).
+This guide is also [available in Japanese](/japanese/how-to-use).
 
 ## Start
 
@@ -28,8 +28,8 @@ docs/
 ├── guide/
 │   ├── index.md      →  /guide       the section's own page
 │   └── setup.md      →  /guide/setup
-├── api.html          →  /api         HTML is a source, not only an output
-├── notes.mdx         →  /notes       MDX parses fully — and never executes
+├── api.html          →  /api         HTML is accepted as source input
+├── notes.mdx         →  /notes       MDX is parsed without execution
 └── images/x.svg      →  served as a file beside the documents
 ```
 
@@ -44,18 +44,17 @@ hidden: true # unlisted everywhere, but still served
 ---
 ```
 
-A typo like `hiden` gets a warning naming the key you probably meant. MDX
-expressions and components are shown as written rather than run — that is a
-security decision, recorded in
+A typo like `hiden` gets a warning naming the key you probably meant. Tsumugu
+shows MDX expressions and components as source instead of running them. The
+reason is recorded in
 [ADR 6](/decisions/0006-mdx-without-execution).
 
 ## While you write
 
-Watch mode is on by default: saving rebuilds only what changed and open pages
-reload themselves. Problems appear **on the page they belong to** — a broken
-internal link, a missing anchor, unparsable front matter — with the file and
-line, and the server keeps serving the last good version if a whole rebuild
-fails.
+Watch mode is on by default. Saving rebuilds only what changed and reloads open
+pages. A broken link, missing anchor, or front matter error appears on the page
+that contains it, with the source file and line. If a full rebuild fails, the
+server keeps serving the last good version.
 
 Readers get section-ranked search as they type, a copy control on code
 blocks, heading anchors, and a table of contents that follows the reading
@@ -68,10 +67,10 @@ a real page, and everything else was server-rendered to begin with.
 npx tsumugu build docs --out dist --origin https://docs.example.com
 ```
 
-`dist/` is a static site with clean URLs — `/guide/setup` is
-`guide/setup/index.html` — plus `documents.json`, `llms.txt`, `search.json`
-and `sitemap.xml`, generated from the same documents as the pages. Host it
-anywhere that serves files.
+`dist/` is a static site with clean URLs. For example, `/guide/setup` is written
+to `guide/setup/index.html`. The build also writes `documents.json`, `llms.txt`,
+`search.json`, and `sitemap.xml` from the same source documents. Host the
+directory anywhere that serves static files.
 
 ### GitHub Pages
 
@@ -82,8 +81,8 @@ npx tsumugu build docs --out dist \
   --origin https://your-name.github.io --base /your-repo
 ```
 
-Automate it with a workflow — this repository publishes its own documentation
-with exactly this shape (`.github/workflows/pages.yml`):
+This repository uses `.github/workflows/pages.yml` to publish its own
+documentation:
 
 ```yaml
 name: Pages
@@ -117,6 +116,6 @@ GitHub Actions**.
 
 ## Compose differently
 
-The CLI is one composition of replaceable parts — renderers, transformers, a
-theme. Swapping any of them is a small script against the same API the CLI
-uses: see [Composition](/composition).
+The CLI combines replaceable renderers, transformers, and a theme. To replace
+one, write a small script against the same API. See
+[Composition](/designs/composition).

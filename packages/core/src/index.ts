@@ -6,7 +6,7 @@
  * produces, and needs nothing from core at runtime. A contract that costs no
  * runtime coupling is the cheapest kind to keep.
  *
- * `docs/principles.md` says public APIs are earned. Each export below exists
+ * `docs/designs/principles.md` says public APIs are earned. Each export below exists
  * because a package outside core could not be written without it, not because
  * it might be useful. The document model, the scanner, routing, the serializer
  * and the theme runtime all remain internal until something outside core needs

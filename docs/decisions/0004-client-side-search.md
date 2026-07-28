@@ -8,12 +8,12 @@
 - **Date:** 2026-07-28
 - **Supersedes:** none
 - **Amends:** [ADR 3](0003-live-reload-script-policy.md)
-- **Related:** issue #46, issue #53, issue #54, [`docs/machine-readable.md`](../machine-readable.md)
+- **Related:** issue #46, issue #53, issue #54, [`docs/designs/machine-readable.md`](../designs/machine-readable.md)
 
 ## Context
 
-[ADR 3](0003-live-reload-script-policy.md) allowed exactly one script — live
-reload — by its hash, and only in the development server. Every other page
+[ADR 3](0003-live-reload-script-policy.md) allowed exactly one script, live
+reload, by its hash and only in the development server. Every other page
 Tsumugu produced ran no JavaScript at all.
 
 Search does not fit inside that. A reader typing in a search field expects
@@ -52,7 +52,7 @@ it to fetch `/search.json` from the same origin.
 
 The search control is a `<form method="get" action="/search">`. With no script
 it submits to `/search`, a generated page listing every document. That page does
-not attempt to answer the query — matching lives in one place, and a second
+not attempt to answer the query. Matching lives in one place, and a second
 implementation of it is how two searches start disagreeing.
 
 So JavaScript makes search _instant_; its absence makes search _a page_. Neither
@@ -71,7 +71,7 @@ that guesses hides the exact page somebody asked for.
 
 Ranking, added later for issue #54:
 
-- the query splits on whitespace and **every term must match** — two words
+- the query splits on whitespace and **every term must match**, so two words
   narrow a search, they do not widen it;
 - a match in the section heading outweighs the document title, which outweighs
   the body text, and a match at the start of a word outweighs one inside it;
@@ -100,7 +100,7 @@ hash is taken over and what a reader sees in view-source.
 
 ### Negative
 
-- Pages now carry a script in production, not only in development. A CSP problem
+- Pages carry a script in production as well as development. A CSP problem
   can no longer be a development-only problem.
 - A reader with JavaScript disabled gets the fallback page rather than instant
   results.
@@ -116,8 +116,8 @@ hash is taken over and what a reader sees in view-source.
 
 - The static build (issue #48) must serve `/search.json` for this to work
   outside the development server.
-- If a third script is ever proposed, this pair of ADRs is the precedent to
-  argue against it: two is a policy, three is a habit.
+- If another script is proposed, review whether the client code should remain
+  split and update the content security policy explicitly.
 
 ## Alternatives considered
 

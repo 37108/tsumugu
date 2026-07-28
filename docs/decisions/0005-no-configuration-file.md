@@ -2,14 +2,14 @@
 
 - **Status:** Accepted
 - **Date:** 2026-07-28
-- **Related:** issue #79, [`docs/composition.md`](../composition.md), [`docs/principles.md`](../principles.md)
+- **Related:** issue #79, [`docs/designs/composition.md`](../designs/composition.md), [`docs/designs/principles.md`](../designs/principles.md)
 
 ## Context
 
 Every documentation tool grows a configuration file, and the question was never
-whether Tsumugu could have one — it was what a `tsumugu.config.ts` would
-actually contain. Working through the vertical slice and everything after it,
-the answer kept coming out empty:
+whether Tsumugu could have one. The question was what a `tsumugu.config.ts`
+would contain. Working through the vertical slice and everything after it
+left no settings for the file:
 
 - **The root** is a CLI argument, discovered by convention when omitted:
   an explicit path, then `./docs`, then the working directory when it contains
@@ -18,7 +18,7 @@ the answer kept coming out empty:
   documents they describe.
 - **The site's name** comes from the home page's own title.
 - **Renderers, transformers, the theme** are the preset, and replacing them is
-  a programmatic composition — code that is type-checked where it is written.
+  a programmatic composition, with type checking where it is written.
 - **Host, port, output directory, origin** are flags on the command that uses
   them.
 
@@ -30,11 +30,11 @@ the composition API.
 Tsumugu has no configuration file, and no configuration discovery. `tsumugu dev`
 and `tsumugu build` read their arguments, the file system, and nothing else.
 A project that needs a different composition writes a small script against
-`createSite` / `buildStatic` with `createPreset()` — the same API the CLI uses,
-documented in `docs/composition.md`.
+`createSite` / `buildStatic` with `createPreset()`, the same API the CLI uses,
+documented in `docs/designs/composition.md`.
 
-This is a decision, not a gap. It is revisited when a real composition need
-appears that a script cannot express — not when a file would merely be
+The absence of a configuration file is deliberate. Revisit it when a composition need
+appears that a script cannot express, not when a file would merely be
 customary.
 
 ## Consequences
@@ -59,5 +59,5 @@ with extra steps: a second entry point to secure, and a file the static build
 would have to execute to know what to build.
 
 **A declarative JSON/YAML file.** Cannot express the one thing composition
-needs — registering implementations — without inventing a module-resolution
+needs, registering implementations, without inventing a module-resolution
 scheme inside configuration, which is plugin discovery by another name.

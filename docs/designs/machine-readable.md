@@ -22,8 +22,8 @@ be worth saying.
 
 The export records are built from the **Semantic AST**, after transformers have
 run, and never from the rendered HTML. Scraping the HTML would make the corpus
-depend on the theme — change the presentation and the text a model reads
-changes with it — and it would lose structure the AST still has.
+depend on the theme. Changing the presentation would also change the text a
+model reads, and HTML would lose structure that still exists in the AST.
 
 Each record carries the canonical route, the resolved title and description, the
 document's headings with their identifiers, the readable text block by block,
@@ -55,7 +55,7 @@ agree with.
 
 Hidden, generated and unrenderable documents are excluded. What consumes it,
 and how results are ranked, is described in
-[ADR 4](decisions/0004-client-side-search.md).
+[ADR 4](../decisions/0004-client-side-search.md).
 
 ## Ordering and stability
 

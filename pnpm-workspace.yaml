@@ -1,4 +1,4 @@
-# Workspace layout. See docs/architecture/workspaces.md for the dependency rules.
+# Workspace layout. See docs/designs/architecture/workspaces.md for the dependency rules.
 #
 # - packages/*  publishable-intent packages (still private during pre-alpha)
 # - internal/*  internal-only workspaces that must never be published
@@ -19,7 +19,7 @@ minimumReleaseAge: 30240
 onlyBuiltDependencies: []
 
 # Enforce engines.node at install time. Without this the minimum supported
-# runtime in docs/compatibility.md is advisory, and an unsupported runtime
+# runtime in docs/designs/compatibility.md is advisory, and an unsupported runtime
 # surfaces later as an unrelated error instead of a clear install failure.
 engineStrict: true
 

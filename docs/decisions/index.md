@@ -1,9 +1,14 @@
-# Architecture Decision Records
+---
+title: Decisions
+description: Accepted architectural decisions and the alternatives that were rejected.
+order: 4
+---
 
-An ADR records a decision that shapes the architecture: what was decided, what
-was rejected, and why. The record exists so a future contributor — usually the
-person who made the decision, a year later — can tell a constraint from a
-habit.
+# Decisions
+
+An architecture decision record (ADR) states what was decided, what was
+rejected, and why. It helps future contributors tell a deliberate constraint
+from an old habit.
 
 ## When to write one
 
@@ -26,9 +31,8 @@ anything.
 3. Land it in the same pull request as the change it explains, so the decision
    and its implementation are reviewed together.
 
-A superseded ADR is not deleted or edited into agreement. Its status becomes
-`Superseded by ADR N`, and the new record says what changed. History that has
-been tidied is history that lies.
+Do not delete or rewrite a superseded ADR. Change its status to
+`Superseded by ADR N`, and state what changed in the new record.
 
 ## Index
 

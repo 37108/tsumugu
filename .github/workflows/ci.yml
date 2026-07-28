@@ -18,7 +18,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # The minimum supported runtime from docs/compatibility.md. CI validates the
+  # The minimum supported runtime from docs/designs/compatibility.md. CI validates the
   # baseline, because code that only works on a newer Node.js would otherwise
   # pass here and fail for users.
   NODE_VERSION: "24"

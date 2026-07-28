@@ -1,5 +1,5 @@
 ---
-description: What tsumugu dev does while you edit — watching, rebuilding, reloading, and what happens when something breaks.
+description: How tsumugu dev watches files, rebuilds pages, reloads browsers, and handles errors.
 ---
 
 # Development mode
@@ -9,9 +9,9 @@ describes what it does between saves, and what it does when a save is wrong.
 
 ## Watching
 
-The documentation root is watched recursively. A burst of file-system events —
-which is what one save in a modern editor produces, between a temporary file, a
-rename and a permissions change — is collapsed into a single rebuild after the
+The documentation root is watched recursively. A modern editor may produce a
+temporary file, a rename, and a permission change for one save. Tsumugu
+collapses that burst into a single rebuild after the
 changes stop.
 
 A rebuild re-scans, re-reads what changed, and re-renders only the documents
@@ -29,7 +29,7 @@ rebuilt  1 document
 ## Reloading
 
 Open pages reload themselves after a rebuild, through one small script allowed
-by its hash. See [ADR 3](decisions/0003-live-reload-script-policy.md).
+by its hash. See [ADR 3](../decisions/0003-live-reload-script-policy.md).
 `--no-live-reload` is not a flag; turning watching off turns reloading off with
 it, since a page told to reload when nothing is watching would be a page told
 to reload by nothing.
@@ -56,7 +56,7 @@ rebuild failed  The documentation root /work/docs could not be read.
   still serving the last version that built
 ```
 
-The clearest case is the documentation root disappearing — a branch switch, a
+The clearest case is the documentation root disappearing after a branch switch, a
 directory moved, a network share dropping. Reading it fails, the rebuild aborts,
 and the reader keeps the pages that existed a moment ago. Putting the directory
 back and saving anything recovers on the next rebuild; nothing has to be
@@ -75,31 +75,31 @@ rebuilt  1 document in 24 ms
 ```
 
 The same numbers are available programmatically as `UpdateSummary` from
-`Site.update()` — documents rendered, reused and removed, pages serialized, and
-the wall-clock cost. The counts are the observability model: `rendered: 300`
+`Site.update()`: documents rendered, reused and removed, pages serialized, and
+the wall-clock cost. The counts are the observability model. `rendered: 300`
 after a one-line edit _is_ the bug report, no tracing required, and
 `tests/performance.test.ts` asserts on exactly these numbers so the pipeline
 cannot stop being incremental without a test saying so.
 
-Deeper instrumentation — per-stage timings, per-document traces — is
+Deeper instrumentation, such as per-stage timings and per-document traces, is
 deliberately absent until a problem needs it that these counts cannot name.
 
 ## What is cached, and what invalidates it
 
-Three caches, each keyed on something that cannot lie about staleness, all
-in memory and all rebuilt from the file system on restart — there is nothing
+Tsumugu keeps three in-memory caches with explicit invalidation keys. They are
+rebuilt from the file system on restart, so there is nothing
 on disk to go stale:
 
-| Cached                                                                        | Invalidated by                                                                 |
-| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| the loaded document                                                           | file size or modification time                                                 |
-| the parsed, transformed, themed body — and its outline, links and search text | the content hash                                                               |
-| the serialized page                                                           | a signature over the navigation, the site name, and the page's own diagnostics |
+| Cached                                                               | Invalidated by                                                                 |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| the loaded document                                                  | file size or modification time                                                 |
+| the parsed, transformed, themed body, outline, links and search text | the content hash                                                               |
+| the serialized page                                                  | a signature over the navigation, the site name, and the page's own diagnostics |
 
-The guarantees, stated as behaviour: an unchanged file is never re-read; an
-unchanged document is never re-parsed; and a page is re-serialized only when
+The guarantees, stated as behaviour: an unchanged file is never re-read, an
+unchanged document is never re-parsed, and a page is re-serialized only when
 the document changed or something on every page (the sidebar, the site name)
-did. `docs/performance.md` shows what these are worth in milliseconds.
+did. `docs/designs/performance.md` shows what these are worth in milliseconds.
 
 ## Colour
 

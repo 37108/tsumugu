@@ -41,7 +41,7 @@ const server = await serve({
 
 A `defineConfig` helper would add a name, a document page and a compatibility
 commitment while improving nothing: `createSite` is already typed, and its
-options are already checked where they are written. `docs/principles.md` asks a
+options are already checked where they are written. `docs/designs/principles.md` asks a
 new concept to justify itself, and this one could not.
 
 ### What core owns

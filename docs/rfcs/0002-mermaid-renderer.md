@@ -1,6 +1,6 @@
 # RFC 2: Mermaid diagrams
 
-- **Status:** Draft — awaiting a server-side rendering path that fits the model
+- **Status:** Draft (awaiting a server-side rendering path that fits the model)
 - **Date:** 2026-07-28
 - **Related:** issue #58, [ADR 3](../decisions/0003-live-reload-script-policy.md), [ADR 4](../decisions/0004-client-side-search.md)
 
@@ -8,13 +8,15 @@
 
 Mermaid is how diagrams live in Markdown today: a fenced block with
 `language: mermaid`, readable as text, versioned with the prose. Tsumugu
-currently shows that block as code — lossless, but not a diagram.
+currently shows that block as code. The source is preserved, but no diagram is
+drawn.
 
 ## Proposal
 
 A **transformer**, `tsumugu-transformer-mermaid`, that rewrites
-`code-block[language=mermaid]` nodes into an SVG carried by the AST — rendered
-at build time, on the server, so the reader receives an image and no script.
+`code-block[language=mermaid]` nodes into an SVG carried by the AST. Rendering
+happens on the server at build time, so the reader receives an image and no
+script.
 
 The blocker is the rendering path, and it is why this is a draft rather than a
 plan. Mermaid's renderer needs a DOM; running it server-side means a headless
@@ -28,9 +30,9 @@ documentation content, against both script ADRs at once.
 
 ## Fit
 
-The transformer boundary fits perfectly — this is precisely the "annotate the
-AST, let the theme present it" shape syntax highlighting already has. The
-dependency cost is the entire tension.
+The transformer boundary matches the shape used by syntax highlighting: it
+annotates the AST and lets the theme present the result. The unresolved problem
+is the dependency cost.
 
 ## Alternatives
 

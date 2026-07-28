@@ -3,7 +3,7 @@
 - **Status:** Accepted
 - **Date:** 2026-07-28
 - **Supersedes:** none
-- **Related:** issue #29, issue #30, [`docs/principles.md`](../principles.md), `packages/core/src/server/live-reload.ts`
+- **Related:** issue #29, issue #30, [`docs/designs/principles.md`](../designs/principles.md), `packages/core/src/server/live-reload.ts`
 
 ## Context
 
@@ -23,8 +23,7 @@ feature substitutes for it. The alternatives were:
   and steals the scroll position of somebody who is reading rather than editing.
 - **A script, allowed narrowly.**
 
-The question is not "is JavaScript acceptable" but "what exactly becomes
-possible, on which pages, for whose benefit".
+The policy must state what the script can do, where it runs, and who benefits.
 
 ## Decision
 
@@ -44,8 +43,8 @@ When live reload is on, the policy gains exactly two sources:
 script-src 'sha256-<hash of Tsumugu's own script>'; connect-src 'self'
 ```
 
-A hash allows one exact byte sequence. Any other script on the page — an
-author's, an injected one, a modified copy of ours — fails the policy, because
+A hash allows one exact byte sequence. An author's script, an injected script,
+or a modified copy of ours fails the policy because
 changing a single character changes the hash. A nonce would allow anything the
 server marked, and `unsafe-inline` would allow everything; both would make the
 guarantee weaker than it needs to be for a five-line script.
@@ -77,7 +76,7 @@ documentation path implausible.
 
 - Editing a file updates the open page, which is the feedback loop the
   development server exists for.
-- The security property that matters — documentation JavaScript never runs — is
+- The security property that matters, that documentation JavaScript never runs, is
   unchanged, and is now enforced by a mechanism narrow enough to state in one
   line.
 - Nothing outside the development command can emit a script by accident: it

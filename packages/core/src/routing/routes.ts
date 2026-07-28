@@ -68,7 +68,7 @@ function splitExtension(name: string): {
  *
  * - **Filename prefixes stay.** `01-install.md` is `/01-install`. Deciding that
  *   part of a name the author typed is ordering rather than identity is
- *   precisely the counterexample in `docs/principles.md`. An author who wants
+ *   precisely the counterexample in `docs/designs/principles.md`. An author who wants
  *   `/install` renames the file, which is visible and reversible.
  *
  * - **No trailing slash**, except at the root. `/guide` and `/guide/` are one

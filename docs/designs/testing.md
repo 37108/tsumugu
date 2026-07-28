@@ -1,4 +1,9 @@
-# Testing Strategy
+---
+title: Testing
+order: 4
+---
+
+# Testing
 
 ## Why a strategy at all
 
@@ -33,8 +38,8 @@ interfaces once those exist. A contract test is written against the interface
 and run against each implementation, so a new renderer inherits the suite
 instead of restating it.
 
-**Integration tests** cover several stages together — file discovery through to
-a rendered response — and live in `tests/` because they do not belong to any
+**Integration tests** cover several stages from file discovery through a
+rendered response. They live in `tests/` because they do not belong to any
 single package.
 
 **Fixture tests** use real Markdown, HTML, metadata, malformed input and
@@ -50,7 +55,7 @@ so they cover user-visible workflows and nothing else.
 ## Conventions
 
 **Naming.** Test files end in `.test.ts`. A `describe` block names the unit
-under test; an `it` block states the behaviour as a sentence — `it("removes the
+under test. An `it` block states the behaviour as a sentence, such as `it("removes the
 directory even when the callback throws")`, not `it("works")`.
 
 **Location.** Colocated for anything owned by one package; `tests/` for anything
@@ -135,12 +140,12 @@ the numbers stay meaningful.
 
 ## Commands
 
-| Command              | Use                                                  |
-| -------------------- | ---------------------------------------------------- |
-| `pnpm test`          | build, then run everything once                      |
-| `pnpm test:watch`    | build, then re-run affected tests as files change    |
-| `pnpm test:coverage` | build, then run everything with coverage             |
-| `pnpm check`         | formatting, linting, types and tests — the full gate |
+| Command              | Use                                                 |
+| -------------------- | --------------------------------------------------- |
+| `pnpm test`          | build, then run everything once                     |
+| `pnpm test:watch`    | build, then re-run affected tests as files change   |
+| `pnpm test:coverage` | build, then run everything with coverage            |
+| `pnpm check`         | formatting, linting, types and tests; the full gate |
 
 All of them build first, because `tests/cli.test.ts` runs real build output.
 `tsc --build` is incremental, so this is cheap after the first run.

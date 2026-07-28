@@ -78,15 +78,15 @@ This governance model may be changed through an RFC. Changes should remain propo
 
 Two axes, so a label answers a question rather than decorating:
 
-- **`type:`** — what kind of work: `type: bug`, `type: feature`, `type: docs`,
+- `type:` describes the work: `type: bug`, `type: feature`, `type: docs`, or
   `type: process`.
-- **`status:`** — where it stands: `status: triage` (nobody has read it yet),
+- `status:` shows where it stands: `status: triage` (nobody has read it yet),
   `status: accepted` (would merge a good implementation), `status: needs-info`
   (blocked on the reporter), `status: blocked` (blocked on other work, named in
   a comment).
 
 Plus `good first issue` for issues a newcomer can land without holding the
-architecture in their head — each names the files involved and what done looks
+architecture in their head. Each names the files involved and what done looks
 like.
 
 Triage means: reproduce or ask (`status: needs-info`), then accept or close

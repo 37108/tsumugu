@@ -12,7 +12,7 @@ import type { ResolvedMetadata } from "../metadata/resolve.js";
  * and it is the one part that goes stale fastest when they do: a file is added,
  * the config is not, and the page exists but nobody can find it. So navigation
  * is not configured here. It is a function of the documents that exist, their
- * directories and their metadata — which is what `docs/principles.md` means by
+ * directories and their metadata — which is what `docs/designs/principles.md` means by
  * the file system being the source of truth.
  *
  * This module is plain data in, plain data out. It knows nothing about HTML,
@@ -87,7 +87,7 @@ function emptyDirectory(path: readonly string[]): DirectoryNode {
  * and on the ICU data the runtime was built with, so the same project would
  * order its sidebar differently on a contributor's laptop and in CI. A
  * documentation tool that cannot promise the same output twice cannot be
- * diffed, and `docs/testing.md` requires determinism across platforms. Sorting
+ * diffed, and `docs/designs/testing.md` requires determinism across platforms. Sorting
  * that is *correct for a language* is a real need, and it is a later, explicit
  * feature rather than an accident of the default.
  */

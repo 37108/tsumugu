@@ -127,7 +127,7 @@ function firstLevelOneHeading(root: DocumentNode): string | undefined {
  * Numeric prefixes are **kept**. `01-install.md` becomes `01 install`, not
  * `Install`. The file system is the source of truth, and silently deciding
  * that part of a name the author typed is decoration is the behaviour
- * `docs/principles.md` warns against. An author who wants a different title
+ * `docs/designs/principles.md` warns against. An author who wants a different title
  * writes one in front matter, which costs them one line and costs nobody a
  * surprise.
  */

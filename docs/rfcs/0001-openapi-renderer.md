@@ -1,15 +1,15 @@
 # RFC 1: An OpenAPI renderer
 
-- **Status:** Draft — awaiting evidence of demand
+- **Status:** Draft (awaiting evidence of demand)
 - **Date:** 2026-07-28
-- **Related:** issue #57, [`docs/architecture/semantic-ast.md`](../architecture/semantic-ast.md)
+- **Related:** issue #57, [`docs/designs/architecture/semantic-ast.md`](../designs/architecture/semantic-ast.md)
 
 ## Problem
 
 API documentation usually lives in an OpenAPI document, and teams either
 maintain a prose copy that drifts from it or embed a hosted viewer that brings
-its own JavaScript, styling and network access — all three of which Tsumugu's
-security model refuses.
+its own JavaScript, styling, and network access. Tsumugu's security model
+refuses all three.
 
 ## Proposal
 
@@ -21,8 +21,8 @@ HTML ones.
 - **Produces the existing Semantic AST**: one heading per tag, one section per
   operation (method + path as the heading, so anchors work), parameter and
   response tables as `table` nodes, schemas as `code-block` nodes. No new node
-  types in the first version — the whole point of the AST is that a new format
-  arrives without the themes learning anything.
+  types in the first version. The AST allows a new format to arrive without the
+  themes learning anything.
 - Endpoints therefore get navigation, search entries, `documents.json` records
   and `llms.txt` mentions for free, which is the "human and AI from one source"
   claim applied to APIs.
@@ -34,8 +34,8 @@ generation, and `$ref` resolution across files in the first version.
 ## Fit
 
 Leans on _HTML is a first-class input_ (generalised: durable formats deserve
-renderers, not converters) and _one job per stage_. Strains _small core_ not at
-all — that is the test of the renderer boundary.
+renderers, not converters) and _one job per stage_. It does not strain _small
+core_, which is the test of the renderer boundary.
 
 ## Alternatives
 

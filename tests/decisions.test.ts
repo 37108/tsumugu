@@ -8,7 +8,7 @@ import { repositoryRoot } from "./helpers/paths.js";
  * The ADR and RFC indexes, kept honest.
  *
  * An index that drifts from its directory is worse than no index: it tells a
- * reader the record they are looking for does not exist. Each README promises
+ * reader the record they are looking for does not exist. Each index promises
  * to list every record beside it, and this is the promise being kept.
  */
 
@@ -28,7 +28,7 @@ async function read(name: string): Promise<Register> {
       .filter((entry) => /^\d{4}-.+\.md$/u.test(entry))
       .filter((entry) => !entry.startsWith("0000-"))
       .sort(),
-    index: await readFile(path.join(directory, "README.md"), "utf8"),
+    index: await readFile(path.join(directory, "index.md"), "utf8"),
   };
 }
 
@@ -50,7 +50,7 @@ describe("decision and RFC indexes", () => {
       for (const file of register.files) {
         expect(
           register.index,
-          `docs/${register.directory}/README.md does not link ${file}`,
+          `docs/${register.directory}/index.md does not link ${file}`,
         ).toContain(`(${file})`);
       }
     }
@@ -65,7 +65,7 @@ describe("decision and RFC indexes", () => {
       for (const file of linked) {
         expect(
           register.files,
-          `docs/${register.directory}/README.md links ${file}, which is not there`,
+          `docs/${register.directory}/index.md links ${file}, which is not there`,
         ).toContain(file);
       }
     }

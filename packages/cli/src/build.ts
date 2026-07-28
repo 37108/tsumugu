@@ -109,7 +109,7 @@ export async function runBuild(
 }
 
 /**
- * A size a person can read, in the `10 MB` shape `docs/testing.md` uses.
+ * A size a person can read, in the `10 MB` shape `docs/designs/testing.md` uses.
  *
  * Powers of 1024, one decimal above bytes, no locale formatting — the same
  * project prints the same string on every machine.

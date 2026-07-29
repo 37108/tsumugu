@@ -1,5 +1,14 @@
 # tsumugu-renderer-mdx
 
+## 0.4.1
+
+### Patch Changes
+
+- Updated dependencies [35ef93f]
+  - tsumugu-core@0.4.1
+  - tsumugu-renderer-html@0.4.1
+  - tsumugu-renderer-markdown@0.4.1
+
 ## 0.4.0
 
 ### Minor Changes

@@ -116,7 +116,7 @@ export async function runBuild(
     ...(options.clean === undefined ? {} : { clean: options.clean }),
     ...(options.trust === true ? { trust: true } : {}),
     siteName: siteNameFor(root),
-    ...createPreset(),
+    ...createPreset(options.trust === true ? { trust: true } : {}),
   });
 }
 
@@ -154,7 +154,7 @@ export function describeBuild(
     // The declaration is loud on purpose: nobody should discover later that
     // their content was being emitted as written.
     lines.push(
-      `${style.dim("  trust ")} on — this root's markup was emitted as written`,
+      `${style.dim("  trust ")} on — this root's markup was emitted as written, scripts included`,
     );
   }
 

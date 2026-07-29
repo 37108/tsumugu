@@ -7,7 +7,9 @@ import { frontmatter } from "micromark-extension-frontmatter";
 import { gfmTable } from "micromark-extension-gfm-table";
 import { mdxjs } from "micromark-extension-mdxjs";
 
-import { convertToSemanticAst } from "./convert.js";
+import { convertToSemanticAst, type ScriptMode } from "./convert.js";
+
+export type { ScriptMode } from "./convert.js";
 import { readFrontMatter } from "./frontmatter.js";
 
 /**
@@ -45,6 +47,14 @@ export interface MarkdownRendererOptions {
    * different options, which selection would otherwise reject as ambiguous.
    */
   readonly id?: string;
+  /**
+   * What happens to `<script>` inside embedded HTML. Markdown always carries
+   * embedded HTML as preserved raw markup; `"preserve"` — for a composition
+   * the operator declared trusted (ADR 7) — additionally reports each inline
+   * script's text so the server can allow exactly those by hash. This
+   * renderer never decides trust; it is built into a composition that did.
+   */
+  readonly scripts?: ScriptMode;
 }
 
 /**
@@ -97,12 +107,16 @@ export function createMarkdownRenderer(
         tree,
         document.sourcePath,
         document.content,
+        options.scripts ?? "remove",
       );
 
       return {
         root: converted.root,
         diagnostics: [...frontMatter.diagnostics, ...converted.diagnostics],
         metadata: frontMatter.entries,
+        ...(converted.scripts.length === 0
+          ? {}
+          : { scripts: converted.scripts }),
       };
     },
   };

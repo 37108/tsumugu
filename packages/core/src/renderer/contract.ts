@@ -84,6 +84,15 @@ export interface RenderResult {
    * level of the shared title precedence.
    */
   readonly htmlTitle?: string;
+  /**
+   * The text of each inline script the renderer preserved, in document order.
+   *
+   * Only a renderer built to preserve scripts — a composition the operator
+   * declared trusted (ADR 7) — reports any. The server hashes each into the
+   * page's `script-src`, which is how exactly these scripts run and an
+   * injected one still does not.
+   */
+  readonly scripts?: readonly string[];
 }
 
 export const rendererCodes = {
@@ -229,6 +238,7 @@ export async function renderDocument(
     root: result.root,
     metadata,
     ...(result.htmlTitle === undefined ? {} : { htmlTitle: result.htmlTitle }),
+    ...(result.scripts === undefined ? {} : { scripts: result.scripts }),
   };
 }
 

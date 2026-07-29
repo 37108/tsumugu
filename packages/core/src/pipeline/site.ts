@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 import type { DocumentNode, SemanticNode } from "../ast/nodes.js";
 import { trustRawHtml } from "../ast/trust.js";
 import {
@@ -110,8 +112,10 @@ export interface BuildOptions {
    * as code (ADR 7).
    *
    * Off by default, and never inferred. With it, markup preserved as
-   * untrusted raw source is emitted verbatim instead of as escaped text.
-   * Nothing else in the pipeline changes.
+   * untrusted raw source is emitted verbatim instead of as escaped text, and
+   * each page carries CSP hashes for the inline scripts its renderer
+   * preserved. Script *preservation* is the renderers' construction, not this
+   * option: the preset wires both from one declaration.
    */
   readonly trust?: boolean;
 }
@@ -124,6 +128,14 @@ export interface Page {
   readonly diagnostics: readonly DocumentDiagnostic[];
   /** True when Tsumugu wrote this page because the project had none. */
   readonly generated?: boolean;
+  /**
+   * CSP source expressions for the page's preserved inline scripts.
+   *
+   * Present only under the operator's `--trust` declaration (ADR 7). The
+   * server adds them to this page's `script-src`, so exactly the scripts the
+   * author wrote may run and an injected one still may not.
+   */
+  readonly scriptHashes?: readonly string[];
 }
 
 /** A generated file that is not a page: JSON, plain text, XML. */
@@ -165,6 +177,12 @@ export interface BuildResult {
   readonly renderBadRequest: () => string;
   /** Problems not attributable to a single page. */
   readonly diagnostics: readonly DocumentDiagnostic[];
+  /**
+   * Whether this site was built under the operator's `--trust` declaration
+   * (ADR 7). The server reads it to widen `script-src` with `'self'`, so a
+   * trusted page may also load script files from inside the root.
+   */
+  readonly trust?: boolean;
 }
 
 /** What an update actually did, so a caller can say so and a test can check. */
@@ -215,6 +233,8 @@ interface PreparedDocument {
   readonly tableOfContents: ReturnType<typeof buildTableOfContents>;
   /** Where this document points, and what it can be pointed at. */
   readonly references: ReturnType<typeof collectReferences>;
+  /** CSP source expressions for the document's preserved inline scripts. */
+  readonly scriptHashes: readonly string[];
   readonly diagnostics: readonly DocumentDiagnostic[];
   /**
    * The page this document last produced, and what it depended on.
@@ -312,6 +332,7 @@ export async function createSite(options: BuildOptions): Promise<Site> {
     renderNotFound: () => "",
     renderBadRequest: () => "",
     diagnostics: [],
+    ...(options.trust === true ? { trust: true } : {}),
   };
 
   /** Parses, transforms, resolves metadata and themes one document. */
@@ -373,6 +394,15 @@ export async function createSite(options: BuildOptions): Promise<Site> {
       // Collected while the tree is in hand. Finding a project's links again
       // after every edit would mean parsing every file again after every edit.
       references: collectReferences(root),
+      // Hashed here, once per rebuild, rather than per response: the hash is
+      // a property of the document's content, exactly like the page.
+      scriptHashes:
+        rendered.stage === "rendered" && rendered.scripts !== undefined
+          ? rendered.scripts.map(
+              (script) =>
+                `'sha256-${createHash("sha256").update(script, "utf8").digest("base64")}'`,
+            )
+          : [],
       diagnostics: dedupeDiagnostics(diagnostics),
     };
   }
@@ -617,6 +647,9 @@ export async function createSite(options: BuildOptions): Promise<Site> {
           title: entry.metadata.title,
           html: entry.page.html,
           diagnostics: entry.page.diagnostics,
+          ...(entry.scriptHashes.length === 0
+            ? {}
+            : { scriptHashes: entry.scriptHashes }),
         });
         continue;
       }
@@ -641,6 +674,9 @@ export async function createSite(options: BuildOptions): Promise<Site> {
         title: entry.metadata.title,
         html: page.html,
         diagnostics,
+        ...(entry.scriptHashes.length === 0
+          ? {}
+          : { scriptHashes: entry.scriptHashes }),
       });
     }
 
@@ -707,6 +743,7 @@ export async function createSite(options: BuildOptions): Promise<Site> {
     result = {
       pages,
       assets: scanned.assets,
+      ...(options.trust === true ? { trust: true } : {}),
       exports: new Map<string, ExportOutput>([
         [
           "/documents.json",

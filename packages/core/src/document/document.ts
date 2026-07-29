@@ -90,6 +90,13 @@ export interface RenderedDocument extends Omit<LoadedDocument, "stage"> {
    * title precedence: below front matter, above the first heading.
    */
   readonly htmlTitle?: string;
+  /**
+   * Inline script text the renderer preserved, in document order.
+   *
+   * Present only in a composition the operator declared trusted (ADR 7); the
+   * server hashes each entry into the page's `script-src`.
+   */
+  readonly scripts?: readonly string[];
 }
 
 /** Any stage of a document. Narrow on `stage` to reach the fields it has. */

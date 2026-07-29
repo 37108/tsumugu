@@ -167,6 +167,9 @@ importers:
 
   packages/renderer-markdown:
     dependencies:
+      hast-util-from-html:
+        specifier: ^2.0.3
+        version: 2.0.3
       mdast-util-from-markdown:
         specifier: ^2.0.3
         version: 2.0.3
@@ -198,6 +201,9 @@ importers:
       '@tsumugu/internal-tsconfig':
         specifier: workspace:*
         version: link:../../internal/tsconfig
+      '@types/hast':
+        specifier: ^3.0.4
+        version: 3.0.4
       '@types/mdast':
         specifier: ^4.0.4
         version: 4.0.4

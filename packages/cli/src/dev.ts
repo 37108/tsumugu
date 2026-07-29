@@ -266,7 +266,7 @@ export async function startDev(options: DevOptions = {}): Promise<DevResult> {
     // Which renderers, transformers and theme a project gets is the preset's
     // decision, not the CLI's. The CLI parses a command line and prints to a
     // terminal; a programmatic consumer composes the same preset without it.
-    ...createPreset(),
+    ...createPreset(options.trust === true ? { trust: true } : {}),
     siteName: siteNameFor(root),
     ...(reloading ? { script: reloadScript } : {}),
     ...(options.trust === true ? { trust: true } : {}),
@@ -376,7 +376,7 @@ export function describeStartup(
     // The declaration is loud on purpose: nobody should discover later that
     // their content was being emitted as written.
     lines.push(
-      `${style.dim("  trust ")} on — this root's markup is emitted as written`,
+      `${style.dim("  trust ")} on — this root's markup is emitted as written and its scripts run`,
     );
   }
 

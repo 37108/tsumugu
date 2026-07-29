@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 import { parseDevOptions, startDev, type DevResult } from "tsumugu";
 import { afterEach, describe, expect, it } from "vitest";
 
@@ -57,6 +59,27 @@ const canvasPage = [
 ].join("\n");
 
 describe("a root served without --trust", () => {
+  it("removes author scripts and does not widen the policy", async () => {
+    const body = 'document.querySelector("canvas").dataset.ready = "yes";';
+    const files = {
+      "demo.html": `<main><h1>Demo</h1>\n<script>${body}</script>\n</main>\n`,
+    };
+
+    await serveFixture(files, [], async ({ server }) => {
+      const response = await fetch(`${server.url}demo`);
+      const html = await response.text();
+      const policy = response.headers.get("content-security-policy") ?? "";
+      const scriptSource = /script-src ([^;]+)/.exec(policy)?.[1] ?? "";
+
+      expect(html).not.toContain(`<script>${body}`);
+      expect(scriptSource).not.toContain("'self'");
+      // No author hash either: the policy without the declaration is exactly
+      // the policy there has always been.
+      const authorHash = `'sha256-${createHash("sha256").update(body, "utf8").digest("base64")}'`;
+      expect(scriptSource).not.toContain(authorHash);
+    });
+  });
+
   it("keeps preserved markup as escaped source", async () => {
     await serveFixture({ "demo.html": canvasPage }, [], async ({ server }) => {
       const html = await (await fetch(`${server.url}demo`)).text();
@@ -85,6 +108,59 @@ describe("a root served with --trust", () => {
         expect(html).not.toContain("<pre data-tsumugu-raw-html");
       },
     );
+  });
+
+  it("emits author scripts and allows exactly them by hash", async () => {
+    const body = 'document.querySelector("canvas").dataset.ready = "yes";';
+    const hash = `'sha256-${createHash("sha256").update(body, "utf8").digest("base64")}'`;
+    const files = {
+      "demo.html": `<main><h1>Demo</h1><canvas id="chart"></canvas>\n<script>${body}</script>\n</main>\n`,
+    };
+
+    await serveFixture(files, ["--trust"], async ({ server }) => {
+      const response = await fetch(`${server.url}demo`);
+      const html = await response.text();
+      const policy = response.headers.get("content-security-policy") ?? "";
+      const scriptSource = /script-src ([^;]+)/.exec(policy)?.[1] ?? "";
+
+      expect(html).toContain(`<script>${body}</script>`);
+      // The declaration's scope, stated to the browser: this page's own
+      // scripts by hash, files inside the root by 'self', nothing else.
+      expect(scriptSource).toContain(hash);
+      expect(scriptSource).toContain("'self'");
+    });
+  });
+
+  it("collects scripts inside preserved subtrees too", async () => {
+    const body = "customElements.get('x-widget');";
+    const hash = `'sha256-${createHash("sha256").update(body, "utf8").digest("base64")}'`;
+    const files = {
+      "demo.html": `<main><x-widget><script>${body}</script></x-widget></main>\n`,
+    };
+
+    await serveFixture(files, ["--trust"], async ({ server }) => {
+      const response = await fetch(`${server.url}demo`);
+      const policy = response.headers.get("content-security-policy") ?? "";
+
+      expect(await response.text()).toContain(`<script>${body}</script>`);
+      expect(policy).toContain(hash);
+    });
+  });
+
+  it("covers HTML embedded in Markdown", async () => {
+    const body = 'console.log("hi");';
+    const hash = `'sha256-${createHash("sha256").update(body, "utf8").digest("base64")}'`;
+    const files = {
+      "index.md": `# Guide\n\n<script>${body}</script>\n`,
+    };
+
+    await serveFixture(files, ["--trust"], async ({ server }) => {
+      const response = await fetch(server.url);
+      const policy = response.headers.get("content-security-policy") ?? "";
+
+      expect(await response.text()).toContain(`<script>${body}</script>`);
+      expect(policy).toContain(hash);
+    });
   });
 
   it("leaves modeled content rendered exactly as without it", async () => {

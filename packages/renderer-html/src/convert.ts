@@ -25,12 +25,24 @@ export const htmlCodes = {
 export interface ConversionResult {
   readonly children: readonly BlockNode[];
   readonly diagnostics: readonly DocumentDiagnostic[];
+  /**
+   * The text of every inline script preserved by this conversion, in document
+   * order. Empty unless scripts are preserved. The server turns each into a
+   * CSP hash, which is what lets exactly these scripts run and nothing else.
+   */
+  readonly scripts: readonly string[];
 }
+
+/** What happens to a `<script>` element. Removal is the default (ADR 7). */
+export type ScriptMode = "remove" | "preserve";
 
 interface Conversion {
   readonly sourcePath: SourcePath;
   readonly source: string;
   readonly diagnostics: DocumentDiagnostic[];
+  readonly scriptMode: ScriptMode;
+  /** Inline script text, collected only when scripts are preserved. */
+  readonly scripts: string[];
   /** Scripts are reported once, not once per occurrence. */
   scriptsReported: boolean;
   /** Likewise for elements with no semantic equivalent. */
@@ -187,11 +199,38 @@ function sourceOf(conversion: Conversion, node: HastNode): string {
   return conversion.source.slice(position.start.offset, position.end.offset);
 }
 
+/**
+ * Collects the text of every inline script in a preserved subtree, in order.
+ *
+ * Only when scripts are preserved: the collected text becomes CSP hashes, and
+ * a hash for a script that is never emitted would widen the policy for
+ * nothing. A script that references a file has no text to hash; `'self'`
+ * covers it.
+ */
+function collectScripts(conversion: Conversion, node: HastNode): void {
+  if (conversion.scriptMode !== "preserve") {
+    return;
+  }
+  if (isElement(node) && node.tagName.toLowerCase() === "script") {
+    const text = textOf(node);
+    // An empty script runs nothing; a hash for it would widen the policy for
+    // nothing. The src check mirrors the Markdown renderer's collectFromHast.
+    if (stringProperty(node, "src") === undefined && text !== "") {
+      conversion.scripts.push(text);
+    }
+    return;
+  }
+  for (const child of childrenOf(node)) {
+    collectScripts(conversion, child);
+  }
+}
+
 function preservedHtml(
   conversion: Conversion,
   node: HastNode,
   placement: "block" | "inline",
 ): BlockNode & InlineNode {
+  collectScripts(conversion, node);
   const value = sourceOf(conversion, node);
   return {
     type: "raw-html",
@@ -300,7 +339,7 @@ function dropScript(conversion: Conversion, node: HastNode): void {
     severity: "warning",
     stage: "renderer",
     message: `Script content in "${conversion.sourcePath}" was removed.`,
-    hint: "Documentation JavaScript is disabled by default. A future interactive mode will need an explicit, isolated trust boundary.",
+    hint: "Documentation JavaScript is disabled by default. An operator who owns this root can run it with --trust (ADR 7).",
     sourcePath: conversion.sourcePath,
     ...rangeOf(node),
   });
@@ -349,6 +388,9 @@ function block(conversion: Conversion, node: RootContent): BlockNode[] {
   const tag = node.tagName.toLowerCase();
 
   if (tag === "script" || tag === "noscript") {
+    if (conversion.scriptMode === "preserve") {
+      return [preservedHtml(conversion, node, "block")];
+    }
     dropScript(conversion, node);
     return [];
   }
@@ -535,6 +577,9 @@ function inline(conversion: Conversion, node: RootContent): InlineNode[] {
   const tag = node.tagName.toLowerCase();
 
   if (tag === "script" || tag === "noscript") {
+    if (conversion.scriptMode === "preserve") {
+      return [preservedHtml(conversion, node, "inline")];
+    }
     dropScript(conversion, node);
     return [];
   }
@@ -613,11 +658,14 @@ export function convertToSemanticAst(
   nodes: readonly RootContent[],
   sourcePath: SourcePath,
   source: string,
+  scriptMode: ScriptMode = "remove",
 ): ConversionResult {
   const conversion: Conversion = {
     sourcePath,
     source,
     diagnostics: [],
+    scriptMode,
+    scripts: [],
     scriptsReported: false,
     unsupportedReported: false,
   };
@@ -625,5 +673,6 @@ export function convertToSemanticAst(
   return {
     children: blocks(conversion, nodes),
     diagnostics: conversion.diagnostics,
+    scripts: conversion.scripts,
   };
 }

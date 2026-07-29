@@ -76,3 +76,36 @@ describe("createPreset", () => {
     ]);
   });
 });
+
+describe("the trust option", () => {
+  const scriptDocument = {
+    stage: "loaded",
+    id: "docs/a.html",
+    sourcePath: "docs/a.html",
+    format: "html",
+    stat: { size: 1, modifiedAtMs: 1 },
+    contentHash: "hash",
+    content: '<p>a</p><script>console.log("hi");</script>',
+    metadata: { values: new Map() },
+    route: "/a",
+    diagnostics: [],
+  } as unknown as Parameters<
+    ReturnType<typeof createPreset>["renderers"][number]["render"]
+  >[0];
+
+  it("composes script-preserving renderers under trust", async () => {
+    const preset = createPreset({ trust: true });
+    const html = preset.renderers.find((renderer) => renderer.id === "html");
+
+    const result = await html?.render(scriptDocument);
+    expect(result?.scripts).toEqual(['console.log("hi");']);
+  });
+
+  it("composes script-removing renderers otherwise", async () => {
+    const preset = createPreset();
+    const html = preset.renderers.find((renderer) => renderer.id === "html");
+
+    const result = await html?.render(scriptDocument);
+    expect(result?.scripts ?? []).toHaveLength(0);
+  });
+});

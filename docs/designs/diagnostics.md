@@ -171,6 +171,7 @@ Every code in the implementation appears here.
 | `renderer-markdown/unsupported-construct`      | warning  | Markdown the Semantic AST cannot represent yet; the source is kept and shown        |
 | `renderer-markdown/invalid-front-matter`       | warning  | the front matter is not valid YAML, or is not a mapping; the document still renders |
 | `renderer-markdown/unsupported-metadata-value` | warning  | a front-matter value has no metadata representation, such as a date or nested map   |
+| `renderer-markdown/split-script`               | warning  | an inline script is split across Markdown nodes, so it cannot be hashed or run      |
 
 ### `transformer-highlight/`
 

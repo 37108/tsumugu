@@ -56,6 +56,16 @@ export interface PresetOptions {
   readonly transformers?: readonly Transformer[];
   /** Replaces the theme. */
   readonly theme?: Theme;
+  /**
+   * The operator's declaration that the root's content is theirs and may run
+   * as code (ADR 7).
+   *
+   * With it, the default renderers preserve `<script>` elements and report
+   * each inline script's text instead of removing them. It only shapes the
+   * defaults: a caller replacing `renderers` decides script handling in the
+   * renderers they pass.
+   */
+  readonly trust?: boolean;
 }
 
 export interface Preset {
@@ -84,10 +94,14 @@ export interface Preset {
  */
 export function createPreset(options: PresetOptions = {}): Preset {
   return {
-    renderers: options.renderers ?? [
-      createMarkdownRenderer(),
-      createHtmlRenderer(),
-    ],
+    renderers:
+      options.renderers ??
+      (options.trust === true
+        ? [
+            createMarkdownRenderer({ scripts: "preserve" }),
+            createHtmlRenderer({ scripts: "preserve" }),
+          ]
+        : [createMarkdownRenderer(), createHtmlRenderer()]),
     transformers: options.transformers ?? [
       createHeadingIdTransformer(),
       createHighlightTransformer(),

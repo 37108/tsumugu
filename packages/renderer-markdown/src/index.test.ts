@@ -447,3 +447,47 @@ describe("MDX", () => {
     expect(result.diagnostics ?? []).toEqual([]);
   });
 });
+
+describe("embedded HTML scripts", () => {
+  it("collects inline script text when built to preserve scripts", async () => {
+    const preserving = createMarkdownRenderer({ scripts: "preserve" });
+    const result = await preserving.render(
+      documentOf('# T\n\n<script>console.log("hi");</script>\n'),
+    );
+
+    expect(result.scripts).toEqual(['console.log("hi");']);
+  });
+
+  it("collects nothing by default", async () => {
+    const result = await createMarkdownRenderer().render(
+      documentOf('# T\n\n<script>console.log("hi");</script>\n'),
+    );
+
+    expect(result.scripts ?? []).toHaveLength(0);
+  });
+
+  it("reports a script split across a paragraph instead of half-hashing it", async () => {
+    const preserving = createMarkdownRenderer({ scripts: "preserve" });
+    const result = await preserving.render(
+      documentOf("Before <script>alert(1)</script> after.\n"),
+    );
+
+    // Markdown split the element into <script>, text, </script>; its body is
+    // not reachable here, so no hash is produced and the author is told why.
+    expect(result.scripts ?? []).toHaveLength(0);
+    expect(
+      result.diagnostics?.some(
+        (diagnostic) => diagnostic.code === "renderer-markdown/split-script",
+      ),
+    ).toBe(true);
+  });
+
+  it("produces no hash for an empty script", async () => {
+    const preserving = createMarkdownRenderer({ scripts: "preserve" });
+    const result = await preserving.render(
+      documentOf("# T\n\n<script></script>\n"),
+    );
+
+    expect(result.scripts ?? []).toHaveLength(0);
+  });
+});

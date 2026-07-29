@@ -2,7 +2,9 @@ import type { LoadedDocument, RenderResult, Renderer } from "tsumugu-core";
 import type { Element, Nodes as HastNode, RootContent } from "hast";
 import { fromHtml } from "hast-util-from-html";
 
-import { convertToSemanticAst } from "./convert.js";
+import { convertToSemanticAst, type ScriptMode } from "./convert.js";
+
+export type { ScriptMode } from "./convert.js";
 
 /**
  * The HTML renderer.
@@ -18,9 +20,10 @@ import { convertToSemanticAst } from "./convert.js";
  * That holds for `.html` files exactly as it does for HTML embedded in
  * Markdown. So:
  *
- * - Script content is **removed**, with one warning per document. JavaScript in
- *   documentation is disabled by default, and a future interactive mode needs
- *   an explicit isolated boundary rather than a quiet exception here.
+ * - Script content is **removed**, with one warning per document — unless the
+ *   renderer was built with `scripts: "preserve"`, which only a composition
+ *   the operator declared trusted does (ADR 7). Even then this renderer only
+ *   preserves and reports; whether anything runs is the server's CSP decision.
  * - Elements with no semantic equivalent are **preserved as untrusted raw
  *   markup**. They are not dropped, because they are the author's content, and
  *   they are not trusted, because nobody has said they should be. What actually
@@ -32,6 +35,14 @@ import { convertToSemanticAst } from "./convert.js";
 export interface HtmlRendererOptions {
   /** Identifier for this renderer instance. */
   readonly id?: string;
+  /**
+   * What happens to `<script>` elements. `"remove"` — the default — drops
+   * them with a diagnostic. `"preserve"` keeps them as preserved raw markup
+   * and reports each inline script's text, for the composition an operator
+   * has declared trusted (ADR 7). This renderer never decides trust; it is
+   * built into a composition that did.
+   */
+  readonly scripts?: ScriptMode;
 }
 
 /**
@@ -125,6 +136,7 @@ export function createHtmlRenderer(
         full ? contentOf(tree) : tree.children,
         document.sourcePath,
         document.content,
+        options.scripts ?? "remove",
       );
 
       return {
@@ -133,6 +145,9 @@ export function createHtmlRenderer(
           children: converted.children,
         },
         diagnostics: converted.diagnostics,
+        ...(converted.scripts.length === 0
+          ? {}
+          : { scripts: converted.scripts }),
         // Only a complete document has a title element. A fragment simply
         // contributes nothing at this level of the shared precedence, and the
         // chain moves on to the first heading.

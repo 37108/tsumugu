@@ -30,8 +30,10 @@ There is one exception, and it belongs to the party trusted with everything:
 declaring that the root's content is theirs and may run as code. It is off by
 default, never inferred, announced in the terminal, and scoped to the root —
 never to the network. Under it, markup preserved as untrusted raw source is
-emitted as written. Everything else on this page, including path containment
-and loopback binding, holds with or without the flag.
+emitted as written, and the root's own scripts run — inline ones by hash,
+files by `'self'`, an external origin never. Everything else on this page,
+including path containment and loopback binding, holds with or without the
+flag.
 
 ## What enforces it
 
@@ -51,7 +53,10 @@ Each claim below names the test or implementation that enforces it.
   SHA-256 hashes: the page client and, in development, live reload. An
   author's script and an injected one are refused by the browser even if every
   server-side layer failed. ADRs 3 and 4 record the two exceptions and their
-  boundaries. (`tests/vertical-slice.test.ts`)
+  boundaries. Under `--trust`, a page's `script-src` additionally names
+  `'self'` and a hash per preserved inline script — so exactly the scripts the
+  author wrote may run, and an injected one still may not, because it still
+  has no hash. (`tests/vertical-slice.test.ts`, `tests/trust.test.ts`)
 - **Requests cannot leave the root.** Routes are branded types whose
   constructors reject traversal, request paths are decoded _before_ validation
   so `%2e%2e%2f` cannot hide, and assets are resolved through `realpath` and

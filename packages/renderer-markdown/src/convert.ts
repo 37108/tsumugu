@@ -8,6 +8,8 @@ import type {
   SourceRange,
   TableAlignment,
 } from "tsumugu-core";
+import type { Nodes as HastNodes } from "hast";
+import { fromHtml } from "hast-util-from-html";
 import type { Nodes as MdastNode, Parent as MdastParent } from "mdast";
 
 /**
@@ -22,12 +24,22 @@ import type { Nodes as MdastNode, Parent as MdastParent } from "mdast";
 
 export const markdownCodes = {
   unsupported: "renderer-markdown/unsupported-construct",
+  splitScript: "renderer-markdown/split-script",
 } as const;
 
 export interface ConversionResult {
   readonly root: DocumentNode;
   readonly diagnostics: readonly DocumentDiagnostic[];
+  /**
+   * The text of every inline script found in preserved HTML, in document
+   * order. Empty unless scripts are preserved. The server turns each into a
+   * CSP hash, which is what lets exactly these scripts run and nothing else.
+   */
+  readonly scripts: readonly string[];
 }
+
+/** What happens to `<script>` inside embedded HTML. See ADR 7. */
+export type ScriptMode = "remove" | "preserve";
 
 /**
  * State threaded through the conversion.
@@ -40,6 +52,70 @@ interface Conversion {
   readonly sourcePath: SourcePath;
   readonly source: string;
   readonly diagnostics: DocumentDiagnostic[];
+  readonly scriptMode: ScriptMode;
+  /** Inline script text, collected only when scripts are preserved. */
+  readonly scripts: string[];
+}
+
+/**
+ * Collects the text of every inline script in an embedded-HTML fragment.
+ *
+ * Markdown carries HTML as raw text, so the fragment is parsed here — only
+ * when scripts are preserved, and only when it plausibly contains one. A
+ * script that references a file has no text to hash; `'self'` covers it.
+ *
+ * Markdown splits HTML mixed into a paragraph across nodes: `<script>`, the
+ * body as ordinary Markdown text, `</script>`. A fragment like that has no
+ * body *here*, so its text cannot be hashed and the browser will refuse the
+ * script the page reassembles. That is reported rather than worked around —
+ * a hash of half a script would be a policy entry for nothing.
+ */
+function collectScripts(
+  conversion: Conversion,
+  node: MdastNode,
+  value: string,
+): void {
+  if (conversion.scriptMode !== "preserve" || !/<script/i.test(value)) {
+    return;
+  }
+  if (!/<\/script/i.test(value)) {
+    conversion.diagnostics.push({
+      code: markdownCodes.splitScript,
+      severity: "warning",
+      stage: "renderer",
+      message: `An inline script in "${conversion.sourcePath}" is split across Markdown and cannot run.`,
+      hint: "Write the whole <script> element as its own block, separated by blank lines, so its text can be allowed by hash.",
+      sourcePath: conversion.sourcePath,
+      ...rangeOf(node),
+    });
+    return;
+  }
+  collectFromHast(conversion, fromHtml(value, { fragment: true }));
+}
+
+function collectFromHast(conversion: Conversion, node: HastNodes): void {
+  if (
+    node.type === "element" &&
+    node.tagName.toLowerCase() === "script" &&
+    // Mirrors the HTML renderer's collectScripts: a script that references a
+    // file has no text to hash, and `'self'` covers it.
+    typeof node.properties["src"] !== "string"
+  ) {
+    const text = node.children
+      .map((child) => (child.type === "text" ? child.value : ""))
+      .join("");
+    // An empty script runs nothing; a hash for it would widen the policy for
+    // nothing.
+    if (text !== "") {
+      conversion.scripts.push(text);
+    }
+    return;
+  }
+  if ("children" in node) {
+    for (const child of node.children) {
+      collectFromHast(conversion, child);
+    }
+  }
 }
 
 function rangeOf(node: MdastNode): { range?: SourceRange } {
@@ -291,6 +367,7 @@ function block(conversion: Conversion, node: MdastNode): BlockNode[] {
       ];
 
     case "html":
+      collectScripts(conversion, node, node.value);
       return [
         {
           type: "raw-html",
@@ -382,6 +459,7 @@ function inline(conversion: Conversion, node: MdastNode): InlineNode[] {
       ];
 
     case "html":
+      collectScripts(conversion, node, node.value);
       return [
         {
           type: "raw-html",
@@ -412,8 +490,15 @@ export function convertToSemanticAst(
   root: MdastNode,
   sourcePath: SourcePath,
   source: string,
+  scriptMode: ScriptMode = "remove",
 ): ConversionResult {
-  const conversion: Conversion = { sourcePath, source, diagnostics: [] };
+  const conversion: Conversion = {
+    sourcePath,
+    source,
+    diagnostics: [],
+    scriptMode,
+    scripts: [],
+  };
 
   return {
     root: {
@@ -422,5 +507,6 @@ export function convertToSemanticAst(
       ...rangeOf(root),
     },
     diagnostics: conversion.diagnostics,
+    scripts: conversion.scripts,
   };
 }

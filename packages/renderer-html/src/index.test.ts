@@ -334,6 +334,46 @@ describe("the trust model", () => {
     );
   });
 
+  it("preserves scripts and collects their text when built to", () => {
+    const preserving = createHtmlRenderer({ scripts: "preserve" });
+    const result = preserving.render(
+      documentOf('<p>a</p><script>console.log("hi");</script>'),
+    );
+    if (result instanceof Promise) {
+      throw new Error("the HTML renderer is synchronous");
+    }
+
+    expect(nodeTypes(result.root)).toContain("raw-html");
+    expect(result.scripts).toEqual(['console.log("hi");']);
+    // Nothing was removed, so nothing says it was.
+    expect(result.diagnostics ?? []).toHaveLength(0);
+  });
+
+  it("collects scripts nested inside preserved subtrees", () => {
+    const preserving = createHtmlRenderer({ scripts: "preserve" });
+    const result = preserving.render(
+      documentOf("<x-widget><script>go();</script></x-widget>"),
+    );
+    if (result instanceof Promise) {
+      throw new Error("the HTML renderer is synchronous");
+    }
+
+    expect(result.scripts).toEqual(["go();"]);
+  });
+
+  it("collects nothing from a script that only references a file", () => {
+    const preserving = createHtmlRenderer({ scripts: "preserve" });
+    const result = preserving.render(
+      documentOf('<script src="./demo.js"></script>'),
+    );
+    if (result instanceof Promise) {
+      throw new Error("the HTML renderer is synchronous");
+    }
+
+    expect(result.scripts ?? []).toHaveLength(0);
+    expect(nodeTypes(result.root)).toContain("raw-html");
+  });
+
   it("preserves an unknown element as untrusted raw markup", () => {
     const raw = firstOfType(
       render("<custom-widget>x</custom-widget>").root,

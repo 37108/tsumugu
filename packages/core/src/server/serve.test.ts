@@ -95,6 +95,44 @@ describe("serve", () => {
     }
   });
 
+  it("widens a trusted page's script-src by exactly its hashes and 'self'", async () => {
+    const hash = "'sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA='";
+    const trustedPages = new Map<RoutePath, Page>([
+      [
+        "/" as RoutePath,
+        { ...pageAt("/", "<!doctype html><p>Home</p>"), scriptHashes: [hash] },
+      ],
+    ]);
+
+    running = await serve({
+      site: () => ({ pages: trustedPages, trust: true }),
+      port: 0,
+    });
+    const response = await fetch(running.url);
+    const policy = response.headers.get("content-security-policy") ?? "";
+    const scriptSource = /script-src ([^;]+)/.exec(policy)?.[1] ?? "";
+
+    expect(scriptSource).toContain("'self'");
+    expect(scriptSource).toContain(hash);
+
+    // A response that is not a page keeps the untrusted policy: no 'self',
+    // no page hashes, declaration or not.
+    const missing = await fetch(`${running.url}gone`);
+    const missingPolicy = missing.headers.get("content-security-policy") ?? "";
+    const missingSource = /script-src ([^;]+)/.exec(missingPolicy)?.[1] ?? "";
+    expect(missingSource).not.toContain("'self'");
+    expect(missingSource).not.toContain(hash);
+  });
+
+  it("does not widen script-src without the declaration", async () => {
+    const server = await start();
+    const response = await fetch(server.url);
+    const policy = response.headers.get("content-security-policy") ?? "";
+    const scriptSource = /script-src ([^;]+)/.exec(policy)?.[1] ?? "";
+
+    expect(scriptSource).not.toContain("'self'");
+  });
+
   it("ignores a query string when resolving a route", async () => {
     const server = await start();
     const response = await fetch(`${server.url}guide?highlight=install`);

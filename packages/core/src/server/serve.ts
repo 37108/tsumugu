@@ -49,6 +49,12 @@ export interface ServedSite {
   readonly renderNotFound?: (requestedPath: string) => string;
   /** Renders the page for a request path that could not be read at all. */
   readonly renderBadRequest?: () => string;
+  /**
+   * Whether the site was built under the operator's `--trust` declaration
+   * (ADR 7). Widens each page's `script-src` with `'self'` and the page's own
+   * script hashes; every other response keeps the untrusted policy.
+   */
+  readonly trust?: boolean;
 }
 
 export interface ServeOptions {
@@ -102,9 +108,32 @@ export interface RunningServer {
  * Documentation is content; content does not execute. Inline styles are
  * permitted because a theme's styling has nowhere else to live yet.
  */
+/**
+ * A trusted page's script allowance.
+ *
+ * Its presence *is* the operator's `--trust` declaration reaching this
+ * response; an untrusted response simply has none. Carrying a boolean too
+ * would be a second way to say the same thing, and the two could disagree.
+ */
+interface TrustedScripts {
+  /** CSP source expressions for the page's preserved inline scripts. */
+  readonly hashes: readonly string[];
+}
+
 function securityHeaders(
   liveReload: boolean,
+  trusted?: TrustedScripts,
 ): Readonly<Record<string, string>> {
+  // Under the operator's `--trust` declaration (ADR 7), and only for a page:
+  // `'self'` admits script files served from inside the root, and each of the
+  // page's own inline scripts is admitted by its hash. The policy stays on —
+  // an injected script has no hash, and an external origin has no source
+  // expression, declaration or not.
+  const declared =
+    trusted === undefined
+      ? ""
+      : ` 'self'${trusted.hashes.map((hash) => ` ${hash}`).join("")}`;
+
   const policy = [
     "default-src 'none'",
     "img-src 'self' data:",
@@ -117,7 +146,7 @@ function securityHeaders(
     // a development server adds. Every other script on the page is still
     // refused, including one an author wrote and one an attacker injected — a
     // hash cannot be forged into matching different content.
-    `script-src ${clientScriptHash}${liveReload ? ` ${reloadScriptHash}` : ""}`,
+    `script-src ${clientScriptHash}${liveReload ? ` ${reloadScriptHash}` : ""}${declared}`,
     // The scripts fetch the index and, in development, hold the reload stream
     // open. Both are this server; nothing else may be reached.
     "connect-src 'self'",
@@ -182,6 +211,7 @@ async function handle(
     status: number,
     body: string | Uint8Array,
     contentType?: string,
+    trusted?: TrustedScripts,
   ) => void,
 ): Promise<void> {
   const withoutQuery = target.split(/[?#]/)[0] ?? "/";
@@ -209,7 +239,12 @@ async function handle(
 
   const found = site.pages.get(route);
   if (found !== undefined) {
-    send(200, found.html);
+    send(
+      200,
+      found.html,
+      undefined,
+      site.trust === true ? { hashes: found.scriptHashes ?? [] } : undefined,
+    );
     return;
   }
 
@@ -258,6 +293,7 @@ export function serve(options: ServeOptions): Promise<RunningServer> {
       status: number,
       body: string | Uint8Array,
       contentType = "text/html; charset=utf-8",
+      trusted?: TrustedScripts,
     ): void => {
       // A request gets one response. Without this, a failure *after* a response
       // had already been written would try to write a second one, and Node
@@ -272,7 +308,7 @@ export function serve(options: ServeOptions): Promise<RunningServer> {
         // Development, not production: an edited file must show up on reload
         // rather than being explained away as a cache.
         "cache-control": "no-store",
-        ...securityHeaders(options.liveReload !== undefined),
+        ...securityHeaders(options.liveReload !== undefined, trusted),
       });
       response.end(body);
     };

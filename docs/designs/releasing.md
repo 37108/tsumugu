@@ -97,6 +97,31 @@ The npm organisation must be configured to trust this repository's release
 workflow. Until that is done the publish step fails with an authorization error,
 which is the correct failure: nothing is published by accident.
 
+### Before the first publish of a _new_ package
+
+Trusted publishing verifies a publisher that was configured **on a package that
+already exists**. A name the registry has never seen has no configuration to
+check, so the publish fails with `404 Not Found - PUT`, not with an
+authorization error. Adding a workspace is therefore two acts, and only the
+second is automatic:
+
+1. A maintainer publishes the new package once, by hand, from a machine
+   authenticated to npm. This is what creates the name.
+2. That package is configured on npmjs.com to trust this repository's release
+   workflow, exactly as the others are. Every later version publishes itself.
+
+Do step 1 **before** merging the version pull request that first releases the
+package. Changesets publishes each package independently, so a missing name
+does not stop the rest: the release succeeds for everything else and leaves
+whatever depends on the new package pointing at a version nobody can install.
+
+That is not hypothetical. On 2026-07-29, `0.4.0` shipped
+`tsumugu-renderer-mdx` for the first time. Eight packages published, that one
+404'd, and `tsumugu@0.4.0` — which depends on it — was uninstallable until the
+name was created by hand. The release step reported the failure loudly and
+correctly; nothing checked for it beforehand, which is why this section
+exists.
+
 ## What a release checks
 
 `pnpm run release` runs formatting, linting, type checking, and the full test

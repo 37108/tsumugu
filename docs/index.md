@@ -14,9 +14,12 @@ site. There is no configuration file: routes and navigation come from the files.
 The usage guide is written twice, once in each language. Both cover the same
 ground, and every page links to its counterpart.
 
-- [English](/en) — what Tsumugu is, [How to Use](/en/how-to-use), and
-  [Options](/en/options)
-- [日本語](/ja) — 紡ぐとは、[使い方](/ja/how-to-use)、[オプション](/ja/options)
+- [English](/en)
+  - [How to Use](/en/how-to-use)
+  - [Options](/en/options)
+- [日本語](/ja)
+  - [使い方](/ja/how-to-use)
+  - [オプション](/ja/options)
 
 ## Everything else here is a design record
 

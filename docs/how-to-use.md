@@ -18,6 +18,18 @@ That serves the `docs/` directory on localhost and prints the URL. No
 configuration file exists or is needed: the root is the directory you name
 (or `./docs` by convention), and everything else derives from the files.
 
+There is one flag worth knowing on your first run. Documentation you point
+Tsumugu at is content, not code, so scripts do not run and MDX components are
+shown as source. When the directory is your own and you want it to run, add
+`--trust`:
+
+```bash
+npx tsumugu dev docs --trust
+```
+
+That flag is the whole of the trust setting.
+[What it covers](#when-the-content-is-yours) is below.
+
 ## Write
 
 Routes mirror the file system, and three formats go through one pipeline:
@@ -29,7 +41,7 @@ docs/
 │   ├── index.md      →  /guide       the section's own page
 │   └── setup.md      →  /guide/setup
 ├── api.html          →  /api         HTML is accepted as source input
-├── notes.mdx         →  /notes       MDX is parsed without execution
+├── notes.mdx         →  /notes       MDX parses; --trust runs it
 └── images/x.svg      →  served as a file beside the documents
 ```
 

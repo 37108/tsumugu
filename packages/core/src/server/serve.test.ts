@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { RoutePath } from "../document/paths.js";
 import type { Page } from "../pipeline/site.js";
 
+import { reloadPath, reloadScript } from "./live-reload.js";
 import { serve, type RunningServer, type ServeOptions } from "./serve.js";
 
 /**
@@ -50,6 +51,10 @@ async function start(
 }
 
 describe("serve", () => {
+  it("keeps the live reload client on the server's endpoint", () => {
+    expect(reloadScript).toContain(`EventSource("${reloadPath}")`);
+  });
+
   it("binds loopback by default", async () => {
     const server = await start();
 

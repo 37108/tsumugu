@@ -1,5 +1,11 @@
 # tsumugu-core
 
+## 0.3.1
+
+### Patch Changes
+
+- bd52a0b: Render Markdown task list markers as accessible, read-only checkboxes.
+
 ## 0.3.0
 
 ### Minor Changes

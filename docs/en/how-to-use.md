@@ -6,7 +6,8 @@ order: 1
 
 # How to Use
 
-This guide is also [available in Japanese](/japanese/how-to-use).
+This page is also [available in Japanese](/ja/how-to-use). Every option named
+here is listed with its default on [Options](/en/options).
 
 ## Start
 
@@ -91,6 +92,12 @@ if a named directory is missing, or if two names canonicalize to the same
 locale. `--lang fr` sets the HTML language of the shared scope; a locale scope
 always uses its own locale. Without `--locales`, directory routing and exports
 work exactly as they do for an ordinary site.
+
+Switching languages is a link you write, because only you know which page is
+the counterpart of which. This site is built with `--locales en,ja`: the guide
+you are reading is `docs/en/`, its translation is `docs/ja/`, each page opens
+with a link to its pair, and the shared scope at `/` holds the design records
+that exist in one language only.
 
 ## When the content is yours
 

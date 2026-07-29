@@ -10,8 +10,10 @@ import { repositoryRoot } from "./helpers/paths.js";
  *
  * Served the way the project serves it: with the operator's `--trust`
  * declaration, because the documentation is this repository's own content and
- * two of its pages compute their figures while the page is built (ADR 7). The
- * `pnpm docs` script passes the same flag.
+ * two of its pages compute their figures while the page is built (ADR 7), and
+ * with `--locales en,ja`, because the usage guide is written in both languages
+ * and each gets its own scope (ADR 8). The `pnpm docs` script passes the same
+ * options.
  *
  * This is the only test whose fixture is the real project: `docs/` as it is
  * written, through the official preset, with nothing arranged for the test. It
@@ -36,14 +38,24 @@ const docsRoot = path.join(repositoryRoot, "docs");
 
 /** The project's own invocation, minus the port and the watcher. */
 function serveOwnDocs(): Promise<DevResult> {
-  return startDev({ root: docsRoot, port: 0, watch: false, trust: true });
+  return startDev({
+    root: docsRoot,
+    port: 0,
+    watch: false,
+    trust: true,
+    locales: ["en", "ja"],
+  });
 }
 
 /** Representative routes: one of each shape the project's documentation has. */
 const routes = [
   "",
-  "how-to-use",
-  "japanese/about",
+  "en",
+  "en/how-to-use",
+  "en/options",
+  "ja",
+  "ja/how-to-use",
+  "ja/options",
   "designs/principles",
   "designs/composition",
   "designs/accessibility",
@@ -120,11 +132,10 @@ describe("Tsumugu's own documentation", () => {
     running = await serveOwnDocs();
     const html = await (await fetch(running.server.url)).text();
 
-    expect(html).toContain('href="/what-is-tsumugu">What is Tsumugu</a>');
-    expect(html).toContain('href="/how-to-use">How to Use</a>');
-    expect(html).toContain(
-      'href="/japanese">Japanese Contents</a><ul><li><a href="/japanese/about">紡ぐとは</a></li><li><a href="/japanese/how-to-use">使い方</a>',
-    );
+    // The locale scopes are the guide, and the shared scope leaves them out:
+    // what is left at the root is the design records (ADR 8).
+    expect(html).not.toContain('href="/en">What is Tsumugu</a>');
+    expect(html).not.toContain('href="/ja">紡ぐとは</a>');
     expect(html).toContain(
       'href="/designs">Designs</a><ul><li><a href="/designs/accessibility">Accessibility</a>',
     );
@@ -141,6 +152,28 @@ describe("Tsumugu's own documentation", () => {
     expect(html).not.toContain("to write your own");
   });
 
+  it("keeps each language of the guide in its own scope", async () => {
+    running = await serveOwnDocs();
+
+    const english = await (await fetch(`${running.server.url}en`)).text();
+    const japanese = await (await fetch(`${running.server.url}ja`)).text();
+
+    // Each scope navigates its own language and nothing else, and declares the
+    // language a reader is actually looking at.
+    expect(english).toContain('<html lang="en">');
+    expect(english).toContain('href="/en/options">Options</a>');
+    expect(english).not.toContain('href="/ja/options"');
+
+    expect(japanese).toContain('<html lang="ja">');
+    expect(japanese).toContain('href="/ja/options">オプション</a>');
+    expect(japanese).not.toContain('href="/en/options"');
+
+    // The switch between them is a link in the prose, which is the only thing
+    // that knows which page translates which.
+    expect(english).toContain('href="/ja"');
+    expect(japanese).toContain('href="/en"');
+  });
+
   it("takes the site's name from the home page rather than the directory", async () => {
     running = await serveOwnDocs();
     const html = await (await fetch(running.server.url)).text();
@@ -154,9 +187,11 @@ describe("Tsumugu's own documentation", () => {
   it("gives every page a title of its own", async () => {
     running = await serveOwnDocs();
 
-    const titles = [...running.site.result.pages.values()].map(
-      (page) => page.title,
-    );
+    // Authored pages only: each scope has its own generated search page, and
+    // all of them are called "Search" by design.
+    const titles = [...running.site.result.pages.values()]
+      .filter((page) => page.generated !== true)
+      .map((page) => page.title);
 
     expect(titles.length).toBeGreaterThan(10);
     expect(titles).not.toContain("");

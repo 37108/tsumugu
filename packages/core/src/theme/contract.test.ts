@@ -148,6 +148,16 @@ function render(root: SemanticNode, theme: Theme = minimalTheme) {
 }
 
 describe("a theme turns semantic nodes into a virtual tree", () => {
+  it("preserves the language of a semantic part through a theme", () => {
+    const result = render({
+      type: "paragraph",
+      lang: "en",
+      children: [{ type: "text", value: "Search" }],
+    });
+
+    expect(serializeToHtml(result.tree)).toBe('<p lang="en">Search</p>');
+  });
+
   it.each([
     ["text", { type: "text", value: "Hello" } satisfies SemanticNode, "Hello"],
     [

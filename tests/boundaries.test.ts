@@ -232,6 +232,8 @@ describe("public export surface", () => {
     // otherwise, which is what "earned" means in docs/designs/principles.md.
     "tsumugu-core": [
       "buildSite",
+      "canonicalizeLocale",
+      "canonicalizeLocales",
       "createHeadingIdTransformer",
       "createReloadChannel",
       "createSite",
@@ -249,6 +251,7 @@ describe("public export surface", () => {
       "summarizeDiagnostics",
       "text",
       "trustedHtml",
+      "validateLocaleDirectories",
       "version",
       "watchRoot",
     ],

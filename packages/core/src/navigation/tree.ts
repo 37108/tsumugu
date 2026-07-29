@@ -24,6 +24,8 @@ import type { ResolvedMetadata } from "../metadata/resolve.js";
 /** What navigation needs to know about one document. */
 export interface NavigationDocument {
   readonly sourcePath: SourcePath;
+  /** Path relative to the navigation scope, when it differs from the source. */
+  readonly navigationPath?: SourcePath;
   readonly route: RoutePath;
   readonly metadata: Pick<
     ResolvedMetadata,
@@ -299,6 +301,7 @@ function duplicateLabelWarnings(
  */
 export function buildNavigation(
   documents: readonly NavigationDocument[],
+  rootRoute: RoutePath = "/" as RoutePath,
 ): Navigation {
   const root = emptyDirectory([]);
 
@@ -307,14 +310,20 @@ export function buildNavigation(
       continue;
     }
 
-    const segments = document.sourcePath.split("/");
+    const segments = (document.navigationPath ?? document.sourcePath).split(
+      "/",
+    );
     const directories = segments.slice(0, -1);
     const directory = directoryFor(root, directories);
 
     // The document's route matching its directory's route is what makes it the
     // directory's own page. Asking routing rather than matching `index.*` by
     // name keeps one definition of "this file is its directory".
-    const directoryRoute = `/${directories.join("/")}`;
+    const suffix = directories.join("/");
+    const directoryRoute =
+      suffix === ""
+        ? rootRoute
+        : `${rootRoute === "/" ? "" : rootRoute}/${suffix}`;
     if (document.route === directoryRoute) {
       directory.index = document;
     } else {

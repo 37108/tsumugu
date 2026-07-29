@@ -54,6 +54,10 @@ export interface ShellInput {
    * exactly like percent-encoding.
    */
   readonly basePath?: string;
+  /** Root route of the current content scope. */
+  readonly scopePath?: RoutePath;
+  /** Language of fixed interface copy when it differs from the document. */
+  readonly uiLang?: string;
   /** The theme's own stylesheet, placed after the shell's. */
   readonly themeStylesheet?: string;
   /**
@@ -74,6 +78,8 @@ export interface ShellResult {
 
 /** The id the skip link and the main landmark agree on. */
 const mainId = "tsumugu-content";
+const sidebarLabelId = "tsumugu-sidebar-label";
+const contentsLabelId = "tsumugu-contents-label";
 
 /**
  * The default tab icon, inline.
@@ -103,7 +109,7 @@ const faviconHref = `data:image/svg+xml,${encodeURIComponent(faviconSvg)}`;
  * highlighted option is named by `aria-activedescendant` — which the script
  * sets, because it is the only thing that knows which option that is.
  */
-function searchField(basePath: string): VirtualNode {
+function searchField(scopePath: string, uiLang?: string): VirtualNode {
   const inputId = "tsumugu-search-input";
   const listId = "tsumugu-search-results";
   const statusId = "tsumugu-search-status";
@@ -114,12 +120,16 @@ function searchField(basePath: string): VirtualNode {
       class: "tsumugu-search",
       "data-tsumugu-search": "true",
       role: "search",
-      action: `${basePath}/search`,
+      action: `${scopePath}/search`,
       method: "get",
     },
     element(
       "label",
-      { class: "tsumugu-visually-hidden", for: inputId },
+      {
+        class: "tsumugu-visually-hidden",
+        for: inputId,
+        ...(uiLang === undefined ? {} : { lang: uiLang }),
+      },
       text("Search the documentation"),
     ),
     element("input", {
@@ -133,6 +143,7 @@ function searchField(basePath: string): VirtualNode {
       "aria-expanded": "false",
       "aria-controls": listId,
       "aria-autocomplete": "list",
+      ...(uiLang === undefined ? {} : { lang: uiLang }),
     }),
     element("ul", { id: listId, role: "listbox", hidden: true }),
     // Announced rather than shown: a sighted reader can see the results
@@ -142,6 +153,7 @@ function searchField(basePath: string): VirtualNode {
       class: "tsumugu-visually-hidden",
       role: "status",
       "aria-live": "polite",
+      ...(uiLang === undefined ? {} : { lang: uiLang }),
     }),
   );
 }
@@ -219,6 +231,7 @@ function tableOfContentsList(
  */
 function diagnosticsPanel(
   diagnostics: readonly DocumentDiagnostic[],
+  uiLang?: string,
 ): VirtualNode {
   if (diagnostics.length === 0) {
     return fragment();
@@ -228,7 +241,11 @@ function diagnosticsPanel(
 
   return element(
     "section",
-    { class: "tsumugu-diagnostics", "aria-labelledby": heading },
+    {
+      class: "tsumugu-diagnostics",
+      "aria-labelledby": heading,
+      ...(uiLang === undefined ? {} : { lang: uiLang }),
+    },
     element(
       "h2",
       { id: heading },
@@ -282,6 +299,11 @@ function diagnosticsPanel(
  */
 export function renderShell(input: ShellInput): ShellResult {
   const basePath = input.basePath ?? "";
+  const scopePath = `${basePath}${
+    input.scopePath === undefined || input.scopePath === "/"
+      ? ""
+      : input.scopePath
+  }`;
   const trail = new Set(navigationTrail(input.navigation, input.currentRoute));
   const hasNavigation = input.navigation.length > 0;
   const hasContents = input.tableOfContents.length > 0;
@@ -291,7 +313,11 @@ export function renderShell(input: ShellInput): ShellResult {
     // sidebar that would otherwise be re-read on every page.
     element(
       "a",
-      { class: "tsumugu-skip", href: `#${mainId}` },
+      {
+        class: "tsumugu-skip",
+        href: `#${mainId}`,
+        ...(input.uiLang === undefined ? {} : { lang: input.uiLang }),
+      },
       text("Skip to content"),
     ),
     element(
@@ -305,16 +331,23 @@ export function renderShell(input: ShellInput): ShellResult {
         { class: "tsumugu-header" },
         element(
           "a",
-          { class: "tsumugu-brand", href: basePath === "" ? "/" : basePath },
+          { class: "tsumugu-brand", href: scopePath === "" ? "/" : scopePath },
           text(input.siteName),
         ),
-        ...(input.search === true ? [searchField(basePath)] : []),
+        ...(input.search === true
+          ? [searchField(scopePath, input.uiLang)]
+          : []),
       ),
       ...(hasNavigation
         ? [
             element(
               "nav",
-              { class: "tsumugu-sidebar", "aria-label": "Documentation" },
+              {
+                class: "tsumugu-sidebar",
+                ...(input.uiLang === undefined
+                  ? { "aria-label": "Documentation" }
+                  : { "aria-labelledby": sidebarLabelId }),
+              },
               // Closed by default: on a narrow screen a large project would
               // otherwise put its whole navigation above the content. The
               // wide layout forces the list visible through ::details-content,
@@ -323,7 +356,13 @@ export function renderShell(input: ShellInput): ShellResult {
               element(
                 "details",
                 { class: "tsumugu-disclosure" },
-                element("summary", {}, text("Documentation")),
+                element(
+                  "summary",
+                  input.uiLang === undefined
+                    ? {}
+                    : { id: sidebarLabelId, lang: input.uiLang },
+                  text("Documentation"),
+                ),
                 navigationList(
                   input.navigation,
                   trail,
@@ -338,14 +377,25 @@ export function renderShell(input: ShellInput): ShellResult {
         "main",
         { class: "tsumugu-main", id: mainId },
         element("article", { class: "tsumugu-doc" }, input.content),
-        diagnosticsPanel(input.diagnostics),
+        diagnosticsPanel(input.diagnostics, input.uiLang),
       ),
       ...(hasContents
         ? [
             element(
               "nav",
-              { class: "tsumugu-toc", "aria-label": "On this page" },
-              element("h2", {}, text("On this page")),
+              {
+                class: "tsumugu-toc",
+                ...(input.uiLang === undefined
+                  ? { "aria-label": "On this page" }
+                  : { "aria-labelledby": contentsLabelId }),
+              },
+              element(
+                "h2",
+                input.uiLang === undefined
+                  ? {}
+                  : { id: contentsLabelId, lang: input.uiLang },
+                text("On this page"),
+              ),
               tableOfContentsList(input.tableOfContents),
             ),
           ]
@@ -353,7 +403,18 @@ export function renderShell(input: ShellInput): ShellResult {
       element(
         "footer",
         { class: "tsumugu-footer" },
-        element("p", {}, text(`${input.siteName} · built with Tsumugu`)),
+        input.uiLang === undefined
+          ? element("p", {}, text(`${input.siteName} · built with Tsumugu`))
+          : element(
+              "p",
+              {},
+              text(`${input.siteName} · `),
+              element(
+                "span",
+                { lang: input.uiLang },
+                text("built with Tsumugu"),
+              ),
+            ),
       ),
     ),
     // Last in the body, not in the head: a script in the head runs before the
@@ -386,9 +447,9 @@ export function renderShell(input: ShellInput): ShellResult {
     // Where the site lives, for the page client: fetches and form fallbacks
     // resolve against this, so one static script — one hash — serves the root
     // and any base path alike.
-    ...(basePath === ""
+    ...(scopePath === ""
       ? []
-      : [element("meta", { name: "tsumugu-base", content: basePath })]),
+      : [element("meta", { name: "tsumugu-base", content: scopePath })]),
     // The mark — つ, the first syllable of 紡ぐ, drawn as one stroke of
     // thread — as a data URI, so a project gets a tab icon without shipping a
     // file. A favicon.svg or favicon.ico in the documentation root wins,

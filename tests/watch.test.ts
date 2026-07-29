@@ -140,6 +140,34 @@ describe("watch mode", () => {
     });
   });
 
+  it("updates only the affected locale scope through the watcher", async () => {
+    await withProject(
+      {
+        "index.md": "# Shared\n",
+        "ja/index.md": "# 日本語\n",
+        "en/index.md": "# English\n",
+      },
+      { locales: ["ja", "en"] },
+      async (root, result) => {
+        await writeFile(path.join(root, "ja", "guide.md"), "# 日本語ガイド\n");
+
+        const japanese = await eventually(
+          `${result.server.url}ja`,
+          (html) =>
+            html.includes("日本語ガイド") && !html.includes('href="/en/guide"'),
+        );
+        expect(japanese).toContain('href="/ja/guide"');
+        expect(await (await fetch(result.server.url)).text()).not.toContain(
+          "日本語ガイド",
+        );
+
+        await eventually(`${result.server.url}ja/search.json`, (body) =>
+          body.includes("日本語ガイド"),
+        );
+      },
+    );
+  });
+
   it("stops serving a file that was deleted", async () => {
     await withProject(
       { "index.md": "# Home\n", "temporary.md": "# Temporary\n" },

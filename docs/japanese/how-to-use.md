@@ -63,6 +63,37 @@ hidden: true # どこにも載せないが、配信はされる
 [ADR 6](/decisions/0006-mdx-without-execution) に記録されています。
 Tsumugu に渡した内容はコードではないので、実行しません。
 
+## ロケールを分ける
+
+1 つのサイトに翻訳したドキュメントを置く場合は、ロケールのディレクトリを
+明示します。
+
+```bash
+npx tsumugu dev docs --locales ja,en-US
+```
+
+```text
+docs/
+├── greeting.md       →  /greeting    共通スコープ
+├── ja/
+│   └── guide.md      →  /ja/guide    日本語スコープ
+└── en-US/
+    └── guide.md      →  /en-US/guide 米国英語スコープ
+```
+
+`/` のナビゲーションと検索には `greeting.md` が含まれ、`ja/` と `en-US/`
+以下は含まれません。`/ja` には `ja/` 以下だけ、`/en-US` には `en-US/`
+以下だけが含まれます。`documents.json`、`llms.txt`、`search.json` も
+スコープごとに生成され、ルートの `sitemap.xml` はサイト全体を含みます。
+
+ロケール名には Unicode のロケール識別子を使います。Tsumugu は名前を正規化
+するため、`en-us` は `en-US` というディレクトリを選びます。指定した
+ディレクトリが存在しない場合や、正規化後に同じロケールになる名前を重複して
+指定した場合は、配信やビルドを始める前に停止します。`--lang fr` は共通
+スコープの HTML 言語を設定します。ロケールのスコープでは、そのロケール
+自身が使われます。`--locales` を付けなければ、従来どおりすべての
+ディレクトリを通常のルートとして扱います。
+
 ## 中身が自分のものであるとき
 
 ドキュメント自体がコードであることもあります。`<canvas>` のデモ、
@@ -120,7 +151,8 @@ npx tsumugu build docs --out dist --origin https://docs.example.com
 `dist/` はクリーン URL の静的サイトです。たとえば `/guide/setup` は
 `guide/setup/index.html` になります。ページと同じ文書から生成された
 `documents.json`、`llms.txt`、`search.json`、`sitemap.xml` も含まれます。
-ファイルを配れる場所ならどこでもホストできます。
+ファイルを配れる場所ならどこでもホストできます。`build` でも `dev` と
+同じ `--locales` と `--lang` を使えます。
 
 ### GitHub Pages
 

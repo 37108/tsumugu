@@ -47,6 +47,9 @@ Options for dev
   --root <directory>   directory to serve, the same as the positional argument
   --host <host>        interface to bind (default: 127.0.0.1, loopback only)
   --port <port>        port to bind, 0 for any free port (default: 0)
+  --locales <tags>     comma-separated locale directories, e.g. ja,en-US
+  --lang <tag>         language for documents outside locale directories
+                       (default: en)
   --trust              declare this root's content yours: markup is emitted as
                        written, its scripts run, and .mdx is executed while the
                        page is built (ADR 7)
@@ -57,6 +60,9 @@ Options for build
   --origin <url>       where the site will be published, for sitemap.xml
   --base <path>        path prefix the site is served under, e.g. /my-repo
                        on a GitHub Pages project site
+  --locales <tags>     comma-separated locale directories, e.g. ja,en-US
+  --lang <tag>         language for documents outside locale directories
+                       (default: en)
   --clean              remove the output directory even if tsumugu did not write it
   --trust              declare this root's content yours: markup is emitted as
                        written, its scripts run, and .mdx is executed while the

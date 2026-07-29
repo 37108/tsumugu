@@ -225,6 +225,19 @@ describe("buildStatic", () => {
     expect(await listFiles(outDir)).not.toContain("stale/index.html");
   });
 
+  it("keeps the previous output when locale validation fails", async () => {
+    await build();
+    const before = await readFile(path.join(outDir, "index.html"), "utf8");
+
+    await expect(build({ locales: ["ja"] })).rejects.toThrow(
+      `Locale "ja" directory ${path.join(root, "ja")} was not found.`,
+    );
+
+    expect(await readFile(path.join(outDir, "index.html"), "utf8")).toBe(
+      before,
+    );
+  });
+
   it("removes a directory it did not write when told to", async () => {
     await mkdir(outDir, { recursive: true });
     await writeFile(path.join(outDir, "important.txt"), "somebody's work");
@@ -259,7 +272,7 @@ describe("buildStatic", () => {
     expect(parsed.entries[0]?.url.startsWith("/repo/")).toBe(true);
   });
 
-  it("reports a collision rather than overwriting", async () => {
+  it("preserves the existing generated-output collision order", async () => {
     // A file called `llms.txt` in the documentation root wants the same output
     // path as the generated one.
     await writeFile(path.join(root, "llms.txt"), "by hand\n");
@@ -269,7 +282,6 @@ describe("buildStatic", () => {
     expect(report.diagnostics.map((entry) => entry.code)).toContain(
       buildCodes.collision,
     );
-    // First writer wins, and the loser is named rather than silently dropped.
     expect(await readFile(path.join(outDir, "llms.txt"), "utf8")).not.toBe(
       "by hand\n",
     );

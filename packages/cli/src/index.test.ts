@@ -57,13 +57,26 @@ describe("run", () => {
   });
 
   it("documents only options that exist", () => {
-    for (const option of ["--root", "--host", "--port", "--trust"]) {
+    for (const option of [
+      "--root",
+      "--host",
+      "--port",
+      "--locales",
+      "--lang",
+      "--trust",
+    ]) {
       expect(usage).toContain(option);
     }
   });
 
   it("documents --trust for dev and for build", () => {
     expect(usage.match(/--trust/g)).toHaveLength(2);
+  });
+
+  it("documents locale scopes for dev and for build", () => {
+    expect(usage.match(/--locales/g)).toHaveLength(2);
+    expect(usage.match(/--lang/g)).toHaveLength(2);
+    expect(usage).toContain("ja,en-US");
   });
 
   it.each([
@@ -117,6 +130,18 @@ describe("parseDevOptions", () => {
     });
   });
 
+  it("reads and canonicalizes locale scopes and the shared language", () => {
+    expect(
+      parseDevOptions(["--locales", "ja, en-us, zh-Hant", "--lang", "en-us"]),
+    ).toEqual({
+      ok: true,
+      options: {
+        locales: ["ja", "en-US", "zh-Hant"],
+        lang: "en-US",
+      },
+    });
+  });
+
   it("names --trust when rejecting an unknown option", () => {
     const result = parseDevOptions(["--watch"]);
 
@@ -129,6 +154,13 @@ describe("parseDevOptions", () => {
     ["a flag with no value", ["--host"]],
     ["a port that is not a number", ["--port", "eighty"]],
     ["a port out of range", ["--port", "70000"]],
+    ["an empty locale", ["--locales", "ja,,en"]],
+    ["an invalid locale", ["--locales", "en_US"]],
+    ["a canonical locale duplicate", ["--locales", "en-US,en-us"]],
+    ["a reserved locale", ["--locales", "search"]],
+    ["repeated locales", ["--locales", "ja", "--locales", "en"]],
+    ["an invalid shared language", ["--lang", "en_US"]],
+    ["a repeated shared language", ["--lang", "ja", "--lang", "en"]],
   ])("rejects %s", (_description, argv) => {
     const result = parseDevOptions(argv);
 
@@ -240,6 +272,31 @@ describe("formatForTerminal", () => {
 });
 
 describe("parseBuildOptions", () => {
+  it("reads and canonicalizes locale scopes and the shared language", () => {
+    expect(
+      parseBuildOptions(["docs", "--locales", "ja,en-us", "--lang", "zh-hant"]),
+    ).toEqual({
+      ok: true,
+      options: {
+        root: "docs",
+        locales: ["ja", "en-US"],
+        lang: "zh-Hant",
+      },
+    });
+  });
+
+  it.each([
+    ["an empty locale", ["--locales", "ja,"]],
+    ["an invalid locale", ["--locales", "en_US"]],
+    ["a canonical locale duplicate", ["--locales", "en-US,en-us"]],
+    ["a reserved locale", ["--locales", "search"]],
+    ["repeated locales", ["--locales", "ja", "--locales", "en"]],
+    ["an invalid shared language", ["--lang", "en_US"]],
+    ["a repeated shared language", ["--lang", "ja", "--lang", "en"]],
+  ])("rejects %s", (_description, argv) => {
+    expect(parseBuildOptions(argv).ok).toBe(false);
+  });
+
   it("normalizes the base path to one leading slash and no trailing one", () => {
     for (const written of ["/repo", "repo", "repo/", "/repo/", "//repo//"]) {
       const parsed = parseBuildOptions(["docs", "--base", written]);

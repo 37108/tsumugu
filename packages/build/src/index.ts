@@ -12,6 +12,7 @@ import {
   createSite,
   type BuildOptions as SiteOptions,
   type DocumentDiagnostic,
+  validateLocaleDirectories,
 } from "tsumugu-core";
 
 /**
@@ -140,6 +141,9 @@ export async function buildStatic(
   options: StaticBuildOptions,
 ): Promise<StaticBuildReport> {
   const diagnostics: DocumentDiagnostic[] = [];
+  if (options.locales !== undefined) {
+    await validateLocaleDirectories(options.root, options.locales);
+  }
 
   if (!(await isEmptyDirectory(options.outDir))) {
     if (await isOwnOutput(options.outDir)) {
@@ -204,23 +208,37 @@ export async function buildStatic(
     }
   }
 
-  for (const [route, output] of result.exports) {
-    const file = route.replace(/^\//u, "");
-    if (claim(file, `the generated ${file}`)) {
-      const body = output.render(origin ?? placeholderOrigin);
-      await write(outDir, file, body);
-      totalBytes += Buffer.byteLength(body);
+  const copyAssets = async (): Promise<void> => {
+    for (const asset of result.assets) {
+      if (claim(asset, `the file ${asset}`)) {
+        const source = path.join(root, ...asset.split("/"));
+        const target = path.join(outDir, ...asset.split("/"));
+        await mkdir(path.dirname(target), { recursive: true });
+        await copyFile(source, target);
+        totalBytes += (await stat(source)).size;
+      }
     }
-  }
+  };
 
-  for (const asset of result.assets) {
-    if (claim(asset, `the file ${asset}`)) {
-      const source = path.join(root, ...asset.split("/"));
-      const target = path.join(outDir, ...asset.split("/"));
-      await mkdir(path.dirname(target), { recursive: true });
-      await copyFile(source, target);
-      totalBytes += (await stat(source)).size;
+  const writeExports = async (): Promise<void> => {
+    for (const [route, output] of result.exports) {
+      const file = route.replace(/^\//u, "");
+      if (claim(file, `the generated ${file}`)) {
+        const body = output.render(origin ?? placeholderOrigin);
+        await write(outDir, file, body);
+        totalBytes += Buffer.byteLength(body);
+      }
     }
+  };
+
+  if (options.locales === undefined) {
+    // Preserve the original single-site collision order byte for byte.
+    await writeExports();
+    await copyAssets();
+  } else {
+    // Within explicit scopes, authored machine files retain their precedence.
+    await copyAssets();
+    await writeExports();
   }
 
   await write(outDir, markerFile, markerContents);

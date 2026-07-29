@@ -164,6 +164,20 @@ function childrenOfNode(node: SemanticNode): readonly SemanticNode[] {
   return "children" in node ? node.children : [];
 }
 
+/** Applies semantic language metadata without asking every theme to repeat it. */
+function withLanguage(node: VirtualNode, lang: string): VirtualNode {
+  if (node.type === "element") {
+    return { ...node, attributes: { ...node.attributes, lang } };
+  }
+  if (node.type === "fragment") {
+    return {
+      ...node,
+      children: node.children.map((child) => withLanguage(child, lang)),
+    };
+  }
+  return element("span", { lang }, node);
+}
+
 /**
  * Renders a document with a theme.
  *
@@ -190,13 +204,15 @@ export function renderWithTheme(
   function renderNode(node: SemanticNode): VirtualNode {
     const renderer = theme.renderers[node.type];
     const children = childrenOfNode(node);
+    const applyLanguage = (rendered: VirtualNode): VirtualNode =>
+      node.lang === undefined ? rendered : withLanguage(rendered, node.lang);
 
     if (renderer === undefined) {
-      return fallbackRenderer(theme.id, node, context, children);
+      return applyLanguage(fallbackRenderer(theme.id, node, context, children));
     }
 
     try {
-      return renderer(node, context);
+      return applyLanguage(renderer(node, context));
     } catch (cause) {
       diagnostics.push({
         code: themeCodes.rendererThrew,
@@ -210,7 +226,7 @@ export function renderWithTheme(
         ...(node.range === undefined ? {} : { range: node.range }),
         cause,
       });
-      return fallbackContent(node, context, children);
+      return applyLanguage(fallbackContent(node, context, children));
     }
   }
 

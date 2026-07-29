@@ -5,6 +5,11 @@ import { createPreset } from "tsumugu-preset";
 import { createMdxRenderer } from "tsumugu-renderer-mdx";
 
 import { siteNameFor } from "./dev.js";
+import {
+  parseLang,
+  parseLocales,
+  validateLocaleDirectories,
+} from "./locales.js";
 import { formatForTerminal, styleFor, type TerminalStyle } from "./terminal.js";
 
 /**
@@ -17,6 +22,10 @@ import { formatForTerminal, styleFor, type TerminalStyle } from "./terminal.js";
 
 export interface BuildCommandOptions {
   readonly root?: string;
+  /** Canonical locale directories built as isolated content scopes. */
+  readonly locales?: readonly string[];
+  /** Language for documents outside the locale scopes. */
+  readonly lang?: string;
   readonly outDir?: string;
   readonly origin?: string;
   readonly basePath?: string;
@@ -44,6 +53,8 @@ export function parseBuildOptions(
     basePath?: string;
     clean?: boolean;
     trust?: boolean;
+    locales?: readonly string[];
+    lang?: string;
   } = {};
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -84,6 +95,32 @@ export function parseBuildOptions(
       continue;
     }
 
+    if (argument === "--locales") {
+      if (options.locales !== undefined) {
+        return { ok: false, message: "--locales can only be specified once." };
+      }
+      const parsed = parseLocales(value);
+      if (!parsed.ok) {
+        return parsed;
+      }
+      options.locales = parsed.value;
+      index += 1;
+      continue;
+    }
+
+    if (argument === "--lang") {
+      if (options.lang !== undefined) {
+        return { ok: false, message: "--lang can only be specified once." };
+      }
+      const parsed = parseLang(value);
+      if (!parsed.ok) {
+        return parsed;
+      }
+      options.lang = parsed.value;
+      index += 1;
+      continue;
+    }
+
     if (
       argument !== undefined &&
       argument !== "" &&
@@ -96,7 +133,7 @@ export function parseBuildOptions(
 
     return {
       ok: false,
-      message: `Unknown option "${argument ?? ""}". Supported: --root, --out, --origin, --base, --clean, --trust.`,
+      message: `Unknown option "${argument ?? ""}". Supported: --root, --out, --origin, --base, --locales, --lang, --clean, --trust.`,
     };
   }
 
@@ -108,12 +145,15 @@ export async function runBuild(
   options: BuildCommandOptions & { readonly root: string },
 ): Promise<StaticBuildReport> {
   const root = path.resolve(options.root);
+  const locales = await validateLocaleDirectories(root, options.locales);
 
   return buildStatic({
     root,
     outDir: path.resolve(options.outDir ?? defaultOutDir),
     ...(options.origin === undefined ? {} : { origin: options.origin }),
     ...(options.basePath === undefined ? {} : { basePath: options.basePath }),
+    ...(locales === undefined ? {} : { locales }),
+    ...(options.lang === undefined ? {} : { lang: options.lang }),
     ...(options.clean === undefined ? {} : { clean: options.clean }),
     ...(options.trust === true ? { trust: true } : {}),
     siteName: siteNameFor(root),

@@ -200,6 +200,75 @@ describe("tsumugu binary", () => {
     });
   });
 
+  it("builds isolated locale scopes through the emitted binary", async () => {
+    await withTemporaryDirectory(async (directory) => {
+      await writeFiles(directory, {
+        "docs/index.md": "# Shared\n",
+        "docs/greeting.md": "# Greeting\n",
+        "docs/ja/index.md": "# 日本語\n",
+        "docs/ja/guide.md": "# ガイド\n",
+        "docs/en/index.md": "# English\n",
+      });
+
+      const outcome = await runCli(
+        [
+          "build",
+          "docs",
+          "--out",
+          "out",
+          "--origin",
+          "https://example.com",
+          "--locales",
+          "ja,en",
+          "--lang",
+          "fr",
+        ],
+        directory,
+      );
+
+      expect(outcome.exitCode).toBe(0);
+      const written = await listFiles(path.join(directory, "out"));
+      expect(written).toContain("greeting/index.html");
+      expect(written).toContain("ja/guide/index.html");
+      expect(written).toContain("en/index.html");
+      expect(written).toContain("ja/search.json");
+      expect(written).toContain("en/documents.json");
+
+      const shared = await readFile(
+        path.join(directory, "out", "index.html"),
+        "utf8",
+      );
+      const japanese = await readFile(
+        path.join(directory, "out", "ja", "index.html"),
+        "utf8",
+      );
+      expect(shared).toContain('<html lang="fr">');
+      expect(shared).not.toContain('href="/ja/guide"');
+      expect(japanese).toContain('<html lang="ja">');
+      expect(japanese).toContain('href="/ja/guide"');
+      expect(japanese).not.toContain('href="/greeting"');
+    });
+  });
+
+  it("reports a configured locale directory that is missing", async () => {
+    await withTemporaryDirectory(async (directory) => {
+      await writeFiles(directory, {
+        "docs/index.md": "# Shared\n",
+        "docs/ja/index.md": "# 日本語\n",
+      });
+
+      const outcome = await runCli(
+        ["build", "docs", "--out", "out", "--locales", "ja,en"],
+        directory,
+      );
+
+      expect(outcome.exitCode).toBe(1);
+      expect(outcome.stdout).toBe("");
+      expect(outcome.stderr).toContain('Locale "en" directory');
+      await expect(access(path.join(directory, "out"))).rejects.toThrow();
+    });
+  });
+
   it("refuses to build into a directory it does not own", async () => {
     await withTemporaryDirectory(async (directory) => {
       await writeFiles(directory, {

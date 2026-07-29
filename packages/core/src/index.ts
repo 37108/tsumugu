@@ -125,6 +125,11 @@ export type {
   UpdateSummary,
 } from "./pipeline/site.js";
 export { buildSite, createSite } from "./pipeline/site.js";
+export {
+  canonicalizeLocale,
+  canonicalizeLocales,
+  validateLocaleDirectories,
+} from "./locales.js";
 export type {
   RunningServer,
   ServedSite,

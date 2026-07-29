@@ -62,6 +62,36 @@ removes `<script>` from HTML. The reason is recorded in
 [ADR 6](/decisions/0006-mdx-without-execution): content you point Tsumugu at
 is not code, so it does not run.
 
+## Separate locales
+
+Name the locale directories explicitly when one site contains translated
+documentation:
+
+```bash
+npx tsumugu dev docs --locales ja,en-US
+```
+
+```text
+docs/
+├── greeting.md       →  /greeting    shared scope
+├── ja/
+│   └── guide.md      →  /ja/guide    Japanese scope
+└── en-US/
+    └── guide.md      →  /en-US/guide US English scope
+```
+
+At `/`, navigation and search contain `greeting.md` but exclude everything
+under `ja/` and `en-US/`. At `/ja`, they contain only `ja/`; at `/en-US`, only
+`en-US/`. Each scope also gets its own `documents.json`, `llms.txt`, and
+`search.json`. The root `sitemap.xml` covers the whole site.
+
+Locale names use Unicode locale identifiers. Tsumugu canonicalizes them, so
+`en-us` selects a directory named `en-US`. It stops before serving or building
+if a named directory is missing, or if two names canonicalize to the same
+locale. `--lang fr` sets the HTML language of the shared scope; a locale scope
+always uses its own locale. Without `--locales`, directory routing and exports
+work exactly as they do for an ordinary site.
+
 ## When the content is yours
 
 Some documentation is the code: a `<canvas>` demo, an interactive example, an
@@ -118,7 +148,8 @@ npx tsumugu build docs --out dist --origin https://docs.example.com
 `dist/` is a static site with clean URLs. For example, `/guide/setup` is written
 to `guide/setup/index.html`. The build also writes `documents.json`, `llms.txt`,
 `search.json`, and `sitemap.xml` from the same source documents. Host the
-directory anywhere that serves static files.
+directory anywhere that serves static files. `build` accepts the same
+`--locales` and `--lang` options as `dev`.
 
 ### GitHub Pages
 

@@ -110,5 +110,6 @@ describe("the embedded script", () => {
     expect(clientScript).toContain('createElement("button")');
     expect(clientScript).toContain("navigator.clipboard");
     expect(clientScript).toContain('"Copy code"');
+    expect(clientScript).toContain('button.lang="en"');
   });
 });

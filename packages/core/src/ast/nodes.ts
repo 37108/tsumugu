@@ -44,6 +44,8 @@ export interface SourceRange {
  */
 interface NodeBase {
   readonly range?: SourceRange;
+  /** Natural language of this part when it differs from its document. */
+  readonly lang?: string;
 }
 
 /** The root of a document. */

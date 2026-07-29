@@ -72,7 +72,7 @@ Renderer registration is explicit. Selection is capability-based. Ambiguous matc
 
 ### Semantic AST
 
-The Semantic AST represents documentation meaning rather than browser DOM structure or parser-specific syntax. It is shared by rendering, table-of-contents generation, search, link analysis, and future AI-oriented exports.
+The Semantic AST represents documentation meaning rather than browser DOM structure or parser-specific syntax. It is shared by rendering, table-of-contents generation, search, link analysis, and future AI-oriented exports. A node can declare its natural language when it differs from the document around it.
 
 The initial AST should remain intentionally small. HTML that cannot be represented without data loss may use an explicit preserved-HTML escape hatch, with rendering governed by the security policy.
 

@@ -32,6 +32,8 @@ export interface ScanOptions {
 
 export interface ScanResult {
   readonly snapshot: DocumentSnapshot;
+  /** Direct child directories of the root, sorted by code unit. */
+  readonly rootDirectories: readonly string[];
   /**
    * Files that are not documents, relative to the root, POSIX-separated.
    *
@@ -126,6 +128,7 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
   const documents: DiscoveredDocument[] = [];
   const assets: string[] = [];
   const diagnostics: DocumentDiagnostic[] = [];
+  const rootDirectories: string[] = [];
 
   const walk = async (directory: string): Promise<void> => {
     let entries;
@@ -177,6 +180,9 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
       }
 
       if (entry.isDirectory()) {
+        if (directory === options.root) {
+          rootDirectories.push(entry.name);
+        }
         await walk(absolute);
         continue;
       }
@@ -221,6 +227,7 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
 
   return {
     snapshot: toSnapshot(documents),
+    rootDirectories,
     assets: assets.sort(),
     diagnostics,
   };

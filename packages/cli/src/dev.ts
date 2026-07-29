@@ -16,6 +16,11 @@ import { createPreset } from "tsumugu-preset";
 import { createMdxRenderer } from "tsumugu-renderer-mdx";
 
 import { formatForTerminal, styleFor, type TerminalStyle } from "./terminal.js";
+import {
+  parseLang,
+  parseLocales,
+  validateLocaleDirectories,
+} from "./locales.js";
 
 /**
  * The zero-config development command.
@@ -29,6 +34,10 @@ import { formatForTerminal, styleFor, type TerminalStyle } from "./terminal.js";
 export interface DevOptions {
   /** Documentation root. Discovered by convention when omitted. */
   readonly root?: string;
+  /** Canonical locale directories served as isolated content scopes. */
+  readonly locales?: readonly string[];
+  /** Language for documents outside the locale scopes. */
+  readonly lang?: string;
   readonly host?: string;
   readonly port?: number;
   /** Watch the root and rebuild on change. On unless turned off. */
@@ -165,6 +174,8 @@ export function parseDevOptions(
     host?: string;
     port?: number;
     trust?: boolean;
+    locales?: readonly string[];
+    lang?: string;
   } = {};
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -186,6 +197,32 @@ export function parseDevOptions(
 
     if (argument === "--trust") {
       options.trust = true;
+      continue;
+    }
+
+    if (argument === "--locales") {
+      if (options.locales !== undefined) {
+        return { ok: false, message: "--locales can only be specified once." };
+      }
+      const parsed = parseLocales(value);
+      if (!parsed.ok) {
+        return parsed;
+      }
+      options.locales = parsed.value;
+      index += 1;
+      continue;
+    }
+
+    if (argument === "--lang") {
+      if (options.lang !== undefined) {
+        return { ok: false, message: "--lang can only be specified once." };
+      }
+      const parsed = parseLang(value);
+      if (!parsed.ok) {
+        return parsed;
+      }
+      options.lang = parsed.value;
+      index += 1;
       continue;
     }
 
@@ -221,7 +258,7 @@ export function parseDevOptions(
 
     return {
       ok: false,
-      message: `Unknown option "${argument ?? ""}". Supported: --root, --host, --port, --trust.`,
+      message: `Unknown option "${argument ?? ""}". Supported: --root, --host, --port, --locales, --lang, --trust.`,
     };
   }
 
@@ -256,6 +293,7 @@ export function siteNameFor(root: string): string {
  */
 export async function startDev(options: DevOptions = {}): Promise<DevResult> {
   const root = path.resolve(options.root ?? conventionalDirectory);
+  const locales = await validateLocaleDirectories(root, options.locales);
   const watching = options.watch !== false;
   // Reloading a browser when nothing is watching for changes would be a script
   // that can never fire, so the two are one decision unless asked otherwise.
@@ -273,6 +311,8 @@ export async function startDev(options: DevOptions = {}): Promise<DevResult> {
         : {},
     ),
     siteName: siteNameFor(root),
+    ...(locales === undefined ? {} : { locales }),
+    ...(options.lang === undefined ? {} : { lang: options.lang }),
     ...(reloading ? { script: reloadScript } : {}),
     ...(options.trust === true ? { trust: true } : {}),
   });

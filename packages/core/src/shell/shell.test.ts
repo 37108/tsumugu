@@ -49,6 +49,32 @@ function shell(overrides: Partial<ShellInput> = {}): string {
 }
 
 describe("renderShell", () => {
+  it("does not annotate English interface copy on an English page", () => {
+    const html = shell();
+
+    expect(/<a[^>]*class="tsumugu-skip"[^>]*lang=/u.test(html)).toBe(false);
+    expect(
+      /<label[^>]*class="tsumugu-visually-hidden"[^>]*lang=/u.test(html),
+    ).toBe(false);
+  });
+
+  it("annotates diagnostics when interface copy differs from the page", () => {
+    const html = shell({
+      uiLang: "en",
+      diagnostics: [
+        {
+          code: "test/problem",
+          severity: "warning",
+          message: "Something needs attention.",
+        },
+      ],
+    });
+
+    expect(html).toContain(
+      '<section aria-labelledby="tsumugu-diagnostics-heading" class="tsumugu-diagnostics" lang="en">',
+    );
+  });
+
   it("marks up the landmarks a page is navigated by", () => {
     const html = shell();
 

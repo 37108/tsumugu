@@ -36,6 +36,10 @@ function link(url: string, label: string): InlineNode {
   return { type: "link", url, children: [text(label)] };
 }
 
+function language(lang: string | undefined): { readonly lang?: string } {
+  return lang === undefined ? {} : { lang };
+}
+
 /**
  * A navigation item as a list entry, with its section nested beneath it.
  *
@@ -88,6 +92,7 @@ export interface GeneratedHomeInput {
   readonly siteName: string;
   readonly navigation: readonly NavigationItem[];
   readonly basePath?: string;
+  readonly contentLang?: string;
 }
 
 /**
@@ -103,13 +108,16 @@ export function generateHomeDocument(input: GeneratedHomeInput): DocumentNode {
       type: "document",
       children: [
         { type: "heading", depth: 1, children: [text(input.siteName)] },
-        paragraph(
-          text(
-            "This documentation root has no documents yet. Add a Markdown or HTML file to it, then reload: ",
+        {
+          ...paragraph(
+            text(
+              "This documentation root has no documents yet. Add a Markdown or HTML file to it, then reload: ",
+            ),
+            { type: "inline-code", value: "index.md" },
+            text(" becomes this page."),
           ),
-          { type: "inline-code", value: "index.md" },
-          text(" becomes this page."),
-        ),
+          ...language(input.contentLang),
+        },
       ],
     };
   }
@@ -118,11 +126,14 @@ export function generateHomeDocument(input: GeneratedHomeInput): DocumentNode {
     type: "document",
     children: [
       { type: "heading", depth: 1, children: [text(input.siteName)] },
-      paragraph(
-        text("This page lists the documents in this project. Add an "),
-        { type: "inline-code", value: "index.md" },
-        text(" to the documentation root to write your own."),
-      ),
+      {
+        ...paragraph(
+          text("This page lists the documents in this project. Add an "),
+          { type: "inline-code", value: "index.md" },
+          text(" to the documentation root to write your own."),
+        ),
+        ...language(input.contentLang),
+      },
       navigationList(input.navigation, input.basePath ?? ""),
     ],
   };
@@ -132,6 +143,7 @@ export interface GeneratedNotFoundInput {
   readonly requestedPath: string;
   readonly navigation: readonly NavigationItem[];
   readonly basePath?: string;
+  readonly contentLang?: string;
 }
 
 /**
@@ -146,23 +158,35 @@ export function generateNotFoundDocument(
   input: GeneratedNotFoundInput,
 ): DocumentNode {
   const children: BlockNode[] = [
-    { type: "heading", depth: 1, children: [text("Page not found")] },
-    paragraph(
-      text("No document is served at "),
-      { type: "inline-code", value: input.requestedPath },
-      text("."),
-    ),
+    {
+      type: "heading",
+      depth: 1,
+      ...language(input.contentLang),
+      children: [text("Page not found")],
+    },
+    {
+      ...paragraph(
+        text("No document is served at "),
+        { type: "inline-code", value: input.requestedPath },
+        text("."),
+      ),
+      ...language(input.contentLang),
+    },
   ];
 
   if (input.navigation.length === 0) {
-    children.push(
-      paragraph(text("This project has no documents to link to yet.")),
-    );
+    children.push({
+      ...paragraph(text("This project has no documents to link to yet.")),
+      ...language(input.contentLang),
+    });
     return { type: "document", children };
   }
 
   children.push(
-    paragraph(text("These sections exist:")),
+    {
+      ...paragraph(text("These sections exist:")),
+      ...language(input.contentLang),
+    },
     navigationList(input.navigation, input.basePath ?? ""),
   );
 
@@ -173,6 +197,7 @@ export interface GeneratedSearchInput {
   readonly query?: string;
   readonly navigation: readonly NavigationItem[];
   readonly basePath?: string;
+  readonly contentLang?: string;
 }
 
 /**
@@ -192,23 +217,30 @@ export function generateSearchDocument(
   input: GeneratedSearchInput,
 ): DocumentNode {
   const children: BlockNode[] = [
-    { type: "heading", depth: 1, children: [text("Search")] },
+    {
+      type: "heading",
+      depth: 1,
+      ...language(input.contentLang),
+      children: [text("Search")],
+    },
   ];
 
   if (input.query !== undefined && input.query.trim() !== "") {
-    children.push(
-      paragraph(
+    children.push({
+      ...paragraph(
         text("Searching for "),
         { type: "inline-code", value: input.query.trim() },
         text(
           " needs JavaScript, which is not running. Everything this project contains is listed below.",
         ),
       ),
-    );
+      ...language(input.contentLang),
+    });
   } else {
-    children.push(
-      paragraph(text("Everything this project contains is listed below.")),
-    );
+    children.push({
+      ...paragraph(text("Everything this project contains is listed below.")),
+      ...language(input.contentLang),
+    });
   }
 
   if (input.navigation.length > 0) {
@@ -226,18 +258,26 @@ export function generateSearchDocument(
  * without repeating the address back. Echoing input that failed validation is
  * how a 400 page becomes a reflection point.
  */
-export function generateBadRequestDocument(): DocumentNode {
+export function generateBadRequestDocument(contentLang?: string): DocumentNode {
   return {
     type: "document",
     children: [
-      { type: "heading", depth: 1, children: [text("Bad request")] },
-      paragraph(
-        text(
-          "That address is not a documentation path this server can read. Check the link and try again, or start from the ",
+      {
+        type: "heading",
+        depth: 1,
+        ...language(contentLang),
+        children: [text("Bad request")],
+      },
+      {
+        ...paragraph(
+          text(
+            "That address is not a documentation path this server can read. Check the link and try again, or start from the ",
+          ),
+          link("/", "home page"),
+          text("."),
         ),
-        link("/", "home page"),
-        text("."),
-      ),
+        ...language(contentLang),
+      },
     ],
   };
 }

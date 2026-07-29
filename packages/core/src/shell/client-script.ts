@@ -111,6 +111,7 @@ if(!code)continue;
 const button=document.createElement("button");
 button.type="button";
 button.className="tsumugu-copy";
+button.lang="en";
 button.textContent="Copy";
 button.setAttribute("aria-label","Copy code");
 button.setAttribute("aria-live","polite");

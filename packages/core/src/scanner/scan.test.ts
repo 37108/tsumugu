@@ -59,6 +59,7 @@ describe("scan", () => {
           "guide/setup.md",
           "index.md",
         ]);
+        expect(result.rootDirectories).toEqual(["guide"]);
         expect(result.diagnostics).toEqual([]);
       },
     );
@@ -162,6 +163,7 @@ describe("scan", () => {
       const result = await scan({ root });
 
       expect(result.snapshot.size).toBe(0);
+      expect(result.rootDirectories).toEqual([]);
       expect(result.diagnostics).toEqual([]);
     });
   });

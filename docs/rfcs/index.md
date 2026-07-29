@@ -30,8 +30,9 @@ lands.
 
 ## Index
 
-| RFC                                | Status   | Proposal                                              |
-| ---------------------------------- | -------- | ----------------------------------------------------- |
-| [1](0001-openapi-renderer.md)      | Draft    | an OpenAPI renderer, as a renderer package            |
-| [2](0002-mermaid-renderer.md)      | Draft    | Mermaid diagrams, and why not yet                     |
-| [3](0003-operator-opt-in-trust.md) | Accepted | `--trust`: the operator opts the root in to execution |
+| RFC                                 | Status   | Proposal                                              |
+| ----------------------------------- | -------- | ----------------------------------------------------- |
+| [1](0001-openapi-renderer.md)       | Draft    | an OpenAPI renderer, as a renderer package            |
+| [2](0002-mermaid-renderer.md)       | Draft    | Mermaid diagrams, and why not yet                     |
+| [3](0003-operator-opt-in-trust.md)  | Accepted | `--trust`: the operator opts the root in to execution |
+| [4](0004-explicit-locale-scopes.md) | Accepted | explicit locale scopes within one documentation root  |

@@ -38,7 +38,12 @@ afterEach(async () => {
 async function audit(
   files: Readonly<Record<string, string>>,
   path = "",
-  options: { readonly trust?: boolean } = {},
+  options: {
+    readonly trust?: boolean;
+    readonly locales?: readonly string[];
+    readonly lang?: string;
+    readonly viewportWidth?: number;
+  } = {},
 ): Promise<AxeResults> {
   let results: AxeResults | undefined;
 
@@ -49,9 +54,17 @@ async function audit(
       port: 0,
       watch: false,
       ...(options.trust === true ? { trust: true } : {}),
+      ...(options.locales === undefined ? {} : { locales: options.locales }),
+      ...(options.lang === undefined ? {} : { lang: options.lang }),
     });
 
     const html = await (await fetch(`${running.server.url}${path}`)).text();
+    if (options.viewportWidth !== undefined) {
+      Object.defineProperty(window, "innerWidth", {
+        configurable: true,
+        value: options.viewportWidth,
+      });
+    }
 
     // Parsed as a whole document and transplanted, attributes and all: a
     // harness that dropped `lang` would report a failure the server does not
@@ -137,6 +150,90 @@ describe("accessibility", () => {
 
     expect(describeViolations(results.violations)).toEqual([]);
   });
+
+  it.each([
+    ["narrow", 320],
+    ["wide", 1440],
+  ] as const)(
+    "finds no violations on a localized document at a %s viewport",
+    async (_name, viewportWidth) => {
+      const results = await audit(
+        {
+          "index.md": "# Shared\n",
+          "ja/index.md": "# 日本語\n",
+          "ja/guide.md": "# ガイド\n",
+          "en/index.md": "# English\n",
+        },
+        "ja/guide",
+        { locales: ["ja", "en"], lang: "fr", viewportWidth },
+      );
+
+      expect(document.documentElement.lang).toBe("ja");
+      expect(
+        document.querySelector(".tsumugu-search")?.getAttribute("action"),
+      ).toBe("/ja/search");
+      expect(
+        document
+          .querySelector('label[for="tsumugu-search-input"]')
+          ?.getAttribute("lang"),
+      ).toBe("en");
+      expect(
+        document.querySelector(".tsumugu-skip")?.getAttribute("lang"),
+      ).toBe("en");
+      expect(
+        document.getElementById("tsumugu-search-status")?.getAttribute("lang"),
+      ).toBe("en");
+      expect(describeViolations(results.violations)).toEqual([]);
+    },
+  );
+
+  it.each([
+    ["narrow", 320],
+    ["wide", 1440],
+  ] as const)(
+    "finds no violations on a localized generated home at a %s viewport",
+    async (_name, viewportWidth) => {
+      const results = await audit(
+        {
+          "index.md": "# Shared\n",
+          "ja/guide.md": "# ガイド\n",
+          "en/index.md": "# English\n",
+        },
+        "ja",
+        { locales: ["ja", "en"], viewportWidth },
+      );
+
+      expect(document.documentElement.lang).toBe("ja");
+      expect(document.querySelector('a[href="/ja/guide"]')).not.toBeNull();
+      expect(document.querySelector("article p[lang='en']")).not.toBeNull();
+      expect(describeViolations(results.violations)).toEqual([]);
+    },
+  );
+
+  it.each([
+    ["narrow", 320],
+    ["wide", 1440],
+  ] as const)(
+    "finds no violations on localized search at a %s viewport",
+    async (_name, viewportWidth) => {
+      const results = await audit(
+        {
+          "index.md": "# Shared\n",
+          "ja/index.md": "# 日本語\n",
+          "ja/guide.md": "# ガイド\n",
+          "en/index.md": "# English\n",
+        },
+        "ja/search",
+        { locales: ["ja", "en"], viewportWidth },
+      );
+
+      expect(document.documentElement.lang).toBe("ja");
+      expect(document.querySelector('a[href="/ja/guide"]')).not.toBeNull();
+      expect(document.querySelector("article h1[lang='en']")).not.toBeNull();
+      expect(document.querySelector("article p[lang='en']")).not.toBeNull();
+      expect(describeViolations(results.violations)).toEqual([]);
+    },
+  );
 
   it("finds no violations on a page reporting problems", async () => {
     const results = await audit({

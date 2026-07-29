@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import path from "node:path";
 
 import type { DocumentNode, SemanticNode } from "../ast/nodes.js";
 import { trustRawHtml } from "../ast/trust.js";
@@ -8,6 +9,7 @@ import {
 } from "../document/diagnostics.js";
 import type { LoadedDocument, SourceFormat } from "../document/document.js";
 import type { DocumentId, RoutePath, SourcePath } from "../document/paths.js";
+import { canonicalizeLocales } from "../locales.js";
 import { resolveMetadata, type ResolvedMetadata } from "../metadata/resolve.js";
 import { buildTableOfContents } from "../navigation/table-of-contents.js";
 import { buildNavigation, type NavigationItem } from "../navigation/tree.js";
@@ -89,6 +91,8 @@ export interface BuildOptions {
   readonly theme: Theme;
   /** Language for the generated document element. */
   readonly lang?: string;
+  /** Canonical locale directories treated as isolated content scopes. */
+  readonly locales?: readonly string[];
   /** Name shown in the header and in the browser title. */
   readonly siteName?: string;
   /**
@@ -301,24 +305,33 @@ function withBasePath<T extends SemanticNode>(node: T, basePath: string): T {
 export async function createSite(options: BuildOptions): Promise<Site> {
   const rootRoute = "/" as RoutePath;
   const basePath = options.basePath ?? "";
+  const locales = canonicalizeLocales(options.locales ?? []);
+  const localeSet = new Set(locales);
+  const scopeDefinitions: readonly {
+    readonly locale?: string;
+    readonly route: RoutePath;
+    readonly lang: string;
+  }[] = [
+    { route: rootRoute, lang: options.lang ?? "en" },
+    ...locales.map((locale) => ({
+      locale,
+      route: `/${locale}` as RoutePath,
+      lang: locale,
+    })),
+  ];
 
-  /**
-   * What the site is called.
-   *
-   * The home page's own title wins, when there is one. A project that has
-   * written `# Tsumugu` at the top of its index has already named itself, and
-   * asking again — through an option, or by showing the directory name beside
-   * it — would be asking a question the documentation answered.
-   */
-  let siteName = options.siteName ?? "Documentation";
+  const localeForSource = (sourcePath: SourcePath): string | undefined => {
+    const [first] = sourcePath.split("/");
+    return first !== undefined && localeSet.has(first) ? first : undefined;
+  };
 
-  /**
-   * Whether the shell should show a search field.
-   *
-   * A project with nothing to search does not get a control that finds
-   * nothing, so this is decided by the index rather than by an option.
-   */
-  let hasSearch = false;
+  const scopeForRoute = (route: string) => {
+    const [first] = route.slice(1).split("/");
+    return (
+      scopeDefinitions.find((scope) => scope.locale === first) ??
+      scopeDefinitions[0]!
+    );
+  };
 
   // State that survives an update, and is the only thing that does.
   let documents: ReadonlyMap<DocumentId, LoadedDocument> = new Map();
@@ -410,6 +423,11 @@ export async function createSite(options: BuildOptions): Promise<Site> {
   /** Wraps a themed body in the shell and serializes it. */
   function toHtml(input: {
     readonly body: VirtualNode;
+    readonly siteName: string;
+    readonly hasSearch: boolean;
+    readonly lang: string;
+    readonly scopeRoute: RoutePath;
+    readonly uiLang?: string;
     readonly title: string;
     readonly description?: string;
     readonly currentRoute: RoutePath;
@@ -418,8 +436,10 @@ export async function createSite(options: BuildOptions): Promise<Site> {
     readonly diagnostics: readonly DocumentDiagnostic[];
   }): { readonly html: string; readonly diagnostics: DocumentDiagnostic[] } {
     const shell = renderShell({
-      siteName,
+      siteName: input.siteName,
       ...(basePath === "" ? {} : { basePath }),
+      scopePath: input.scopeRoute,
+      ...(input.uiLang === undefined ? {} : { uiLang: input.uiLang }),
       title: input.title,
       ...(input.description === undefined
         ? {}
@@ -429,7 +449,7 @@ export async function createSite(options: BuildOptions): Promise<Site> {
       tableOfContents: input.tableOfContents,
       content: input.body,
       diagnostics: input.diagnostics,
-      search: hasSearch,
+      search: input.hasSearch,
       ...(options.theme.stylesheet === undefined
         ? {}
         : { themeStylesheet: options.theme.stylesheet }),
@@ -437,7 +457,7 @@ export async function createSite(options: BuildOptions): Promise<Site> {
     });
 
     const serialized = serializeDocument(shell.body, {
-      lang: options.lang ?? "en",
+      lang: input.lang,
       title: shell.documentTitle,
       head: shell.head,
     });
@@ -453,6 +473,13 @@ export async function createSite(options: BuildOptions): Promise<Site> {
     root: DocumentNode,
     title: string,
     navigation: readonly NavigationItem[],
+    scope: {
+      readonly siteName: string;
+      readonly hasSearch: boolean;
+      readonly lang: string;
+      readonly route: RoutePath;
+    },
+    currentRoute: RoutePath = scope.route,
   ): string {
     const themed = renderWithTheme(options.theme, {
       root,
@@ -467,8 +494,13 @@ export async function createSite(options: BuildOptions): Promise<Site> {
 
     return toHtml({
       body: themed.tree,
+      siteName: scope.siteName,
+      hasSearch: scope.hasSearch,
+      lang: scope.lang,
+      scopeRoute: scope.route,
+      ...(scope.lang === "en" ? {} : { uiLang: "en" }),
       title,
-      currentRoute: rootRoute,
+      currentRoute,
       tableOfContents: buildTableOfContents(root),
       navigation,
       diagnostics: [],
@@ -477,7 +509,16 @@ export async function createSite(options: BuildOptions): Promise<Site> {
 
   async function update(): Promise<UpdateSummary> {
     const started = performance.now();
+
     const scanned = await scan({ root: options.root });
+
+    for (const locale of locales) {
+      if (!scanned.rootDirectories.includes(locale)) {
+        throw new Error(
+          `Locale "${locale}" directory ${path.join(options.root, locale)} was not found.`,
+        );
+      }
+    }
 
     // The one fatal condition the diagnostics model defines: the root cannot be
     // read. There is no partial result worth building from it, and replacing a
@@ -560,20 +601,6 @@ export async function createSite(options: BuildOptions): Promise<Site> {
 
     const entries = [...prepared.values()];
 
-    const home = entries.find((entry) => entry.route === rootRoute);
-    siteName =
-      home?.metadata.titleSource === "file-name"
-        ? (options.siteName ?? "Documentation")
-        : (home?.metadata.title ?? options.siteName ?? "Documentation");
-
-    const navigation = buildNavigation(
-      entries.map((entry) => ({
-        sourcePath: entry.sourcePath,
-        route: entry.route,
-        metadata: entry.metadata,
-      })),
-    );
-
     // Link validation is a property of the whole project, so it runs once the
     // set of routes and heading identifiers is complete — and it runs over the
     // references collected earlier rather than over the documents themselves,
@@ -601,201 +628,258 @@ export async function createSite(options: BuildOptions): Promise<Site> {
       ]),
     );
 
-    // Records first: the shell needs to know whether a search field is worth
-    // showing, and that is a question about what the project contains.
-    const records = sortRecords([
-      ...entries.map((entry) =>
-        toRecord({
-          route: entry.route,
-          ...(basePath === "" ? {} : { basePath }),
+    const scopeStates = scopeDefinitions.map((scope) => {
+      const scopedEntries = entries.filter(
+        (entry) => localeForSource(entry.sourcePath) === scope.locale,
+      );
+      const home = scopedEntries.find((entry) => entry.route === scope.route);
+      const fallbackName = scope.locale ?? options.siteName ?? "Documentation";
+      const siteName =
+        home?.metadata.titleSource === "file-name"
+          ? fallbackName
+          : (home?.metadata.title ?? fallbackName);
+      const navigation = buildNavigation(
+        scopedEntries.map((entry) => ({
           sourcePath: entry.sourcePath,
-          format: entry.format,
+          ...(scope.locale === undefined
+            ? {}
+            : {
+                navigationPath: entry.sourcePath.slice(
+                  scope.locale.length + 1,
+                ) as SourcePath,
+              }),
+          route: entry.route,
+          metadata: entry.metadata,
+        })),
+        scope.route,
+      );
+      const records = sortRecords(
+        scopedEntries.map((entry) =>
+          toRecord({
+            route: entry.route,
+            ...(basePath === "" ? {} : { basePath }),
+            sourcePath: entry.sourcePath,
+            format: entry.format,
+            title: entry.metadata.title,
+            ...(entry.metadata.description === undefined
+              ? {}
+              : { description: entry.metadata.description }),
+            hidden: entry.metadata.hidden,
+            generated: false,
+            renderable: entry.root !== undefined,
+            ...(entry.root === undefined ? {} : { root: entry.root }),
+            contentHash: entry.contentHash,
+          }),
+        ),
+      );
+
+      return {
+        ...scope,
+        entries: scopedEntries,
+        home,
+        siteName,
+        navigation,
+        records,
+        hasSearch: searchEntries(records).length > 0,
+      };
+    });
+
+    const pages = new Map<RoutePath, Page>();
+    const exports = new Map<string, ExportOutput>();
+    const sitemapRecords: DocumentRecord[] = [];
+
+    for (const scope of scopeStates) {
+      const shellSignature = `${scope.siteName}\u0000${scope.lang}\u0000${scope.route}\u0000${JSON.stringify(
+        scope.navigation.items,
+      )}\u0000${String(scope.hasSearch)}`;
+
+      for (const entry of scope.entries) {
+        const pageDiagnostics = dedupeDiagnostics([
+          ...entry.diagnostics,
+          ...(linkDiagnostics.get(entry.sourcePath) ?? []),
+        ]);
+        const signature = `${shellSignature}\u0000${JSON.stringify(pageDiagnostics)}`;
+
+        if (entry.page?.signature === signature) {
+          pages.set(entry.route, {
+            route: entry.route,
+            title: entry.metadata.title,
+            html: entry.page.html,
+            diagnostics: entry.page.diagnostics,
+            ...(entry.scriptHashes.length === 0
+              ? {}
+              : { scriptHashes: entry.scriptHashes }),
+          });
+          continue;
+        }
+
+        const page = toHtml({
+          body: entry.body,
+          siteName: scope.siteName,
+          hasSearch: scope.hasSearch,
+          lang: scope.lang,
+          scopeRoute: scope.route,
+          ...(scope.lang === "en" ? {} : { uiLang: "en" }),
           title: entry.metadata.title,
           ...(entry.metadata.description === undefined
             ? {}
             : { description: entry.metadata.description }),
-          hidden: entry.metadata.hidden,
-          generated: false,
-          renderable: entry.root !== undefined,
-          ...(entry.root === undefined ? {} : { root: entry.root }),
-          contentHash: entry.contentHash,
-        }),
-      ),
-    ]);
+          currentRoute: entry.route,
+          tableOfContents: entry.tableOfContents,
+          navigation: scope.navigation.items,
+          diagnostics: pageDiagnostics,
+        });
 
-    const searchable = searchEntries(records);
-    hasSearch = searchable.length > 0;
+        const diagnostics = dedupeDiagnostics(page.diagnostics);
+        entry.page = { signature, html: page.html, diagnostics };
 
-    // Everything outside a document that its page depends on. Two of them: the
-    // navigation, which every page shows, and the site's name, which is in
-    // every title.
-    const shellSignature = `${siteName}\u0000${JSON.stringify(
-      navigation.items,
-    )}\u0000${String(hasSearch)}`;
-
-    const pages = new Map<RoutePath, Page>();
-    for (const entry of entries) {
-      const pageDiagnostics = dedupeDiagnostics([
-        ...entry.diagnostics,
-        ...(linkDiagnostics.get(entry.sourcePath) ?? []),
-      ]);
-      const signature = `${shellSignature}\u0000${JSON.stringify(pageDiagnostics)}`;
-
-      if (entry.page?.signature === signature) {
         pages.set(entry.route, {
           route: entry.route,
           title: entry.metadata.title,
-          html: entry.page.html,
-          diagnostics: entry.page.diagnostics,
+          html: page.html,
+          diagnostics,
           ...(entry.scriptHashes.length === 0
             ? {}
             : { scriptHashes: entry.scriptHashes }),
         });
-        continue;
       }
 
-      const page = toHtml({
-        body: entry.body,
-        title: entry.metadata.title,
-        ...(entry.metadata.description === undefined
-          ? {}
-          : { description: entry.metadata.description }),
-        currentRoute: entry.route,
-        tableOfContents: entry.tableOfContents,
-        navigation: navigation.items,
-        diagnostics: pageDiagnostics,
-      });
-
-      const diagnostics = dedupeDiagnostics(page.diagnostics);
-      entry.page = { signature, html: page.html, diagnostics };
-
-      pages.set(entry.route, {
-        route: entry.route,
-        title: entry.metadata.title,
-        html: page.html,
-        diagnostics,
-        ...(entry.scriptHashes.length === 0
-          ? {}
-          : { scriptHashes: entry.scriptHashes }),
-      });
-    }
-
-    // A project whose root has no index document still has a home page: one
-    // listing what it does have. An authored index always wins, because the
-    // generated page is a default rather than a policy.
-    const generatedRecords: DocumentRecord[] = [];
-
-    if (!pages.has(rootRoute)) {
-      const generatedHome = generateHomeDocument({
-        siteName,
-        navigation: navigation.items,
-        ...(basePath === "" ? {} : { basePath }),
-      });
-
-      generatedRecords.push(
-        toRecord({
-          route: rootRoute,
+      const generatedRecords: DocumentRecord[] = [];
+      if (!pages.has(scope.route)) {
+        const generatedHome = generateHomeDocument({
+          siteName: scope.siteName,
+          navigation: scope.navigation.items,
           ...(basePath === "" ? {} : { basePath }),
-          title: siteName,
-          hidden: false,
-          generated: true,
-          renderable: true,
-          root: generatedHome,
-        }),
-      );
+          ...(scope.lang === "en" ? {} : { contentLang: "en" }),
+        });
 
-      pages.set(rootRoute, {
-        route: rootRoute,
-        title: siteName,
-        html: renderGenerated(generatedHome, siteName, navigation.items),
-        diagnostics: [],
-        generated: true,
-      });
-    }
-
-    const exported = sortRecords([...records, ...generatedRecords]);
-
-    const site = {
-      name: siteName,
-      ...(home?.metadata.description === undefined
-        ? {}
-        : { description: home.metadata.description }),
-    };
-
-    const searchRoute = "/search" as RoutePath;
-    if (searchable.length > 0 && !pages.has(searchRoute)) {
-      pages.set(searchRoute, {
-        route: searchRoute,
-        title: "Search",
-        html: renderGenerated(
-          generateSearchDocument({
-            navigation: navigation.items,
+        generatedRecords.push(
+          toRecord({
+            route: scope.route,
             ...(basePath === "" ? {} : { basePath }),
+            title: scope.siteName,
+            hidden: false,
+            generated: true,
+            renderable: true,
+            root: generatedHome,
           }),
-          "Search",
-          navigation.items,
-        ),
-        diagnostics: [],
-        generated: true,
+        );
+
+        pages.set(scope.route, {
+          route: scope.route,
+          title: scope.siteName,
+          html: renderGenerated(
+            generatedHome,
+            scope.siteName,
+            scope.navigation.items,
+            scope,
+          ),
+          diagnostics: [],
+          generated: true,
+        });
+      }
+
+      const exported = sortRecords([...scope.records, ...generatedRecords]);
+      sitemapRecords.push(...exported);
+      const site = {
+        name: scope.siteName,
+        ...(scope.home?.metadata.description === undefined
+          ? {}
+          : { description: scope.home.metadata.description }),
+      };
+      const prefix = scope.route === rootRoute ? "" : scope.route;
+
+      exports.set(`${prefix}/documents.json`, {
+        contentType: "application/json; charset=utf-8",
+        render: () => documentsJson(exported, site),
       });
+      exports.set(`${prefix}/llms.txt`, {
+        contentType: "text/plain; charset=utf-8",
+        render: () => llmsTxt(exported, site),
+      });
+      exports.set(`${prefix}/search.json`, {
+        contentType: "application/json; charset=utf-8",
+        render: () => searchJson(scope.records),
+      });
+
+      const searchRoute = `${prefix}/search` as RoutePath;
+      if ((scope.hasSearch || locales.length > 0) && !pages.has(searchRoute)) {
+        const searchDocument = generateSearchDocument({
+          navigation: scope.navigation.items,
+          ...(basePath === "" ? {} : { basePath }),
+          ...(scope.lang === "en" ? {} : { contentLang: "en" }),
+        });
+        pages.set(searchRoute, {
+          route: searchRoute,
+          title: "Search",
+          html: renderGenerated(
+            searchDocument,
+            "Search",
+            scope.navigation.items,
+            scope,
+            searchRoute,
+          ),
+          diagnostics: [],
+          generated: true,
+        });
+        if (locales.length > 0) {
+          sitemapRecords.push(
+            toRecord({
+              route: searchRoute,
+              ...(basePath === "" ? {} : { basePath }),
+              title: "Search",
+              hidden: false,
+              generated: true,
+              renderable: true,
+              root: searchDocument,
+            }),
+          );
+        }
+      }
     }
+
+    exports.set("/sitemap.xml", {
+      contentType: "application/xml; charset=utf-8",
+      render: (origin) => sitemapXml(sortRecords(sitemapRecords), origin),
+    });
 
     result = {
       pages,
       assets: scanned.assets,
       ...(options.trust === true ? { trust: true } : {}),
-      exports: new Map<string, ExportOutput>([
-        [
-          "/documents.json",
-          {
-            contentType: "application/json; charset=utf-8",
-            render: () => documentsJson(exported, site),
-          },
-        ],
-        [
-          "/llms.txt",
-          {
-            contentType: "text/plain; charset=utf-8",
-            render: () => llmsTxt(exported, site),
-          },
-        ],
-        [
-          "/search.json",
-          {
-            contentType: "application/json; charset=utf-8",
-            render: () => searchJson(records),
-          },
-        ],
-        [
-          "/sitemap.xml",
-          {
-            contentType: "application/xml; charset=utf-8",
-            render: (origin) => sitemapXml(exported, origin),
-          },
-        ],
-      ]),
-      renderNotFound: (requestedPath) =>
-        renderGenerated(
+      exports,
+      renderNotFound: (requestedPath) => {
+        const scope = scopeStates.find(
+          (candidate) => candidate.route === scopeForRoute(requestedPath).route,
+        )!;
+        return renderGenerated(
           generateNotFoundDocument({
             requestedPath,
-            navigation: navigation.items,
+            navigation: scope.navigation.items,
             ...(basePath === "" ? {} : { basePath }),
+            ...(scope.lang === "en" ? {} : { contentLang: "en" }),
           }),
           "Page not found",
-          navigation.items,
-        ),
-      renderBadRequest: () =>
-        renderGenerated(
-          generateBadRequestDocument(),
+          scope.navigation.items,
+          scope,
+          requestedPath as RoutePath,
+        );
+      },
+      renderBadRequest: () => {
+        const scope = scopeStates[0]!;
+        return renderGenerated(
+          generateBadRequestDocument(scope.lang === "en" ? undefined : "en"),
           "Bad request",
-          navigation.items,
-        ),
+          scope.navigation.items,
+          scope,
+        );
+      },
       diagnostics: dedupeDiagnostics([
         ...scanned.diagnostics,
         ...routing,
         ...collisions,
         ...loaded.diagnostics,
-        ...navigation.diagnostics,
+        ...scopeStates.flatMap((scope) => scope.navigation.diagnostics),
       ]),
     };
 

@@ -9,6 +9,7 @@ import {
   startDev,
 } from "./dev.js";
 import { exitCodes, run } from "./index.js";
+import { LocaleDirectoryError } from "./locales.js";
 import { styleFor } from "./terminal.js";
 
 /**
@@ -52,7 +53,10 @@ if (argv[0] === "build") {
         process.stderr.write(
           `${cause instanceof Error ? cause.message : String(cause)}\n`,
         );
-        process.exitCode = exitCodes.startup;
+        process.exitCode =
+          cause instanceof LocaleDirectoryError
+            ? exitCodes.usage
+            : exitCodes.startup;
       }
     }
   }
@@ -101,7 +105,10 @@ if (argv[0] === "build") {
         process.stderr.write(
           `${cause instanceof Error ? cause.message : String(cause)}\n`,
         );
-        process.exitCode = exitCodes.startup;
+        process.exitCode =
+          cause instanceof LocaleDirectoryError
+            ? exitCodes.usage
+            : exitCodes.startup;
       }
     }
   }

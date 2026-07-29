@@ -55,8 +55,9 @@ new concept to justify itself, and this one could not.
 ### What core owns
 
 The documentation root, the renderer registrations, the transformer
-registrations, the selected theme, the site name and the page language. That is
-the whole of `BuildOptions`, and it is deliberately the whole of it.
+registrations, the selected theme, the site name, the shared page language and
+the explicit locale scopes. That is the whole of `BuildOptions`, and it is
+deliberately the whole of it.
 
 ### What core does not own
 
@@ -111,6 +112,10 @@ dist/
 
 Clean URLs are deliberate: the published address is the one `tsumugu dev`
 answered, so a link, an anchor or a bookmark cannot differ between the two.
+When `locales: ["ja", "en-US"]` is present, each named direct child directory is
+an isolated route, navigation, search and export scope. Documents outside those
+directories stay in the shared root scope. The CLI exposes the same option as
+`--locales ja,en-US`.
 
 The build refuses to write into a directory it did not create. Pass `--clean` if
 you mean it. A directory from a previous build is emptied first, so a page you

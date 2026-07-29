@@ -50,13 +50,17 @@ jobs:
         run: pnpm run build
 
       # A project site lives under /tsumugu/, which is what --base is for; the
-      # origin puts real absolute URLs into sitemap.xml.
+      # origin puts real absolute URLs into sitemap.xml. --trust is this
+      # repository declaring its own documentation is its own content, which is
+      # what lets the architecture pages compute their figures (ADR 7). The
+      # root is this checkout, so nothing outside the repository is executed.
       - name: Build the documentation site
         run: >-
           node packages/cli/dist/bin.js build docs
           --out dist-docs
           --base /tsumugu
           --origin https://37108.github.io
+          --trust
 
       - name: Upload the site
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0

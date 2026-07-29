@@ -269,3 +269,20 @@ describe("step order", () => {
     }
   });
 });
+
+describe("the published documentation", () => {
+  it("builds the site with the declaration its own pages need", () => {
+    // Two architecture pages compute their figures while the page is built
+    // (ADR 7). Without --trust the deployment still succeeds and the figures
+    // silently become source, which is the kind of failure nobody notices
+    // until a reader does.
+    const pages = workflows.find((workflow) => workflow.name === pagesWorkflow);
+    expect(pages, "the Pages workflow is missing").toBeDefined();
+
+    const build = /bin\.js build docs[^\n]*(?:\n\s{10}[^\n]*)*/u.exec(
+      pages?.text ?? "",
+    )?.[0];
+    expect(build, "the Pages workflow does not build the site").toBeDefined();
+    expect(build).toContain("--trust");
+  });
+});

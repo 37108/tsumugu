@@ -122,6 +122,23 @@ name was created by hand. The release step reported the failure loudly and
 correctly; nothing checked for it beforehand, which is why this section
 exists.
 
+### Reading a 404 from the registry
+
+`404 Not Found - PUT` does not mean the registry is missing something. npm
+answers an unauthorized publish of a name that does not exist with 404 rather
+than 401, so that nobody can discover private names by watching status codes.
+Two different problems therefore produce the identical error, and it is worth
+knowing which one you have before changing anything:
+
+- **Publishing by hand.** Check the credential first:
+  `npm whoami --registry=https://registry.npmjs.org/`. A 401 there means the
+  token is missing or expired — including when a default registry points
+  somewhere else, because `npm login` without `--registry` authenticates
+  against that other host and leaves npmjs.org untouched.
+- **Publishing from the release workflow.** The credential is short-lived and
+  comes from the trusted publisher configured on the package, so a 404 means
+  the name has no such configuration: the two steps above have not been done.
+
 ## What a release checks
 
 `pnpm run release` runs formatting, linting, type checking, and the full test

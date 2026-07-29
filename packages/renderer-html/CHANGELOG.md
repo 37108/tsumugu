@@ -1,5 +1,19 @@
 # tsumugu-renderer-html
 
+## 0.4.0
+
+### Minor Changes
+
+- 3fee2d2: Both renderers take one `trust` boolean instead of a `scripts` mode. It is the same declaration the CLI, the preset and the pipeline already carry (ADR 7), stated once rather than in two vocabularies. Under it, the HTML renderer also stops reporting markup with no semantic equivalent: the markup is emitted as written, so there is no deferred decision left to explain.
+- 17ae6bf: Run author scripts under `--trust` (ADR 7, second phase). The renderers gain a `scripts: "preserve"` mode that keeps `<script>` elements and reports each inline script's text; the preset wires it from one `trust` option; and each page's Content-Security-Policy widens by exactly the declaration: a hash per preserved inline script, plus `'self'` for script files inside the root. Injected scripts and external origins stay refused.
+
+### Patch Changes
+
+- Updated dependencies [a8241db]
+- Updated dependencies [b74b4a1]
+- Updated dependencies [17ae6bf]
+  - tsumugu-core@0.4.0
+
 ## 0.3.1
 
 ### Patch Changes

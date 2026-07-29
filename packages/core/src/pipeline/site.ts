@@ -1,4 +1,5 @@
 import type { DocumentNode, SemanticNode } from "../ast/nodes.js";
+import { trustRawHtml } from "../ast/trust.js";
 import {
   dedupeDiagnostics,
   type DocumentDiagnostic,
@@ -104,6 +105,15 @@ export interface BuildOptions {
    * to run it; the pipeline only puts it on the page.
    */
   readonly script?: string;
+  /**
+   * The operator's declaration that this root's content is theirs and may run
+   * as code (ADR 7).
+   *
+   * Off by default, and never inferred. With it, markup preserved as
+   * untrusted raw source is emitted verbatim instead of as escaped text.
+   * Nothing else in the pipeline changes.
+   */
+  readonly trust?: boolean;
 }
 
 /** One servable page. */
@@ -338,8 +348,13 @@ export async function createSite(options: BuildOptions): Promise<Site> {
     // keep the unprefixed tree, because a link is checked against routes and
     // routes never carry the prefix.
     const presented = basePath === "" ? root : withBasePath(root, basePath);
+    // The declaration is applied here, after rendering and transforming, so
+    // no renderer or transformer ever decides trust — they only ever see or
+    // produce untrusted markup, whatever the operator said.
+    const declared =
+      options.trust === true ? trustRawHtml(presented) : presented;
     const themed = renderWithTheme(options.theme, {
-      root: presented,
+      root: declared,
       metadata,
       sourcePath: document.sourcePath,
     });

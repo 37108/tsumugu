@@ -3,6 +3,7 @@ import {
   fragment,
   renderUnsupported,
   text,
+  trustedHtml,
   type CodeLine,
   type NodeRenderer,
   type RenderContext,
@@ -287,17 +288,29 @@ export const defaultTheme: Theme = {
     "table-cell": wrap("td"),
 
     /**
-     * Preserved markup, shown as text.
+     * Preserved markup: shown as text, unless the operator trusted it.
      *
      * This is documentation content, which is not the same as trusted content:
      * a theme with no sanitizer that emitted it would be emitting somebody
      * else's markup into the page. Showing the source keeps the author's
-     * content visible and keeps the decision safe.
+     * content visible and keeps the decision safe. The one exception is a node
+     * the pipeline marked trusted, which happens only under the operator's
+     * `--trust` declaration (ADR 7) — the theme relays that decision, it does
+     * not make one.
      */
     "raw-html": (node) =>
-      node.type === "raw-html"
-        ? element("pre", { "data-tsumugu-raw-html": "true" }, text(node.value))
-        : fragment(),
+      node.type !== "raw-html"
+        ? fragment()
+        : node.trust === "trusted"
+          ? trustedHtml(
+              node.value,
+              "the operator's --trust declaration covers this root's markup (ADR 7)",
+            )
+          : element(
+              "pre",
+              { "data-tsumugu-raw-html": "true" },
+              text(node.value),
+            ),
 
     unsupported: renderUnsupported,
   },

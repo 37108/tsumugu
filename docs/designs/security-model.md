@@ -25,17 +25,27 @@ documentation tool that runs its content turns every writer into a code owner.
 So: **content does not execute**, and the mechanisms below are all enforcement
 of that one sentence.
 
+There is one exception, and it belongs to the party trusted with everything:
+`--trust` ([ADR 7](../decisions/0007-operator-opt-in-trust.md)) is the operator
+declaring that the root's content is theirs and may run as code. It is off by
+default, never inferred, announced in the terminal, and scoped to the root —
+never to the network. Under it, markup preserved as untrusted raw source is
+emitted as written. Everything else on this page, including path containment
+and loopback binding, holds with or without the flag.
+
 ## What enforces it
 
 Each claim below names the test or implementation that enforces it.
 
-- **Author markup is never emitted.** HTML sources are parsed to the Semantic
-  AST; markup with no semantic equivalent is preserved as _escaped text_, and
-  `<script>` content is removed with a diagnostic. The serializer's only path
-  to raw output is `trustedHtml`, which requires a written reason, and the
-  themes use it for exactly two things: Tsumugu's own stylesheets and Tsumugu's
-  own scripts. (`packages/core/src/theme/serialize.test.ts`,
-  `packages/renderer-html/src/index.test.ts`)
+- **Author markup is never emitted, absent the declaration.** HTML sources are
+  parsed to the Semantic AST; markup with no semantic equivalent is preserved
+  as _escaped text_, and `<script>` content is removed with a diagnostic. The
+  serializer's only path to raw output is `trustedHtml`, which requires a
+  written reason, and the themes use it for exactly three things: Tsumugu's own
+  stylesheets, Tsumugu's own scripts, and — only when the pipeline has applied
+  the operator's `--trust` declaration — preserved author markup.
+  (`packages/core/src/theme/serialize.test.ts`,
+  `packages/renderer-html/src/index.test.ts`, `tests/trust.test.ts`)
 - **The browser is told the same thing.** Every response carries
   `Content-Security-Policy: default-src 'none'` with `script-src` naming two
   SHA-256 hashes: the page client and, in development, live reload. An
@@ -93,6 +103,8 @@ Before each release, walk this list against the diff since the last one:
    client controls?
 5. Did a dependency arrive? CONTRIBUTING.md's justification list applies, and
    `pnpm audit` should be quiet.
+6. Did anything widen what `--trust` covers without widening the declaration's
+   wording in the help text and ADR 7?
 
 The first pass of this review, on 2026-07-28, covered everything up to the
 static build. It found one deviation worth recording: the sitemap placeholder

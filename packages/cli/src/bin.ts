@@ -43,7 +43,11 @@ if (argv[0] === "build") {
           ...parsed.options,
           root: discovered.discovery.root,
         });
-        process.stdout.write(`${describeBuild(report, style)}\n`);
+        process.stdout.write(
+          `${describeBuild(report, style, {
+            ...(parsed.options.trust === true ? { trust: true } : {}),
+          })}\n`,
+        );
       } catch (cause) {
         process.stderr.write(
           `${cause instanceof Error ? cause.message : String(cause)}\n`,

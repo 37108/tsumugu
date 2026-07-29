@@ -40,6 +40,11 @@ export interface DevOptions {
    * pages to running nothing at all.
    */
   readonly liveReload?: boolean;
+  /**
+   * The operator's declaration that this root's content is theirs and may run
+   * as code (ADR 7). Off by default, and never inferred.
+   */
+  readonly trust?: boolean;
   /** Called after a rebuild triggered by a file change. */
   readonly onUpdate?: (summary: UpdateSummary) => void;
   /** Called when a rebuild failed, which leaves the last good site served. */
@@ -55,6 +60,8 @@ export interface DevResult {
   readonly diagnostics: readonly DocumentDiagnostic[];
   /** How many documents the project has. Generated pages are not counted. */
   readonly pageCount: number;
+  /** Whether the operator declared the root trusted, for the startup notice. */
+  readonly trust: boolean;
 }
 
 /** Files that make a directory a documentation root on their own. */
@@ -152,7 +159,12 @@ export function parseDevOptions(
 ):
   | { readonly ok: true; readonly options: DevOptions }
   | { readonly ok: false; readonly message: string } {
-  const options: { root?: string; host?: string; port?: number } = {};
+  const options: {
+    root?: string;
+    host?: string;
+    port?: number;
+    trust?: boolean;
+  } = {};
 
   for (let index = 0; index < argv.length; index += 1) {
     const argument = argv[index];
@@ -168,6 +180,11 @@ export function parseDevOptions(
         options.host = value;
       }
       index += 1;
+      continue;
+    }
+
+    if (argument === "--trust") {
+      options.trust = true;
       continue;
     }
 
@@ -203,7 +220,7 @@ export function parseDevOptions(
 
     return {
       ok: false,
-      message: `Unknown option "${argument ?? ""}". Supported: --root, --host, --port.`,
+      message: `Unknown option "${argument ?? ""}". Supported: --root, --host, --port, --trust.`,
     };
   }
 
@@ -252,6 +269,7 @@ export async function startDev(options: DevOptions = {}): Promise<DevResult> {
     ...createPreset(),
     siteName: siteNameFor(root),
     ...(reloading ? { script: reloadScript } : {}),
+    ...(options.trust === true ? { trust: true } : {}),
   });
 
   const server = await serve({
@@ -294,6 +312,7 @@ export async function startDev(options: DevOptions = {}): Promise<DevResult> {
     },
     watching,
     site,
+    trust: options.trust === true,
     diagnostics: currentDiagnostics(site),
     // Generated pages are not counted: a project with no documents should be
     // told it has none, not told it has one it did not write.
@@ -352,6 +371,14 @@ export function describeStartup(
       result.watching ? "on, pages reload themselves after a save" : "off"
     }`,
   ];
+
+  if (result.trust) {
+    // The declaration is loud on purpose: nobody should discover later that
+    // their content was being emitted as written.
+    lines.push(
+      `${style.dim("  trust ")} on — this root's markup is emitted as written`,
+    );
+  }
 
   if (result.pageCount === 0) {
     // The single most likely first-run problem, answered before it is asked.

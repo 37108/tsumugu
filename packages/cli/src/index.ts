@@ -47,6 +47,8 @@ Options for dev
   --root <directory>   directory to serve, the same as the positional argument
   --host <host>        interface to bind (default: 127.0.0.1, loopback only)
   --port <port>        port to bind, 0 for any free port (default: 0)
+  --trust              declare this root's content yours: preserved markup is
+                       emitted as written instead of shown as source (ADR 7)
 
 Options for build
   --root <directory>   directory to build, the same as the positional argument
@@ -55,6 +57,8 @@ Options for build
   --base <path>        path prefix the site is served under, e.g. /my-repo
                        on a GitHub Pages project site
   --clean              remove the output directory even if tsumugu did not write it
+  --trust              declare this root's content yours: preserved markup is
+                       emitted as written instead of shown as source (ADR 7)
 
 Without a directory, tsumugu serves ./docs, or the current directory when it
 contains an index document. Files are watched while dev runs: save a document

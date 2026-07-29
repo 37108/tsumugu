@@ -219,6 +219,18 @@ describe("the default theme", () => {
     expect(html).toContain("&lt;img");
   });
 
+  it("emits preserved markup verbatim once the operator has trusted it", () => {
+    const { html } = render({
+      type: "raw-html",
+      value: '<canvas id="chart"></canvas>',
+      trust: "trusted",
+      placement: "block",
+    });
+
+    expect(html).toContain('<canvas id="chart"></canvas>');
+    expect(html).not.toContain("&lt;canvas");
+  });
+
   it("escapes text that looks like markup", () => {
     expect(render(textNode("<script>alert(1)</script>")).html).not.toContain(
       "<script",

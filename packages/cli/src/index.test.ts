@@ -2,7 +2,13 @@ import { describe, expect, it } from "vitest";
 
 import { version } from "tsumugu-core";
 
-import { discoverRoot, parseDevOptions, siteNameFor } from "./dev.js";
+import {
+  describeStartup,
+  discoverRoot,
+  parseDevOptions,
+  siteNameFor,
+  type DevResult,
+} from "./dev.js";
 import { formatSize, parseBuildOptions } from "./build.js";
 import { exitCodes, run, usage } from "./index.js";
 import { formatForTerminal, styleFor } from "./terminal.js";
@@ -51,9 +57,13 @@ describe("run", () => {
   });
 
   it("documents only options that exist", () => {
-    for (const option of ["--root", "--host", "--port"]) {
+    for (const option of ["--root", "--host", "--port", "--trust"]) {
       expect(usage).toContain(option);
     }
+  });
+
+  it("documents --trust for dev and for build", () => {
+    expect(usage.match(/--trust/g)).toHaveLength(2);
   });
 
   it.each([
@@ -100,6 +110,19 @@ describe("parseDevOptions", () => {
     });
   });
 
+  it("reads the --trust declaration", () => {
+    expect(parseDevOptions(["--trust"])).toEqual({
+      ok: true,
+      options: { trust: true },
+    });
+  });
+
+  it("names --trust when rejecting an unknown option", () => {
+    const result = parseDevOptions(["--watch"]);
+
+    expect(!result.ok && result.message).toContain("--trust");
+  });
+
   it.each([
     ["a second bare argument", ["one", "two"]],
     ["an unknown flag", ["--watch"]],
@@ -110,6 +133,27 @@ describe("parseDevOptions", () => {
     const result = parseDevOptions(argv);
 
     expect(result.ok).toBe(false);
+  });
+});
+
+describe("describeStartup", () => {
+  const base = {
+    server: { url: "http://127.0.0.1:4000/" },
+    watching: true,
+    diagnostics: [],
+    pageCount: 1,
+  };
+
+  it("announces the trust declaration when it is active", () => {
+    const result = { ...base, trust: true } as unknown as DevResult;
+
+    expect(describeStartup(result, "/work/docs")).toContain("trust");
+  });
+
+  it("says nothing about trust otherwise", () => {
+    const result = { ...base, trust: false } as unknown as DevResult;
+
+    expect(describeStartup(result, "/work/docs")).not.toContain("trust");
   });
 });
 
@@ -201,6 +245,12 @@ describe("parseBuildOptions", () => {
       const parsed = parseBuildOptions(["docs", "--base", written]);
       expect(parsed.ok && parsed.options.basePath, written).toBe("/repo");
     }
+  });
+
+  it("reads the --trust declaration", () => {
+    const parsed = parseBuildOptions(["docs", "--trust"]);
+
+    expect(parsed.ok && parsed.options.trust).toBe(true);
   });
 });
 

@@ -20,6 +20,11 @@ export interface BuildCommandOptions {
   readonly origin?: string;
   readonly basePath?: string;
   readonly clean?: boolean;
+  /**
+   * The operator's declaration that this root's content is theirs and may run
+   * as code (ADR 7). Off by default, and never inferred.
+   */
+  readonly trust?: boolean;
 }
 
 /** Where output goes when nobody said. */
@@ -37,6 +42,7 @@ export function parseBuildOptions(
     origin?: string;
     basePath?: string;
     clean?: boolean;
+    trust?: boolean;
   } = {};
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -72,6 +78,11 @@ export function parseBuildOptions(
       continue;
     }
 
+    if (argument === "--trust") {
+      options.trust = true;
+      continue;
+    }
+
     if (
       argument !== undefined &&
       argument !== "" &&
@@ -84,7 +95,7 @@ export function parseBuildOptions(
 
     return {
       ok: false,
-      message: `Unknown option "${argument ?? ""}". Supported: --root, --out, --origin, --base, --clean.`,
+      message: `Unknown option "${argument ?? ""}". Supported: --root, --out, --origin, --base, --clean, --trust.`,
     };
   }
 
@@ -103,6 +114,7 @@ export async function runBuild(
     ...(options.origin === undefined ? {} : { origin: options.origin }),
     ...(options.basePath === undefined ? {} : { basePath: options.basePath }),
     ...(options.clean === undefined ? {} : { clean: options.clean }),
+    ...(options.trust === true ? { trust: true } : {}),
     siteName: siteNameFor(root),
     ...createPreset(),
   });
@@ -129,6 +141,7 @@ export function formatSize(bytes: number): string {
 export function describeBuild(
   report: StaticBuildReport,
   style: TerminalStyle = styleFor(),
+  declaration: { readonly trust?: boolean } = {},
 ): string {
   const lines = [
     `${style.bold("tsumugu")}  built ${String(report.pageCount)} pages`,
@@ -136,6 +149,14 @@ export function describeBuild(
     `${style.dim("  files ")} ${String(report.files.length)}`,
     `${style.dim("  size  ")} ${formatSize(report.totalBytes)}`,
   ];
+
+  if (declaration.trust === true) {
+    // The declaration is loud on purpose: nobody should discover later that
+    // their content was being emitted as written.
+    lines.push(
+      `${style.dim("  trust ")} on — this root's markup was emitted as written`,
+    );
+  }
 
   if (report.diagnostics.length > 0) {
     lines.push("", formatForTerminal(report.diagnostics, style));

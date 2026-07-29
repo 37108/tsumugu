@@ -44,6 +44,7 @@ Do not delete or rewrite a superseded ADR. Change its status to
 | [4](0004-client-side-search.md)                | the page client (search, copy) ships on every page, by hash                      |
 | [5](0005-no-configuration-file.md)             | no configuration file; composition is code, conventions are documented           |
 | [6](0006-mdx-without-execution.md)             | `.mdx` is a source format; its expressions, components and imports never execute |
+| [7](0007-operator-opt-in-trust.md)             | `--trust` lets the operator opt in to executing the root's scripts and MDX       |
 
 `tests/decisions.test.ts` checks that every record in this directory appears in
 the index and that every index entry resolves to a file.

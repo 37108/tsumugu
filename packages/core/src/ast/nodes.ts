@@ -240,20 +240,22 @@ export interface TableCellNode extends NodeBase {
  * without losing something. Rather than dropping it, it is carried through as
  * source text.
  *
- * Everything in this node is **untrusted**. It was authored in a documentation
- * file, which is content, not application code. The serializer decides what may
- * be emitted; nothing here may be assumed safe to inject into the page shell.
+ * Everything in this node starts **untrusted**. It was authored in a
+ * documentation file, which is content, not application code. The serializer
+ * decides what may be emitted; nothing here may be assumed safe to inject into
+ * the page shell.
  */
 export interface RawHtmlNode extends NodeBase {
   readonly type: "raw-html";
   readonly value: string;
   /**
-   * Always `"untrusted"` today: only documentation-authored markup ever becomes
-   * an AST node, and the theme's own markup is a Virtual Tree instead. The
-   * field is present so a consumer has to acknowledge the distinction rather
-   * than infer it from the node's name.
+   * Renderers only ever produce `"untrusted"`: documentation-authored markup
+   * is content, and the theme's own markup is a Virtual Tree instead. The one
+   * way a node becomes `"trusted"` is the operator's `--trust` declaration,
+   * applied by the pipeline (ADR 7). The field is present so a consumer has to
+   * acknowledge the distinction rather than infer it from the node's name.
    */
-  readonly trust: "untrusted";
+  readonly trust: "untrusted" | "trusted";
   /** Whether the fragment stands alone or sits inside a line of prose. */
   readonly placement: "block" | "inline";
 }

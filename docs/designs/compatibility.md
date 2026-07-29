@@ -75,7 +75,7 @@ relying on a bundled Corepack.
 
 Upgrading the pinned version is a deliberate change to the root manifest. Any
 new version must also satisfy the `minimumReleaseAge` constraint described in
-[the workspace document](./architecture/workspaces.md).
+[the workspace document](./architecture/workspaces).
 
 ## Operating systems
 

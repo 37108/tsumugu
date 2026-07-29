@@ -2,9 +2,7 @@ import type { LoadedDocument, RenderResult, Renderer } from "tsumugu-core";
 import type { Element, Nodes as HastNode, RootContent } from "hast";
 import { fromHtml } from "hast-util-from-html";
 
-import { convertToSemanticAst, type ScriptMode } from "./convert.js";
-
-export type { ScriptMode } from "./convert.js";
+import { convertToSemanticAst } from "./convert.js";
 
 /**
  * The HTML renderer.
@@ -21,9 +19,9 @@ export type { ScriptMode } from "./convert.js";
  * Markdown. So:
  *
  * - Script content is **removed**, with one warning per document — unless the
- *   renderer was built with `scripts: "preserve"`, which only a composition
- *   the operator declared trusted does (ADR 7). Even then this renderer only
- *   preserves and reports; whether anything runs is the server's CSP decision.
+ *   renderer was built for a trusted composition (ADR 7). Even then this
+ *   renderer only preserves and reports; whether anything runs is the server's
+ *   CSP decision.
  * - Elements with no semantic equivalent are **preserved as untrusted raw
  *   markup**. They are not dropped, because they are the author's content, and
  *   they are not trusted, because nobody has said they should be. What actually
@@ -36,13 +34,15 @@ export interface HtmlRendererOptions {
   /** Identifier for this renderer instance. */
   readonly id?: string;
   /**
-   * What happens to `<script>` elements. `"remove"` — the default — drops
-   * them with a diagnostic. `"preserve"` keeps them as preserved raw markup
-   * and reports each inline script's text, for the composition an operator
-   * has declared trusted (ADR 7). This renderer never decides trust; it is
+   * Whether the operator declared this root's content theirs (ADR 7).
+   *
+   * Off by default: `<script>` is dropped with a diagnostic, and markup with
+   * no semantic equivalent is reported as preserved-but-undecided. On, both
+   * are emitted as written, and each inline script's text is reported so the
+   * server can allow exactly those. This renderer never decides trust; it is
    * built into a composition that did.
    */
-  readonly scripts?: ScriptMode;
+  readonly trust?: boolean;
 }
 
 /**
@@ -136,7 +136,7 @@ export function createHtmlRenderer(
         full ? contentOf(tree) : tree.children,
         document.sourcePath,
         document.content,
-        options.scripts ?? "remove",
+        options.trust ?? false,
       );
 
       return {

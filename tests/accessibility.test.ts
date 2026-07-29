@@ -38,12 +38,18 @@ afterEach(async () => {
 async function audit(
   files: Readonly<Record<string, string>>,
   path = "",
+  options: { readonly trust?: boolean } = {},
 ): Promise<AxeResults> {
   let results: AxeResults | undefined;
 
   await withTemporaryDirectory(async (root) => {
     await writeFiles(root, files);
-    running = await startDev({ root, port: 0, watch: false });
+    running = await startDev({
+      root,
+      port: 0,
+      watch: false,
+      ...(options.trust === true ? { trust: true } : {}),
+    });
 
     const html = await (await fetch(`${running.server.url}${path}`)).text();
 
@@ -257,6 +263,36 @@ describe("accessibility", () => {
     expect(form?.getAttribute("action")).toBe("/search");
     expect(form?.getAttribute("method")).toBe("get");
     expect(form?.getAttribute("role")).toBe("search");
+  });
+
+  it("finds no violations on a trusted page carrying a figure", async () => {
+    // The markup the project's own architecture pages produce: an accessible
+    // figure inside a focusable scroll region, emitted as written under the
+    // declaration. Written as HTML here because executing MDX needs a bundler
+    // that refuses to load in this suite's DOM environment; that the
+    // components produce exactly this shape is what tests/self-hosting.test.ts
+    // asserts, against the real pages.
+    const results = await audit(
+      {
+        "index.html": [
+          "<h1>Diagrams</h1>",
+          '<scroll-region style="display:block;overflow-x:auto" tabindex="0" role="group" aria-label="A figure">',
+          '<svg role="img" aria-labelledby="f-title f-desc" viewBox="0 0 100 40">',
+          '<title id="f-title">A figure</title>',
+          '<desc id="f-desc">One box.</desc>',
+          '<rect x="0" y="0" width="100" height="40" fill="none" stroke="currentColor" />',
+          "</svg>",
+          "</scroll-region>",
+          "",
+        ].join("\n"),
+      },
+      "",
+      { trust: true },
+    );
+
+    expect(describeViolations(results.violations)).toEqual([]);
+    // Emitted as written rather than shown as source.
+    expect(document.querySelector('svg[role="img"]')).not.toBeNull();
   });
 
   it("tells assistive technology which navigation entry is the current page", async () => {

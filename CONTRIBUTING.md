@@ -10,8 +10,8 @@ Please read:
 
 - `README.md`
 - `docs/designs/principles.md`
-- `docs/designs/architecture/index.md`
-- `docs/designs/architecture/workspaces.md`
+- `docs/designs/architecture/index.mdx`
+- `docs/designs/architecture/workspaces.mdx`
 - `docs/designs/compatibility.md`
 - `docs/designs/testing.md`
 - `docs/designs/diagnostics.md`
@@ -81,7 +81,7 @@ add stylistic lint rules.
 Individual packages expose `build`, `typecheck` and `lint`, so a single package
 can be checked with `pnpm --filter tsumugu-core run lint`.
 
-`docs/designs/architecture/workspaces.md` describes the workspace layout, the allowed
+`docs/designs/architecture/workspaces.mdx` describes the workspace layout, the allowed
 dependency direction, and the toolchain versions. `docs/designs/testing.md` describes
 the test layers, where each kind of test belongs, and the file-system helpers.
 

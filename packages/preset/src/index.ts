@@ -60,10 +60,10 @@ export interface PresetOptions {
    * The operator's declaration that the root's content is theirs and may run
    * as code (ADR 7).
    *
-   * With it, the default renderers preserve `<script>` elements and report
-   * each inline script's text instead of removing them. It only shapes the
-   * defaults: a caller replacing `renderers` decides script handling in the
-   * renderers they pass.
+   * With it, the default renderers emit preserved markup as written, keep
+   * `<script>` elements, and report each inline script's text instead of
+   * removing them. It only shapes the defaults: a caller replacing
+   * `renderers` decides all of that in the renderers they pass.
    */
   readonly trust?: boolean;
   /**
@@ -108,15 +108,14 @@ export interface Preset {
  * is already the clearest way to say it.
  */
 function defaultRenderers(options: PresetOptions): readonly Renderer[] {
-  const trusted = options.trust === true;
-  const scripts = trusted ? ("preserve" as const) : undefined;
-  const mdx = trusted ? options.mdx : undefined;
+  const trust = options.trust === true;
+  const mdx = trust ? options.mdx : undefined;
 
   const markdown = createMarkdownRenderer({
-    ...(scripts === undefined ? {} : { scripts }),
+    ...(trust ? { trust } : {}),
     ...(mdx === undefined ? {} : { mdx: "decline" as const }),
   });
-  const html = createHtmlRenderer(scripts === undefined ? {} : { scripts });
+  const html = createHtmlRenderer(trust ? { trust } : {});
 
   return mdx === undefined ? [markdown, html] : [mdx, markdown, html];
 }

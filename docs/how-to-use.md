@@ -59,15 +59,31 @@ MDX file built from components. Pass `--trust` and Tsumugu runs it:
 tsumugu dev docs --trust
 ```
 
-The flag is you saying the directory is yours. Under it, markup Tsumugu cannot
-model reaches the page as written, your scripts run — inline ones allowed by
-hash, files by `'self'`, never an external origin — and `.mdx` executes while
-the page is built, so its output is static HTML that search and the exports
-can read. A file that will not run says so on the page and falls back to its
-source; one broken file never costs you the site.
+The flag is you saying the directory is yours. Under it, markup Tsumugu
+cannot model reaches the page as written. Your scripts run: inline ones
+allowed by their hash, files by `'self'`, never an external origin. And
+`.mdx` executes while the page is built, so what a reader gets is static
+HTML that search and the exports can read.
+
+A file that will not run says so on the page and falls back to its source.
+One broken file never costs you the site.
 
 Leave the flag off for anything you did not write. The reasoning is in
 [ADR 7](/decisions/0007-operator-opt-in-trust).
+
+Two things to know while you work this way. A `<script>` written inside an
+`.mdx` file cannot run, because MDX reads a script's contents as document
+content rather than as code — put it in a file beside the document and load it
+with `<script src="./demo.js">`. And a document is rebuilt when the document
+changes, not when a component it imports changes, so editing a component needs
+a restart today.
+
+Tsumugu's own architecture pages are written this way: their diagrams are
+computed from the same lists the prose describes. Look at
+`docs/designs/architecture/index.mdx` and `docs/.components/` in the
+repository for a working example. The dotted directory is deliberate — Tsumugu
+refuses dotfiles, so build inputs kept there are never published beside the
+documents that use them.
 
 ## While you write
 

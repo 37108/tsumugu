@@ -1,10 +1,12 @@
+import { PackageGraph } from "../../.components/diagram.jsx";
+
 # Workspace layout and dependency direction
 
 ## Status
 
 This document describes the repository as it exists today. Tsumugu is pre-alpha,
 and the workspace graph is deliberately smaller than the component list in
-[`docs/designs/architecture/index.md`](./): the scanner, document model,
+[`docs/designs/architecture/index.mdx`](./): the scanner, document model,
 routing, navigation, shell, serializer and server all live inside
 `tsumugu-core` until a boundary has been demonstrated by working software.
 
@@ -43,19 +45,44 @@ Unit tests are colocated with the code they cover, under
 
 Dependencies point towards core. Core never points back.
 
-```text
-                        tsumugu ─────────────┐
-                             │               │ only under --trust
-                             ▼               ▼
-                       tsumugu-preset   renderer-mdx
-                             │               │
-   ┌───────────────┬─────────┴──────────┬────┴───────────────────┐
-   ▼               ▼                    ▼                        ▼
-renderer-markdown  renderer-html   theme-default    transformer-highlight
-   └───────────────┴─────────┬──────────┴────────────────────────┘
-                             ▼
-                       tsumugu-core
-```
+<PackageGraph
+  id="graph"
+  title="Workspace dependency direction"
+  description="tsumugu depends on tsumugu-preset, and, only under the trust declaration, on tsumugu-renderer-mdx. The preset depends on renderer-markdown, renderer-html, theme-default and transformer-highlight. renderer-mdx depends on renderer-markdown and renderer-html. All four of those depend on tsumugu-core, which depends on none of them."
+  layers={[
+    [{ name: "tsumugu" }],
+    [
+      { name: "tsumugu-preset" },
+      { name: "renderer-mdx", optional: true, note: "only under --trust" },
+    ],
+    [
+      { name: "renderer-markdown" },
+      { name: "renderer-html" },
+      { name: "theme-default" },
+      { name: "transformer-highlight" },
+    ],
+    [{ name: "tsumugu-core" }],
+  ]}
+  edges={[
+    { from: "tsumugu", to: "tsumugu-preset" },
+    { from: "tsumugu", to: "renderer-mdx", conditional: true },
+    { from: "tsumugu-preset", to: "renderer-markdown" },
+    { from: "tsumugu-preset", to: "renderer-html" },
+    { from: "tsumugu-preset", to: "theme-default" },
+    { from: "tsumugu-preset", to: "transformer-highlight" },
+    { from: "renderer-mdx", to: "renderer-markdown" },
+    { from: "renderer-mdx", to: "renderer-html" },
+    { from: "renderer-markdown", to: "tsumugu-core" },
+    { from: "renderer-html", to: "tsumugu-core" },
+    { from: "theme-default", to: "tsumugu-core" },
+    { from: "transformer-highlight", to: "tsumugu-core" },
+  ]}
+/>
+
+Every arrow points downward, which is the rule rather than a drawing
+convention: a package that had to be drawn pointing up would be a package that
+broke it. The dashed box and the dashed arrow are the one edge that is made at
+runtime rather than always.
 
 `tsumugu-preset` is the composition root: it is the one package that decides
 which renderers, which transformers and which theme an ordinary project gets.
@@ -81,7 +108,7 @@ changing them. HTML therefore remains a first-class input instead of a second
 format bolted on.
 
 The rules the repository commits to, taken from
-[`docs/designs/architecture/index.md`](./) and
+[`docs/designs/architecture/index.mdx`](./) and
 [`docs/designs/principles.md`](../principles.md):
 
 - `tsumugu-core` must not depend on the CLI, themes, renderers, the build

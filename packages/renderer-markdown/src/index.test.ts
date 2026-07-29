@@ -450,7 +450,7 @@ describe("MDX", () => {
 
 describe("embedded HTML scripts", () => {
   it("collects inline script text when built to preserve scripts", async () => {
-    const preserving = createMarkdownRenderer({ scripts: "preserve" });
+    const preserving = createMarkdownRenderer({ trust: true });
     const result = await preserving.render(
       documentOf('# T\n\n<script>console.log("hi");</script>\n'),
     );
@@ -467,7 +467,7 @@ describe("embedded HTML scripts", () => {
   });
 
   it("reports a script split across a paragraph instead of half-hashing it", async () => {
-    const preserving = createMarkdownRenderer({ scripts: "preserve" });
+    const preserving = createMarkdownRenderer({ trust: true });
     const result = await preserving.render(
       documentOf("Before <script>alert(1)</script> after.\n"),
     );
@@ -483,7 +483,7 @@ describe("embedded HTML scripts", () => {
   });
 
   it("produces no hash for an empty script", async () => {
-    const preserving = createMarkdownRenderer({ scripts: "preserve" });
+    const preserving = createMarkdownRenderer({ trust: true });
     const result = await preserving.render(
       documentOf("# T\n\n<script></script>\n"),
     );

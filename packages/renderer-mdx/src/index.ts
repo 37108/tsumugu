@@ -235,10 +235,10 @@ export function createMdxRenderer(options: MdxRendererOptions): Renderer {
   // The non-executing pass: front matter through the shared precedence rules,
   // and the ADR 6 rendering to fall back to. One implementation of both,
   // reused rather than restated.
-  const fallback = createMarkdownRenderer({ scripts: "preserve" });
+  const fallback = createMarkdownRenderer({ trust: true });
   // Executed output is HTML like any other, including the script handling the
   // trusted composition uses everywhere else.
-  const html = createHtmlRenderer({ scripts: "preserve" });
+  const html = createHtmlRenderer({ trust: true });
 
   return {
     id,

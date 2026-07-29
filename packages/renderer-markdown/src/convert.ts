@@ -32,14 +32,11 @@ export interface ConversionResult {
   readonly diagnostics: readonly DocumentDiagnostic[];
   /**
    * The text of every inline script found in preserved HTML, in document
-   * order. Empty unless scripts are preserved. The server turns each into a
+   * order. Empty unless the root is trusted. The server turns each into a
    * CSP hash, which is what lets exactly these scripts run and nothing else.
    */
   readonly scripts: readonly string[];
 }
-
-/** What happens to `<script>` inside embedded HTML. See ADR 7. */
-export type ScriptMode = "remove" | "preserve";
 
 /**
  * State threaded through the conversion.
@@ -52,8 +49,9 @@ interface Conversion {
   readonly sourcePath: SourcePath;
   readonly source: string;
   readonly diagnostics: DocumentDiagnostic[];
-  readonly scriptMode: ScriptMode;
-  /** Inline script text, collected only when scripts are preserved. */
+  /** Whether the operator declared this root's content theirs (ADR 7). */
+  readonly trust: boolean;
+  /** Inline script text, collected only under the declaration. */
   readonly scripts: string[];
 }
 
@@ -61,7 +59,7 @@ interface Conversion {
  * Collects the text of every inline script in an embedded-HTML fragment.
  *
  * Markdown carries HTML as raw text, so the fragment is parsed here — only
- * when scripts are preserved, and only when it plausibly contains one. A
+ * under the declaration, and only when it plausibly contains one. A
  * script that references a file has no text to hash; `'self'` covers it.
  *
  * Markdown splits HTML mixed into a paragraph across nodes: `<script>`, the
@@ -75,7 +73,7 @@ function collectScripts(
   node: MdastNode,
   value: string,
 ): void {
-  if (conversion.scriptMode !== "preserve" || !/<script/i.test(value)) {
+  if (!conversion.trust || !/<script/i.test(value)) {
     return;
   }
   if (!/<\/script/i.test(value)) {
@@ -490,13 +488,13 @@ export function convertToSemanticAst(
   root: MdastNode,
   sourcePath: SourcePath,
   source: string,
-  scriptMode: ScriptMode = "remove",
+  trust = false,
 ): ConversionResult {
   const conversion: Conversion = {
     sourcePath,
     source,
     diagnostics: [],
-    scriptMode,
+    trust,
     scripts: [],
   };
 

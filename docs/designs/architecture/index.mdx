@@ -3,6 +3,8 @@ title: Architecture
 order: 2
 ---
 
+import { Pipeline } from "../../.components/diagram.jsx";
+
 # Architecture
 
 ## Status
@@ -17,27 +19,30 @@ The first supported source formats are Markdown and HTML. Future formats must en
 
 ## Processing pipeline
 
-```text
-File system
-    ↓
-Scanner
-    ↓
-Document
-    ↓
-Renderer
-    ↓
-Semantic AST
-    ↓
-Transformer[]
-    ↓
-Theme
-    ↓
-Virtual Tree
-    ↓
-Serializer
-    ↓
-Server response
-```
+Each stage receives a value and produces the next one. Nothing reaches back
+upstream, and no stage reads a file a previous stage already read.
+
+<Pipeline
+  id="pipeline"
+  title="The processing pipeline"
+  description="File system, then Scanner, producing Document, then Renderer, producing Semantic AST, then Transformer[], then Theme, producing Virtual Tree, then Serializer, producing the server response. Stages that run are on the left; the values they produce are on the right."
+  steps={[
+    { label: "File system", kind: "value" },
+    { label: "Scanner", kind: "runs" },
+    { label: "Document", kind: "value" },
+    { label: "Renderer", kind: "runs" },
+    { label: "Semantic AST", kind: "value" },
+    { label: "Transformer[]", kind: "runs" },
+    { label: "Theme", kind: "runs" },
+    { label: "Virtual Tree", kind: "value" },
+    { label: "Serializer", kind: "runs" },
+    { label: "Server response", kind: "value" },
+  ]}
+/>
+
+Outlined boxes on the left are code that runs; filled boxes on the right are
+the values it hands on. Two stages run back to back where a transformer hands
+the theme the same kind of tree it received.
 
 ## Component responsibilities
 

@@ -3,7 +3,7 @@
 - **Status:** Accepted
 - **Date:** 2026-07-26
 - **Supersedes:** none
-- **Related:** issue #7, [`docs/designs/architecture/index.md`](../designs/architecture/)
+- **Related:** issue #7, [`docs/designs/architecture/index.mdx`](../designs/architecture/)
 
 ## Context
 

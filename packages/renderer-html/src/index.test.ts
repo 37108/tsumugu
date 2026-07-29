@@ -334,8 +334,8 @@ describe("the trust model", () => {
     );
   });
 
-  it("preserves scripts and collects their text when built to", () => {
-    const preserving = createHtmlRenderer({ scripts: "preserve" });
+  it("preserves scripts and collects their text under the declaration", () => {
+    const preserving = createHtmlRenderer({ trust: true });
     const result = preserving.render(
       documentOf('<p>a</p><script>console.log("hi");</script>'),
     );
@@ -350,7 +350,7 @@ describe("the trust model", () => {
   });
 
   it("collects scripts nested inside preserved subtrees", () => {
-    const preserving = createHtmlRenderer({ scripts: "preserve" });
+    const preserving = createHtmlRenderer({ trust: true });
     const result = preserving.render(
       documentOf("<x-widget><script>go();</script></x-widget>"),
     );
@@ -361,8 +361,21 @@ describe("the trust model", () => {
     expect(result.scripts).toEqual(["go();"]);
   });
 
+  it("says nothing about markup with no semantic equivalent under the declaration", () => {
+    const trusted = createHtmlRenderer({ trust: true });
+    const result = trusted.render(documentOf("<svg><rect /></svg>"));
+    if (result instanceof Promise) {
+      throw new Error("the HTML renderer is synchronous");
+    }
+
+    // The markup is emitted as written, so there is no deferred decision left
+    // to warn about.
+    expect(nodeTypes(result.root)).toContain("raw-html");
+    expect(result.diagnostics ?? []).toHaveLength(0);
+  });
+
   it("collects nothing from a script that only references a file", () => {
-    const preserving = createHtmlRenderer({ scripts: "preserve" });
+    const preserving = createHtmlRenderer({ trust: true });
     const result = preserving.render(
       documentOf('<script src="./demo.js"></script>'),
     );

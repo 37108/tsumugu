@@ -29,8 +29,8 @@
     "bench": "pnpm run build && node scripts/benchmark.mjs",
     "styles": "node scripts/build-styles.mjs",
     "sbom": "pnpm sbom --sbom-format cyclonedx --sbom-spec-version 1.7 --prod --sbom-type application --out sbom.cyclonedx.json",
-    "docs": "pnpm run build && node packages/cli/dist/bin.js dev docs",
-    "docs:build": "pnpm run build && node packages/cli/dist/bin.js build docs --out dist-docs --origin https://tsumugu.dev",
+    "docs": "pnpm run build && node packages/cli/dist/bin.js dev docs --trust",
+    "docs:build": "pnpm run build && node packages/cli/dist/bin.js build docs --out dist-docs --origin https://tsumugu.dev --trust",
     "check:boundaries": "pnpm run build && vitest run tests/boundaries.test.ts tests/workspace.test.ts",
     "check": "pnpm run build && pnpm run format:check && pnpm run lint && pnpm run typecheck && vitest run"
   },

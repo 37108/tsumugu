@@ -27,21 +27,19 @@ export interface ConversionResult {
   readonly diagnostics: readonly DocumentDiagnostic[];
   /**
    * The text of every inline script preserved by this conversion, in document
-   * order. Empty unless scripts are preserved. The server turns each into a
+   * order. Empty unless the root is trusted. The server turns each into a
    * CSP hash, which is what lets exactly these scripts run and nothing else.
    */
   readonly scripts: readonly string[];
 }
 
-/** What happens to a `<script>` element. Removal is the default (ADR 7). */
-export type ScriptMode = "remove" | "preserve";
-
 interface Conversion {
   readonly sourcePath: SourcePath;
   readonly source: string;
   readonly diagnostics: DocumentDiagnostic[];
-  readonly scriptMode: ScriptMode;
-  /** Inline script text, collected only when scripts are preserved. */
+  /** Whether the operator declared this root's content theirs (ADR 7). */
+  readonly trust: boolean;
+  /** Inline script text, collected only under the declaration. */
   readonly scripts: string[];
   /** Scripts are reported once, not once per occurrence. */
   scriptsReported: boolean;
@@ -202,13 +200,13 @@ function sourceOf(conversion: Conversion, node: HastNode): string {
 /**
  * Collects the text of every inline script in a preserved subtree, in order.
  *
- * Only when scripts are preserved: the collected text becomes CSP hashes, and
+ * Only under the declaration: the collected text becomes CSP hashes, and
  * a hash for a script that is never emitted would widen the policy for
  * nothing. A script that references a file has no text to hash; `'self'`
  * covers it.
  */
 function collectScripts(conversion: Conversion, node: HastNode): void {
-  if (conversion.scriptMode !== "preserve") {
+  if (!conversion.trust) {
     return;
   }
   if (isElement(node) && node.tagName.toLowerCase() === "script") {
@@ -357,6 +355,12 @@ function reportUnsupported(
   node: HastNode,
   tag: string,
 ): void {
+  if (conversion.trust) {
+    // Under the operator's declaration the markup is emitted as written, so
+    // there is no deferred decision left to explain. Warning anyway would tell
+    // an author their own working `<svg>` is a problem.
+    return;
+  }
   if (conversion.unsupportedReported) {
     return;
   }
@@ -388,7 +392,7 @@ function block(conversion: Conversion, node: RootContent): BlockNode[] {
   const tag = node.tagName.toLowerCase();
 
   if (tag === "script" || tag === "noscript") {
-    if (conversion.scriptMode === "preserve") {
+    if (conversion.trust) {
       return [preservedHtml(conversion, node, "block")];
     }
     dropScript(conversion, node);
@@ -577,7 +581,7 @@ function inline(conversion: Conversion, node: RootContent): InlineNode[] {
   const tag = node.tagName.toLowerCase();
 
   if (tag === "script" || tag === "noscript") {
-    if (conversion.scriptMode === "preserve") {
+    if (conversion.trust) {
       return [preservedHtml(conversion, node, "inline")];
     }
     dropScript(conversion, node);
@@ -658,13 +662,13 @@ export function convertToSemanticAst(
   nodes: readonly RootContent[],
   sourcePath: SourcePath,
   source: string,
-  scriptMode: ScriptMode = "remove",
+  trust = false,
 ): ConversionResult {
   const conversion: Conversion = {
     sourcePath,
     source,
     diagnostics: [],
-    scriptMode,
+    trust,
     scripts: [],
     scriptsReported: false,
     unsupportedReported: false,

@@ -1,5 +1,14 @@
 # tsumugu-build
 
+## 0.4.0
+
+### Patch Changes
+
+- Updated dependencies [a8241db]
+- Updated dependencies [b74b4a1]
+- Updated dependencies [17ae6bf]
+  - tsumugu-core@0.4.0
+
 ## 0.3.1
 
 ### Patch Changes

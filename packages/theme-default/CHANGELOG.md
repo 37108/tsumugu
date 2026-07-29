@@ -1,5 +1,18 @@
 # tsumugu-theme-default
 
+## 0.4.0
+
+### Minor Changes
+
+- a8241db: Add the `--trust` flag to `dev` and `build`: the operator's declaration that the root's content is theirs. Under it, markup preserved as untrusted raw source — `<canvas>`, `<svg>`, custom elements — is emitted as written instead of shown as escaped source (ADR 7, first phase).
+
+### Patch Changes
+
+- Updated dependencies [a8241db]
+- Updated dependencies [b74b4a1]
+- Updated dependencies [17ae6bf]
+  - tsumugu-core@0.4.0
+
 ## 0.3.1
 
 ### Patch Changes

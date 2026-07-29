@@ -1,6 +1,6 @@
 {
   "name": "tsumugu-renderer-html",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "type": "module",
   "description": "HTML renderer for Tsumugu. Converts complete HTML documents and fragments into the Semantic Document AST.",
   "license": "MIT",

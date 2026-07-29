@@ -71,6 +71,20 @@ const contentTypes = new Map<string, string>([
 ]);
 
 /**
+ * The same files, under the operator's `--trust` declaration (ADR 7).
+ *
+ * `script-src 'self'` promises a page may load script files from the root; a
+ * script served as `text/plain` is refused by `nosniff` before the policy is
+ * ever consulted, which would make that promise empty. Only the executable
+ * types change: `.ts` and `.map` are still text, because no browser runs
+ * either.
+ */
+const trustedContentTypes = new Map<string, string>([
+  [".js", "text/javascript; charset=utf-8"],
+  [".mjs", "text/javascript; charset=utf-8"],
+]);
+
+/**
  * Extensions that belong to documents.
  *
  * A document is served as a rendered page at its own route. Serving its source
@@ -111,6 +125,7 @@ function hasUnsafeSegment(segments: readonly string[]): boolean {
 export async function readAsset(
   root: string,
   route: RoutePath,
+  options: { readonly trust?: boolean } = {},
 ): Promise<AssetResult> {
   const segments = route.split("/").filter((segment) => segment !== "");
 
@@ -156,7 +171,12 @@ export async function readAsset(
       ok: true,
       bytes: await readFile(resolved),
       // An unknown type is a download, never markup.
-      contentType: contentTypes.get(extension) ?? "application/octet-stream",
+      contentType:
+        (options.trust === true
+          ? trustedContentTypes.get(extension)
+          : undefined) ??
+        contentTypes.get(extension) ??
+        "application/octet-stream",
     };
   } catch {
     return refused;

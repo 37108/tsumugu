@@ -29,11 +29,19 @@ There is one exception, and it belongs to the party trusted with everything:
 `--trust` ([ADR 7](../decisions/0007-operator-opt-in-trust.md)) is the operator
 declaring that the root's content is theirs and may run as code. It is off by
 default, never inferred, announced in the terminal, and scoped to the root —
-never to the network. Under it, markup preserved as untrusted raw source is
-emitted as written, and the root's own scripts run — inline ones by hash,
-files by `'self'`, an external origin never. Everything else on this page,
-including path containment and loopback binding, holds with or without the
-flag.
+never to the network. Under it, three things change and nothing else does:
+markup preserved as untrusted raw source is emitted as written; the root's own
+scripts run, inline ones by hash and files by `'self'`, an external origin
+never; and `.mdx` is compiled, bundled and **evaluated in the Tsumugu process**
+while the page is built, which is the operator's own machine running the
+operator's own content. Script files inside the root are served as JavaScript
+rather than as text, because `'self'` would otherwise promise something
+`nosniff` refuses. Everything else on this page, including path containment and
+loopback binding, holds with or without the flag.
+
+MDX execution is the widest part of the declaration: an import that resolves
+outside the root is refused (through `realpath`, like every other path here),
+but inside it, a document is code. That is what the flag says.
 
 ## What enforces it
 

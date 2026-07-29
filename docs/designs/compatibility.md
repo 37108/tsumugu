@@ -153,9 +153,11 @@ root manifest does not define.
 ## Source formats
 
 `.md` and `.markdown` (CommonMark plus GFM tables and YAML front matter),
-`.mdx` (the same, with MDX syntax parsed without execution; see
-[ADR 6](../decisions/0006-mdx-without-execution.md)), and `.html` / `.htm` (full
-documents and fragments). Anything else beside the documents is an asset.
+`.mdx` (the same, with MDX syntax parsed without execution by default; see
+[ADR 6](../decisions/0006-mdx-without-execution.md), and
+[ADR 7](../decisions/0007-operator-opt-in-trust.md) for what `--trust`
+changes), and `.html` / `.htm` (full documents and fragments). Anything else
+beside the documents is an asset.
 
 ## Browsers
 

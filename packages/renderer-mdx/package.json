@@ -1,19 +1,16 @@
 {
-  "name": "tsumugu",
+  "name": "tsumugu-renderer-mdx",
   "version": "0.3.1",
   "type": "module",
-  "description": "Tsumugu command-line interface. Composes public packages and is never depended on by them.",
+  "description": "Executing MDX renderer for Tsumugu. Compiles and evaluates .mdx to static HTML under the operator's --trust declaration (ADR 7).",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/37108/tsumugu.git",
-    "directory": "packages/cli"
+    "directory": "packages/renderer-mdx"
   },
   "engines": {
     "node": ">=24.0.0"
-  },
-  "bin": {
-    "tsumugu": "./dist/bin.js"
   },
   "exports": {
     ".": {
@@ -35,14 +32,13 @@
     "clean": "tsc --build --clean"
   },
   "dependencies": {
-    "tsumugu-build": "workspace:*",
+    "@mdx-js/mdx": "^3.1.1",
+    "esbuild": "^0.28.1",
+    "preact": "^10.27.0",
+    "preact-render-to-string": "^6.7.0",
     "tsumugu-core": "workspace:*",
-    "tsumugu-preset": "workspace:*",
     "tsumugu-renderer-html": "workspace:*",
-    "tsumugu-renderer-markdown": "workspace:*",
-    "tsumugu-renderer-mdx": "workspace:*",
-    "tsumugu-theme-default": "workspace:*",
-    "tsumugu-transformer-highlight": "workspace:*"
+    "tsumugu-renderer-markdown": "workspace:*"
   },
   "devDependencies": {
     "@tsumugu/internal-tsconfig": "workspace:*"

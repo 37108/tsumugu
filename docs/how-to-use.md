@@ -45,9 +45,29 @@ hidden: true # unlisted everywhere, but still served
 ```
 
 A typo like `hiden` gets a warning naming the key you probably meant. Tsumugu
-shows MDX expressions and components as source instead of running them. The
-reason is recorded in
-[ADR 6](/decisions/0006-mdx-without-execution).
+shows MDX expressions and components as source instead of running them, and
+removes `<script>` from HTML. The reason is recorded in
+[ADR 6](/decisions/0006-mdx-without-execution): content you point Tsumugu at
+is not code, so it does not run.
+
+## When the content is yours
+
+Some documentation is the code: a `<canvas>` demo, an interactive example, an
+MDX file built from components. Pass `--trust` and Tsumugu runs it:
+
+```sh
+tsumugu dev docs --trust
+```
+
+The flag is you saying the directory is yours. Under it, markup Tsumugu cannot
+model reaches the page as written, your scripts run — inline ones allowed by
+hash, files by `'self'`, never an external origin — and `.mdx` executes while
+the page is built, so its output is static HTML that search and the exports
+can read. A file that will not run says so on the page and falls back to its
+source; one broken file never costs you the site.
+
+Leave the flag off for anything you did not write. The reasoning is in
+[ADR 7](/decisions/0007-operator-opt-in-trust).
 
 ## While you write
 

@@ -66,6 +66,21 @@ export interface PresetOptions {
    * renderers they pass.
    */
   readonly trust?: boolean;
+  /**
+   * An executing MDX renderer to place ahead of the default renderers
+   * (ADR 7, third phase).
+   *
+   * A slot rather than an import, so this package never depends on the
+   * execution toolchain — the caller who owns the trust decision brings the
+   * renderer that acts on it. With it, the default Markdown renderer declines
+   * `.mdx`; without it, ADR 6 rendering stands.
+   *
+   * Only honored alongside `trust`: executing a document is the declaration,
+   * so a composition that has not made it does not get an executing renderer
+   * through a second option. Ignored when `renderers` replaces the
+   * composition outright.
+   */
+  readonly mdx?: Renderer;
 }
 
 export interface Preset {
@@ -92,16 +107,23 @@ export interface Preset {
  * Nothing is hidden behind an option for that case, because spreading an array
  * is already the clearest way to say it.
  */
+function defaultRenderers(options: PresetOptions): readonly Renderer[] {
+  const trusted = options.trust === true;
+  const scripts = trusted ? ("preserve" as const) : undefined;
+  const mdx = trusted ? options.mdx : undefined;
+
+  const markdown = createMarkdownRenderer({
+    ...(scripts === undefined ? {} : { scripts }),
+    ...(mdx === undefined ? {} : { mdx: "decline" as const }),
+  });
+  const html = createHtmlRenderer(scripts === undefined ? {} : { scripts });
+
+  return mdx === undefined ? [markdown, html] : [mdx, markdown, html];
+}
+
 export function createPreset(options: PresetOptions = {}): Preset {
   return {
-    renderers:
-      options.renderers ??
-      (options.trust === true
-        ? [
-            createMarkdownRenderer({ scripts: "preserve" }),
-            createHtmlRenderer({ scripts: "preserve" }),
-          ]
-        : [createMarkdownRenderer(), createHtmlRenderer()]),
+    renderers: options.renderers ?? defaultRenderers(options),
     transformers: options.transformers ?? [
       createHeadingIdTransformer(),
       createHighlightTransformer(),

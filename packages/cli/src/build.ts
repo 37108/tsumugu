@@ -2,6 +2,7 @@ import path from "node:path";
 
 import { buildStatic, type StaticBuildReport } from "tsumugu-build";
 import { createPreset } from "tsumugu-preset";
+import { createMdxRenderer } from "tsumugu-renderer-mdx";
 
 import { siteNameFor } from "./dev.js";
 import { formatForTerminal, styleFor, type TerminalStyle } from "./terminal.js";
@@ -116,7 +117,11 @@ export async function runBuild(
     ...(options.clean === undefined ? {} : { clean: options.clean }),
     ...(options.trust === true ? { trust: true } : {}),
     siteName: siteNameFor(root),
-    ...createPreset(options.trust === true ? { trust: true } : {}),
+    ...createPreset(
+      options.trust === true
+        ? { trust: true, mdx: createMdxRenderer({ root }) }
+        : {},
+    ),
   });
 }
 
@@ -154,7 +159,7 @@ export function describeBuild(
     // The declaration is loud on purpose: nobody should discover later that
     // their content was being emitted as written.
     lines.push(
-      `${style.dim("  trust ")} on — this root's markup was emitted as written, scripts included`,
+      `${style.dim("  trust ")} on — this root's markup was emitted as written, scripts included, and its .mdx executed here`,
     );
   }
 

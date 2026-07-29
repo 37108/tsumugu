@@ -251,7 +251,11 @@ async function handle(
   // A document wins over a file with the same route. A page is what a reader
   // asked for; the asset is a fallback, checked only once no page answered.
   if (options.assetRoot !== undefined) {
-    const asset = await readAsset(options.assetRoot, route);
+    const asset = await readAsset(
+      options.assetRoot,
+      route,
+      site.trust === true ? { trust: true } : {},
+    );
     if (asset.ok) {
       send(200, asset.bytes, asset.contentType);
       return;

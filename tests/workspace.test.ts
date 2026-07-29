@@ -70,6 +70,7 @@ describe("workspace discovery", () => {
       "packages/preset",
       "packages/renderer-html",
       "packages/renderer-markdown",
+      "packages/renderer-mdx",
       "packages/theme-default",
       "packages/transformer-highlight",
     ]);
@@ -122,6 +123,7 @@ describe("publication safety", () => {
       "packages/preset",
       "packages/renderer-html",
       "packages/renderer-markdown",
+      "packages/renderer-mdx",
       "packages/theme-default",
       "packages/transformer-highlight",
     ]);

@@ -80,6 +80,20 @@ describe("a root served without --trust", () => {
     });
   });
 
+  it("keeps MDX islands as escaped source", async () => {
+    const files = {
+      "index.mdx": "# Guide\n\nThe answer is {40 + 2}.\n",
+    };
+
+    await serveFixture(files, [], async ({ server }) => {
+      const html = await (await fetch(server.url)).text();
+
+      // ADR 6 stands without the declaration: shown as written, never run.
+      expect(html).toContain("40 + 2");
+      expect(html).not.toContain("The answer is 42");
+    });
+  });
+
   it("keeps preserved markup as escaped source", async () => {
     await serveFixture({ "demo.html": canvasPage }, [], async ({ server }) => {
       const html = await (await fetch(`${server.url}demo`)).text();
@@ -160,6 +174,63 @@ describe("a root served with --trust", () => {
 
       expect(await response.text()).toContain(`<script>${body}</script>`);
       expect(policy).toContain(hash);
+    });
+  });
+
+  it("executes MDX to static content, in the page and in the exports", async () => {
+    const files = {
+      "components/badge.jsx":
+        "export function Badge({ children }) {\n  return <strong>{children}</strong>;\n}\n",
+      "index.mdx": [
+        "---",
+        "title: Executed",
+        "---",
+        "",
+        'import { Badge } from "./components/badge.jsx";',
+        "",
+        "# Executed",
+        "",
+        "The answer is {40 + 2}.",
+        "",
+        "<Badge>shiny</Badge>",
+        "",
+      ].join("\n"),
+    };
+
+    await serveFixture(files, ["--trust"], async ({ server }) => {
+      const html = await (await fetch(server.url)).text();
+
+      expect(html).toContain("The answer is 42");
+      expect(html).toContain("<strong>shiny</strong>");
+      expect(html).not.toContain("40 + 2");
+      // The executed document is what the machine-readable outputs see too:
+      // one source, human and machine.
+      for (const output of ["search.json", "documents.json"]) {
+        expect(
+          await (await fetch(`${server.url}${output}`)).text(),
+          output,
+        ).toContain("The answer is 42");
+      }
+      // llms.txt lists pages rather than their prose, so the executed
+      // document has to appear there as a page.
+      expect(await (await fetch(`${server.url}llms.txt`)).text()).toContain(
+        "Executed",
+      );
+    });
+  });
+
+  it("falls back to the non-executing rendering when MDX throws", async () => {
+    const files = {
+      "index.mdx": '# Broken\n\n{(() => { throw new Error("boom"); })()}\n',
+    };
+
+    await serveFixture(files, ["--trust"], async ({ server }) => {
+      const html = await (await fetch(server.url)).text();
+
+      // The island is shown as written rather than lost, and the page says
+      // what happened.
+      expect(html).toContain("could not be executed");
+      expect(html).toContain("Broken");
     });
   });
 

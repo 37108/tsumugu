@@ -13,6 +13,7 @@ import {
   type UpdateSummary,
 } from "tsumugu-core";
 import { createPreset } from "tsumugu-preset";
+import { createMdxRenderer } from "tsumugu-renderer-mdx";
 
 import { formatForTerminal, styleFor, type TerminalStyle } from "./terminal.js";
 
@@ -266,7 +267,11 @@ export async function startDev(options: DevOptions = {}): Promise<DevResult> {
     // Which renderers, transformers and theme a project gets is the preset's
     // decision, not the CLI's. The CLI parses a command line and prints to a
     // terminal; a programmatic consumer composes the same preset without it.
-    ...createPreset(options.trust === true ? { trust: true } : {}),
+    ...createPreset(
+      options.trust === true
+        ? { trust: true, mdx: createMdxRenderer({ root }) }
+        : {},
+    ),
     siteName: siteNameFor(root),
     ...(reloading ? { script: reloadScript } : {}),
     ...(options.trust === true ? { trust: true } : {}),
@@ -376,7 +381,7 @@ export function describeStartup(
     // The declaration is loud on purpose: nobody should discover later that
     // their content was being emitted as written.
     lines.push(
-      `${style.dim("  trust ")} on — this root's markup is emitted as written and its scripts run`,
+      `${style.dim("  trust ")} on — this root's markup is emitted as written, its scripts run, and its .mdx executes here`,
     );
   }
 

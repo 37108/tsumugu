@@ -20,6 +20,14 @@ Nothing is discovered. No package is loaded because it happens to be installed,
 no file is read to decide what to register, and no `@tsumugu/plugin-*` naming
 convention means anything. If it is not in the table above, it is not running.
 
+`--trust` changes two of those registrations, and only those
+([ADR 7](../decisions/0007-operator-opt-in-trust.md)): the Markdown and HTML
+renderers are built to preserve `<script>` rather than remove it, and an
+executing MDX renderer joins the front of the list, ahead of the Markdown
+renderer, which then declines `.mdx`. The preset accepts that renderer as an
+option rather than importing it, so a project that never makes the declaration
+never has a compiler and a bundler in its dependency graph.
+
 ## The configuration API is the composition function
 
 Core has no `defineConfig`. Composing a site _is_ calling `createSite` with the

@@ -22,6 +22,7 @@ tsumugu/
 │   ├── cli/                   tsumugu
 │   ├── renderer-markdown/     tsumugu-renderer-markdown
 │   ├── renderer-html/         tsumugu-renderer-html
+│   ├── renderer-mdx/          tsumugu-renderer-mdx (opt-in, executing)
 │   ├── theme-default/         tsumugu-theme-default
 │   ├── transformer-highlight/ tsumugu-transformer-highlight
 │   ├── preset/                tsumugu-preset
@@ -43,12 +44,12 @@ Unit tests are colocated with the code they cover, under
 Dependencies point towards core. Core never points back.
 
 ```text
-                        tsumugu
-                             │
-                             ▼
-                       tsumugu-preset
-                             │
-   ┌───────────────┬─────────┴──────────┬────────────────────────┐
+                        tsumugu ─────────────┐
+                             │               │ only under --trust
+                             ▼               ▼
+                       tsumugu-preset   renderer-mdx
+                             │               │
+   ┌───────────────┬─────────┴──────────┬────┴───────────────────┐
    ▼               ▼                    ▼                        ▼
 renderer-markdown  renderer-html   theme-default    transformer-highlight
    └───────────────┴─────────┬──────────┴────────────────────────┘
@@ -62,6 +63,16 @@ The CLI parses a command line and prints to a terminal; core composes what it is
 handed and chooses nothing. That is what keeps a different set of choices
 possible without changing either of them. See
 [`docs/designs/composition.md`](../composition.md).
+
+The one edge that skips the preset is `tsumugu-renderer-mdx`, and it is
+deliberate. The preset still decides _whether_ an executing MDX renderer is
+registered — it accepts one only alongside `trust`, and puts it ahead of the
+Markdown renderer — but it does not import the package, because doing so would
+put a compiler, a bundler and a JSX runtime into the dependency graph of every
+project that composes the defaults, including the ones that never pass
+`--trust`. So the CLI, which is where the declaration is made, constructs the
+renderer and hands it over. A library consumer does the same thing in one line,
+or does not, and pays nothing for the choice.
 
 Each renderer holds every type of its own parser: mdast never leaves
 `tsumugu-renderer-markdown`, hast never leaves `tsumugu-renderer-html`. Core

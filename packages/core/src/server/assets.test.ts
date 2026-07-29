@@ -93,6 +93,16 @@ describe("readAsset", () => {
     });
   });
 
+  it("serves JavaScript as JavaScript once the operator has trusted the root", async () => {
+    // What `script-src 'self'` promises a trusted page: a script file in the
+    // root can actually be loaded, rather than refused by nosniff first.
+    const result = await readAsset(root, route("/example.js"), { trust: true });
+
+    expect(result.ok && result.contentType).toBe(
+      "text/javascript; charset=utf-8",
+    );
+  });
+
   it("refuses a document's source, which is served as a page instead", async () => {
     expect((await read("/index.md")).served).toBe(false);
   });

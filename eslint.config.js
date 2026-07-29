@@ -14,7 +14,15 @@ export default tseslint.config(
   {
     // Build output, dependencies and coverage reports are generated, never
     // authored, so they are not linted.
-    ignores: ["**/dist/**", "**/node_modules/**", "**/coverage/**"],
+    ignores: [
+      "**/dist/**",
+      "**/node_modules/**",
+      "**/coverage/**",
+      // Documentation the MDX renderer's tests execute, not source this
+      // repository compiles: the files are deliberately written the way an
+      // author would write them, browser globals and JSX and all.
+      "packages/renderer-mdx/test-fixtures/**",
+    ],
   },
 
   js.configs.recommended,

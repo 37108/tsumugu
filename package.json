@@ -53,6 +53,7 @@
     "tsumugu-preset": "workspace:*",
     "tsumugu-renderer-html": "workspace:*",
     "tsumugu-renderer-markdown": "workspace:*",
+    "tsumugu-renderer-mdx": "workspace:*",
     "tsumugu-theme-default": "workspace:*",
     "tsumugu-transformer-highlight": "workspace:*",
     "typescript": "^6.0.3",

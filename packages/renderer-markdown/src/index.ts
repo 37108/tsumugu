@@ -10,6 +10,10 @@ import { mdxjs } from "micromark-extension-mdxjs";
 import { convertToSemanticAst, type ScriptMode } from "./convert.js";
 
 export type { ScriptMode } from "./convert.js";
+// Exported because another renderer composes this one and has to tell its
+// diagnostics apart from its own. A string literal copied into that package
+// would keep compiling after a rename here and quietly stop matching.
+export { markdownCodes } from "./convert.js";
 import { readFrontMatter } from "./frontmatter.js";
 
 /**
@@ -55,6 +59,16 @@ export interface MarkdownRendererOptions {
    * renderer never decides trust; it is built into a composition that did.
    */
   readonly scripts?: ScriptMode;
+  /**
+   * What this renderer does with `.mdx`.
+   *
+   * `"preserve"` — the default — claims the format and renders its dynamic
+   * islands as escaped source (ADR 6). `"decline"` leaves `.mdx` unclaimed,
+   * for a composition that registers an executing MDX renderer (ADR 7):
+   * two renderers claiming one document is a composition error by design,
+   * so the non-executing one has to step aside explicitly.
+   */
+  readonly mdx?: "preserve" | "decline";
 }
 
 /**
@@ -72,7 +86,8 @@ export function createMarkdownRenderer(
     id,
 
     supports: (document: LoadedDocument): boolean =>
-      document.format === "markdown" || document.format === "mdx",
+      document.format === "markdown" ||
+      (document.format === "mdx" && options.mdx !== "decline"),
 
     render: (document: LoadedDocument): RenderResult => {
       // MDX is Markdown with three more kinds of node — expressions, JSX and

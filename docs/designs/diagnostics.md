@@ -180,6 +180,16 @@ Every code in the implementation appears here.
 | `transformer-highlight/unknown-language` | warning  | no grammar exists for the language on the fence; the code is shown plain |
 | `transformer-highlight/failed`           | warning  | a grammar failed while tokenizing; the code is shown plain               |
 
+### `renderer-mdx/`
+
+Produced only by the opt-in executing MDX renderer, which a composition
+registers under the operator's `--trust` declaration (ADR 7).
+
+| Code                            | Severity | Meaning                                                                       |
+| ------------------------------- | -------- | ----------------------------------------------------------------------------- |
+| `renderer-mdx/execution-failed` | warning  | the document would not compile or threw; it renders without execution instead |
+| `renderer-mdx/inline-script`    | warning  | MDX reads a script's content as content, so an inline script cannot be run    |
+
 ### `renderer-html/`
 
 | Code                                | Severity | When                                                                                |

@@ -1,3 +1,4 @@
+import type { Renderer } from "tsumugu-core";
 import { describe, expect, it } from "vitest";
 
 import { createPreset, officialComposition } from "./index.js";
@@ -99,6 +100,25 @@ describe("the trust option", () => {
 
     const result = await html?.render(scriptDocument);
     expect(result?.scripts).toEqual(['console.log("hi");']);
+  });
+
+  it("registers an executing MDX renderer only alongside the declaration", () => {
+    const mdx: Renderer = {
+      id: "mdx",
+      supports: () => true,
+      render: () => ({ root: { type: "document", children: [] } }),
+    };
+
+    // Executing a document is the declaration; a second option must not be a
+    // way around having made it.
+    expect(
+      createPreset({ trust: true, mdx }).renderers.map(
+        (renderer) => renderer.id,
+      ),
+    ).toEqual(["mdx", ...officialComposition.renderers]);
+    expect(
+      createPreset({ mdx }).renderers.map((renderer) => renderer.id),
+    ).toEqual(officialComposition.renderers);
   });
 
   it("composes script-removing renderers otherwise", async () => {

@@ -57,9 +57,13 @@ model (nothing an author wrote becomes running code).
 
 ### Follow-up required
 
-- If real demand for executed components appears, the shape to consider is a
+- ~~If real demand for executed components appears, the shape to consider is a
   build-time, opt-in renderer package that owns the sandboxing question. It
-  would need an RFC because it changes the trust model.
+  would need an RFC because it changes the trust model.~~ Done:
+  [RFC 3](../rfcs/0003-operator-opt-in-trust.md) and
+  [ADR 7](0007-operator-opt-in-trust.md) added `--trust`, and
+  `tsumugu-renderer-mdx` is that package. This record still describes what
+  `.mdx` does by default, which is every invocation without the flag.
 
 ## Alternatives considered
 

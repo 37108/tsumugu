@@ -43,3 +43,8 @@ engineStrict: true
 # allowlist above records for everything else.
 allowBuilds:
   "@parcel/watcher": false
+  # esbuild's platform binary arrives as an optional dependency
+  # (@esbuild/darwin-arm64 and friends); its postinstall only verifies the
+  # binary and falls back to downloading one. The verification is skippable,
+  # the download must never run, so the script stays blocked like the rest.
+  esbuild: false

@@ -13,6 +13,19 @@ packages:
 # enter the lockfile. 30240 minutes is 21 days.
 minimumReleaseAge: 30240
 
+# postcss <= 8.5.17 is vulnerable to path traversal via sourceMappingURL
+# auto-loading (GHSA advisory, Dependabot alert #1). It only reaches this
+# workspace transitively through vite, whose range already allows the fix.
+overrides:
+  postcss: ">=8.5.18"
+
+# The patched postcss (published 2026-07-12) is newer than the 21-day maturity
+# window, and shipping a known path-traversal fix outweighs the wait. Remove
+# this exclusion after 2026-08-02, when 8.5.18 clears minimumReleaseAge.
+minimumReleaseAgeExclude:
+  - postcss
+  - nanoid # postcss 8.5.18's own dependency, released the same day
+
 # No dependency is allowed to run install scripts. pnpm blocks them by default;
 # stating the empty allowlist explicitly makes the decision reviewable and makes
 # any future exception show up in a diff.

@@ -1,5 +1,20 @@
 # tsumugu
 
+## 0.4.1
+
+### Patch Changes
+
+- 35ef93f: Harden CLI base-path parsing against expensive inputs and keep the live-reload client script free of dynamic code construction.
+- Updated dependencies [35ef93f]
+  - tsumugu-core@0.4.1
+  - tsumugu-build@0.4.1
+  - tsumugu-preset@0.4.1
+  - tsumugu-renderer-html@0.4.1
+  - tsumugu-renderer-markdown@0.4.1
+  - tsumugu-renderer-mdx@0.4.1
+  - tsumugu-theme-default@0.4.1
+  - tsumugu-transformer-highlight@0.4.1
+
 ## 0.4.0
 
 ### Minor Changes

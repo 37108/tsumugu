@@ -66,7 +66,7 @@ export function parseBuildOptions(
       } else if (argument === "--base") {
         // Normalized once, here: one leading slash, no trailing one, so the
         // rest of the pipeline can concatenate without thinking about it.
-        options.basePath = `/${value.replace(/^\/+|\/+$/gu, "")}`;
+        options.basePath = `/${value.replace(/^\/+|(?<!\/)\/+$/gu, "")}`;
       } else {
         options.origin = value;
       }

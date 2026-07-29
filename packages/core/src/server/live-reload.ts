@@ -37,9 +37,8 @@ export const reloadPath = "/__tsumugu__/reload";
  * server restart reconnects without anything here handling it — and the
  * `reload` on reconnect is what makes "restart the server" refresh the page.
  */
-export const reloadScript = `(()=>{const s=new EventSource(${JSON.stringify(
-  reloadPath,
-)});s.addEventListener("reload",()=>{location.reload()});})();`;
+export const reloadScript =
+  '(()=>{const s=new EventSource("/__tsumugu__/reload");s.addEventListener("reload",()=>{location.reload()});})();';
 
 /** The CSP source expression that allows exactly the script above. */
 export const reloadScriptHash = `'sha256-${createHash("sha256")

@@ -20,7 +20,16 @@ import {
  *
  * The counts are exact on purpose. `toBeGreaterThan` would pass while quietly
  * dropping forty documents.
+ *
+ * The timeout is stated, and generously, for the same reason: writing three
+ * hundred files and building the site twice is slow on a cold CI runner, and
+ * the default five seconds turns a correctness test into an accidental
+ * deadline that fails on a busy machine rather than on a bug. `pnpm bench` is
+ * where speed is measured.
  */
+
+/** Long enough that only a hang reaches it. */
+const TIMEOUT_MS = 60_000;
 
 const DOCUMENTS = 300;
 const SECTIONS = 12;
@@ -55,43 +64,47 @@ function project(): Record<string, string> {
 }
 
 describe("a three-hundred-document site", () => {
-  it("routes, indexes and rebuilds without losing a single document", async () => {
-    await withTemporaryDirectory(async (root) => {
-      await writeFiles(root, project());
-      const site = await createSite({ root, ...createPreset() });
+  it(
+    "routes, indexes and rebuilds without losing a single document",
+    async () => {
+      await withTemporaryDirectory(async (root) => {
+        await writeFiles(root, project());
+        const site = await createSite({ root, ...createPreset() });
 
-      // Discovery and routing: every file became exactly one page, plus the
-      // generated /search page and nothing else.
-      expect(site.result.pages.size).toBe(DOCUMENTS + 2);
-      expect(site.result.diagnostics).toEqual([]);
+        // Discovery and routing: every file became exactly one page, plus the
+        // generated /search page and nothing else.
+        expect(site.result.pages.size).toBe(DOCUMENTS + 2);
+        expect(site.result.diagnostics).toEqual([]);
 
-      // Link validation ran over every page and found the graph closed.
-      const pageDiagnostics = [...site.result.pages.values()].flatMap(
-        (page) => page.diagnostics,
-      );
-      expect(pageDiagnostics).toEqual([]);
+        // Link validation ran over every page and found the graph closed.
+        const pageDiagnostics = [...site.result.pages.values()].flatMap(
+          (page) => page.diagnostics,
+        );
+        expect(pageDiagnostics).toEqual([]);
 
-      // Search: one entry for each document's body, one per section heading,
-      // one for the index page.
-      const search = JSON.parse(
-        site.result.exports.get("/search.json")?.render("http://x") ?? "{}",
-      ) as { entries: readonly { id: string }[] };
-      expect(search.entries).toHaveLength(DOCUMENTS * 2 + 1);
-      expect(new Set(search.entries.map((entry) => entry.id)).size).toBe(
-        search.entries.length,
-      );
+        // Search: one entry for each document's body, one per section heading,
+        // one for the index page.
+        const search = JSON.parse(
+          site.result.exports.get("/search.json")?.render("http://x") ?? "{}",
+        ) as { entries: readonly { id: string }[] };
+        expect(search.entries).toHaveLength(DOCUMENTS * 2 + 1);
+        expect(new Set(search.entries.map((entry) => entry.id)).size).toBe(
+          search.entries.length,
+        );
 
-      // Incremental: an edit re-renders one document, and the totals still
-      // balance — nothing was dropped to make the arithmetic work.
-      await writeFiles(root, {
-        "section-0/document-0.md": "# Document 0\n\nEdited.\n",
+        // Incremental: an edit re-renders one document, and the totals still
+        // balance — nothing was dropped to make the arithmetic work.
+        await writeFiles(root, {
+          "section-0/document-0.md": "# Document 0\n\nEdited.\n",
+        });
+        const summary = await site.update();
+
+        expect(summary.rendered).toBe(1);
+        expect(summary.reused).toBe(DOCUMENTS);
+        expect(summary.removed).toBe(0);
+        expect(site.result.pages.size).toBe(DOCUMENTS + 2);
       });
-      const summary = await site.update();
-
-      expect(summary.rendered).toBe(1);
-      expect(summary.reused).toBe(DOCUMENTS);
-      expect(summary.removed).toBe(0);
-      expect(site.result.pages.size).toBe(DOCUMENTS + 2);
-    });
-  });
+    },
+    TIMEOUT_MS,
+  );
 });

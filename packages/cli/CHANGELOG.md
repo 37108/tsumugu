@@ -1,5 +1,27 @@
 # tsumugu
 
+## 0.5.0
+
+### Minor Changes
+
+- 8ffdea5: Add explicit locale scopes to `dev`, `build`, and the programmatic build API.
+  `--locales ja,en-US` maps named direct child directories to isolated route,
+  navigation, search, and export scopes while documents outside them remain at
+  the shared root. `--lang` controls the shared scope's HTML language. Core also
+  exports locale canonicalization and directory validation for adapters.
+
+### Patch Changes
+
+- Updated dependencies [8ffdea5]
+  - tsumugu-core@0.5.0
+  - tsumugu-build@0.5.0
+  - tsumugu-preset@0.5.0
+  - tsumugu-renderer-html@0.5.0
+  - tsumugu-renderer-markdown@0.5.0
+  - tsumugu-renderer-mdx@0.5.0
+  - tsumugu-theme-default@0.5.0
+  - tsumugu-transformer-highlight@0.5.0
+
 ## 0.4.1
 
 ### Patch Changes

@@ -8,7 +8,7 @@ Tsumugu is experimental and pre-alpha. No release is currently considered produc
 
 Do not disclose an unpatched vulnerability in a public issue, pull request, or discussion.
 
-A private reporting channel has not yet been configured. Until one is available, avoid publishing exploit details and contact the repository owner through an appropriate private GitHub channel. This file will be updated with a dedicated security contact before the first public package release.
+Report vulnerabilities privately through [GitHub private vulnerability reporting](https://github.com/37108/tsumugu/security/advisories/new). Reports submitted there are visible only to the repository maintainers until a fix is released.
 
 Please include:
 

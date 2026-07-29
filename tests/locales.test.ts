@@ -72,7 +72,11 @@ describe("explicit locale scopes", () => {
           watch: false,
           locales: ["ja", "en"],
         }),
-      ).rejects.toThrow(`Locale "en" directory ${root}/en was not found.`);
+        // The message names the directory the way this platform spells it, so
+        // the expectation is joined rather than written with a slash.
+      ).rejects.toThrow(
+        `Locale "en" directory ${path.join(root, "en")} was not found.`,
+      );
     });
   });
 
@@ -450,7 +454,7 @@ describe("explicit locale scopes", () => {
 
       await rm(path.join(root, "ja"), { recursive: true });
       await expect(running.site.update()).rejects.toThrow(
-        `Locale "ja" directory ${root}/ja was not found.`,
+        `Locale "ja" directory ${path.join(root, "ja")} was not found.`,
       );
 
       expect(await (await fetch(`${running.server.url}ja`)).text()).toBe(

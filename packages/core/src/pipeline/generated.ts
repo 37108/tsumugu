@@ -93,6 +93,17 @@ export interface GeneratedHomeInput {
   readonly navigation: readonly NavigationItem[];
   readonly basePath?: string;
   readonly contentLang?: string;
+  /**
+   * The locale this scope serves, when it is a locale scope rather than the
+   * shared one (ADR 8).
+   *
+   * It changes what the page tells an author to do. "Add an `index.md` to the
+   * documentation root" is the right instruction at `/` and the wrong one at
+   * `/ja`, where the file that fills the scope is `ja/index.md` — and a reader
+   * who follows the wrong one writes a file into a directory that is already
+   * excluded from the scope they were looking at.
+   */
+  readonly locale?: string;
 }
 
 /**
@@ -103,6 +114,9 @@ export interface GeneratedHomeInput {
  * is cheaper than either of them going looking for it.
  */
 export function generateHomeDocument(input: GeneratedHomeInput): DocumentNode {
+  const indexFile =
+    input.locale === undefined ? "index.md" : `${input.locale}/index.md`;
+
   if (input.navigation.length === 0) {
     return {
       type: "document",
@@ -111,9 +125,11 @@ export function generateHomeDocument(input: GeneratedHomeInput): DocumentNode {
         {
           ...paragraph(
             text(
-              "This documentation root has no documents yet. Add a Markdown or HTML file to it, then reload: ",
+              input.locale === undefined
+                ? "This documentation root has no documents yet. Add a Markdown or HTML file to it, then reload: "
+                : `This locale has no documents yet. Add a Markdown or HTML file to the ${input.locale} directory, then reload: `,
             ),
-            { type: "inline-code", value: "index.md" },
+            { type: "inline-code", value: indexFile },
             text(" becomes this page."),
           ),
           ...language(input.contentLang),
@@ -128,9 +144,17 @@ export function generateHomeDocument(input: GeneratedHomeInput): DocumentNode {
       { type: "heading", depth: 1, children: [text(input.siteName)] },
       {
         ...paragraph(
-          text("This page lists the documents in this project. Add an "),
-          { type: "inline-code", value: "index.md" },
-          text(" to the documentation root to write your own."),
+          text(
+            input.locale === undefined
+              ? "This page lists the documents in this project. Add an "
+              : "This page lists the documents in this locale. Add an ",
+          ),
+          { type: "inline-code", value: indexFile },
+          text(
+            input.locale === undefined
+              ? " to the documentation root to write your own."
+              : " to write your own.",
+          ),
         ),
         ...language(input.contentLang),
       },

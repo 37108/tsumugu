@@ -751,6 +751,7 @@ export async function createSite(options: BuildOptions): Promise<Site> {
           navigation: scope.navigation.items,
           ...(basePath === "" ? {} : { basePath }),
           ...(scope.lang === "en" ? {} : { contentLang: "en" }),
+          ...(scope.locale === undefined ? {} : { locale: scope.locale }),
         });
 
         generatedRecords.push(

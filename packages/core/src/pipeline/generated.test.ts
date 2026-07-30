@@ -41,6 +41,37 @@ function links(node: unknown): string[] {
 }
 
 describe("generateHomeDocument", () => {
+  it("names the locale, not the root, when a locale scope is empty", () => {
+    // A reader who opened /ja is told what to add and where. Naming the
+    // documentation root here sends them to the wrong directory: what is empty
+    // is the locale, and the file that fills it is ja/index.md.
+    const document = generateHomeDocument({
+      siteName: "ja",
+      navigation: [],
+      locale: "ja",
+    });
+
+    expect(textContent(document)).toContain("ja/index.md");
+    expect(textContent(document)).not.toContain("documentation root");
+  });
+
+  it("names the locale in the listing it generates for a locale scope", () => {
+    const document = generateHomeDocument({
+      siteName: "ja",
+      navigation,
+      locale: "ja",
+    });
+
+    expect(textContent(document)).toContain("ja/index.md");
+    expect(textContent(document)).not.toContain("documentation root");
+  });
+
+  it("still names the documentation root for the shared scope", () => {
+    expect(
+      textContent(generateHomeDocument({ siteName: "Docs", navigation: [] })),
+    ).toContain("documentation root");
+  });
+
   it("lists what the project contains", () => {
     const document = generateHomeDocument({
       siteName: "Docs",

@@ -21,14 +21,17 @@ Configuration discovery was dropped in favor of the decision recorded in
 | 5. CLI and preset          | The CLI could provide useful defaults while the library remained explicitly composable.                      | `tsumugu dev`, default roots, host and port options, the official preset, and end-to-end CLI tests.                           |
 | 6. First pre-alpha release | Official packages and real projects could test package boundaries before any API became stable.              | Cross-platform CI, security review, benchmark baseline, package export checks, examples, changesets, and a release checklist. |
 
+Diagrams left this list once the evidence arrived: a prototype measured what
+Mermaid does under a DOM emulation, and the answer changed the design rather
+than confirming it ([ADR 9](../decisions/0009-diagrams-drawn-at-build-time.md)).
+
 The issue tracker is the backlog. Work outside these milestones belongs in the
 later list until usage or a prototype supplies evidence.
 
 ## Later, with evidence
 
-- OpenAPI and Mermaid support. Draft RFCs record the open questions:
-  [OpenAPI](../rfcs/0001-openapi-renderer.md) and
-  [Mermaid](../rfcs/0002-mermaid-renderer.md).
+- OpenAPI support. The draft RFC records the open questions:
+  [OpenAPI](../rfcs/0001-openapi-renderer.md).
 - More official themes.
 - Sandboxed interactive documents.
 - Stable third-party extension APIs.

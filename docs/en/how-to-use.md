@@ -99,6 +99,53 @@ you are reading is `docs/en/`, its translation is `docs/ja/`, each page opens
 with a link to its pair, and the shared scope at `/` holds the design records
 that exist in one language only.
 
+## Draw a diagram
+
+A fenced block tagged `mermaid` is drawn while the page is built. The reader
+gets an SVG and no script, the figure follows their light or dark theme, and its
+text stays selectable and searchable:
+
+```mermaid
+graph LR
+  accTitle: How a document becomes a page
+  accDescr: The scanner feeds the renderer, which feeds the transformers, the theme and finally the serializer.
+  A[Scanner] --> B[Renderer]
+  B --> C[Transformers]
+  C --> D[Theme]
+  D --> E[Serializer]
+```
+
+Tsumugu draws the diagram itself rather than running Mermaid, so what it
+understands is a subset — written down here, because a subset nobody documented
+is a guessing game:
+
+| Diagram              | Supported                                                                                                                                                           |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `graph`, `flowchart` | Directions `TD`, `TB`, `LR`, `RL`, `BT`. Shapes `A[Box]`, `A(Rounded)`, `A{Decision}`, `A((Circle))`. Edges `-->`, `---`, `-.->`, `==>`, each taking a `\|label\|`. |
+| `sequenceDiagram`    | `participant` and `actor`, with `as` names. Messages `->>`, `-->>`, `->`, `-->`, `-x`, `-)`. `Note over`, `Note left of`, `Note right of`. Self-messages.           |
+
+Everything else — class, state, gantt, pie, ER, journey, mindmap and the rest,
+plus `subgraph`, `classDef`, `style`, `click` and `%%{init}%%` — stays a code
+block and reports a warning naming what was not drawn. A diagram Tsumugu cannot
+draw never costs you the page, and it is never silently half-drawn.
+
+Two lines are worth writing. `accTitle` names the figure and `accDescr` says
+what it shows, and both go to a reader using a screen reader:
+
+```text
+graph LR
+  accTitle: How a document becomes a page
+  accDescr: The scanner feeds the renderer, and the theme comes last.
+  A[Scanner] --> B[Renderer]
+```
+
+Without them Tsumugu writes the description itself, from the diagram's direction
+and its edges. That is honest, and it is less than a sentence you wrote would
+say.
+
+The reasoning, and the measurements that ruled out running Mermaid on the
+server, are in [ADR 9](/decisions/0009-diagrams-drawn-at-build-time).
+
 ## When the content is yours
 
 Some documentation is the code: a `<canvas>` demo, an interactive example, an

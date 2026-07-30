@@ -5,11 +5,14 @@
 Running `tsumugu dev` with no configuration file is not the absence of
 decisions. It is one composition, written down in `tsumugu-preset`:
 
-| Stage       | Registered                                             |
-| ----------- | ------------------------------------------------------ |
-| renderer    | `markdown`, then `html`                                |
-| transformer | `tsumugu:heading-ids`, then `tsumugu:syntax-highlight` |
-| theme       | `default`                                              |
+| Stage       | Registered                                                                |
+| ----------- | ------------------------------------------------------------------------- |
+| renderer    | `markdown`, then `html`                                                   |
+| transformer | `tsumugu:heading-ids`, `tsumugu:mermaid`, then `tsumugu:syntax-highlight` |
+| theme       | `default`                                                                 |
+
+Diagrams are drawn before highlighting, so the highlighter never colours a block
+that has stopped being code.
 
 Plus the conventions the CLI applies around it: the documentation root is
 `./docs`, or the current directory when it contains an index document; the

@@ -1,8 +1,22 @@
 # RFC 2: Mermaid diagrams
 
-- **Status:** Draft (awaiting a server-side rendering path that fits the model)
+- **Status:** Accepted, in a different shape — see [ADR 9](../decisions/0009-diagrams-drawn-at-build-time.md)
 - **Date:** 2026-07-28
-- **Related:** issue #58, [ADR 3](../decisions/0003-live-reload-script-policy.md), [ADR 4](../decisions/0004-client-side-search.md)
+- **Related:** issue #58, [ADR 3](../decisions/0003-live-reload-script-policy.md), [ADR 4](../decisions/0004-client-side-search.md), [ADR 9](../decisions/0009-diagrams-drawn-at-build-time.md)
+
+## What happened
+
+The evidence this RFC asked for was gathered, and it ruled out the shape the
+RFC proposed. Mermaid under jsdom draws sequence diagrams correctly and cannot
+draw flowcharts at all: their labels land in a `foreignObject`, and the layout
+asks the DOM to measure text, which produced a 41216px width for a five-node
+graph. The sibling-package idea below was the right instinct about _weight_ and
+the wrong one about _feasibility_.
+
+So Tsumugu draws a documented subset itself, at build time, with no dependency.
+ADR 9 records the measurements, the decision and its cost — chiefly that Tsumugu
+is not Mermaid, and syntax outside the subset stays a code block. The rest of
+this RFC is left as it was written.
 
 ## Problem
 

@@ -174,6 +174,27 @@ describe("Tsumugu's own documentation", () => {
     expect(japanese).toContain('href="/en"');
   });
 
+  it("draws the diagram its own usage guide contains", async () => {
+    running = await serveOwnDocs();
+
+    for (const route of ["en/how-to-use", "ja/how-to-use"]) {
+      const html = await (await fetch(`${running.server.url}${route}`)).text();
+
+      // The guide documents diagrams by containing one, so this is the feature
+      // running on real documentation rather than on a fixture. Attributes are
+      // matched one at a time: the serializer orders them, and asserting on a
+      // whole opening tag would be asserting on that ordering.
+      expect(html, route).toContain('<figure class="tsumugu-diagram">');
+      expect(html, route).toContain('role="img"');
+      expect(html, route).toContain("tsumugu-diagram-node");
+      // Named by the author's accTitle rather than by the generated fallback.
+      expect(html, route).not.toContain('aria-label="Flowchart"');
+      // The page also shows a `text` block of diagram source on purpose, as
+      // the example of what accTitle looks like, so the absence of source is
+      // not what is asserted here — the presence of the drawing is.
+    }
+  });
+
   it("takes the site's name from the home page rather than the directory", async () => {
     running = await serveOwnDocs();
     const html = await (await fetch(running.server.url)).text();

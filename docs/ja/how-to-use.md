@@ -146,6 +146,47 @@ graph LR
 そう決めた理由と、サーバー側で Mermaid を動かす道を捨てた実測は
 [ADR 9](/decisions/0009-diagrams-drawn-at-build-time)（英語）にあります。
 
+## API 記述を配信する
+
+OpenAPI の記述は HTTP インターフェースの原本なので、Tsumugu はそれをリンク先の
+ファイルではなく文書として扱います。名前を付ければページになります。
+
+```text
+docs/
+├── api.openapi.yaml   →  /api        記述がそのままページになる
+├── openapi.yaml       →  /openapi    この名前でもよい
+├── config.json        →  これまでどおりファイルとして配信
+└── data.yaml          →  これまでどおりファイルとして配信
+```
+
+オプトインは名前です。ページになるのは `*.openapi.json`、`*.openapi.yaml`、
+`*.openapi.yml` と `openapi.*` という名前だけなので、lock ファイルもフィクスチャ
+も設定ファイルも、これまでのままです。
+
+ページの構造は記述自身の構造です。`info.title` がページ、tag が節、operation は
+メソッドとパスを見出しにした小節になります。つまり operation ごとにアンカーが
+あり、サイドバーに載り、検索・`documents.json`・`llms.txt` にも出てきます。
+
+```text
+# Pet Store              info.title
+## Pets                  tag
+### GET /pets            operation。アンカーが付く
+#### Parameters          表: 名前・場所・型・必須・説明
+#### Responses           表: ステータス・説明・content type
+## Other operations      tag が付いていない operation
+```
+
+読めるのは OpenAPI 3.0 と 3.1 です。記述の中の `$ref` は使われている場所で解決
+するので、共有スキーマは参照ではなく中身が出ます。自分自身を参照するスキーマは
+一度だけ展開し、その先は名前を表示します。外部ファイルへの参照、存在しない参照、
+Swagger 2.0 の記述は、それぞれどうすればよいかを言う警告を出し、それでもページは
+描かれます。
+
+このために読者へ送るものは何もありません。ビューアもスクリプトもネットワーク
+アクセスもなしです。意図的に無いのは「試してみる」コンソールで、これは両方を
+必要とします。理由は
+[ADR 10](/decisions/0010-api-descriptions-claimed-by-name)（英語）にあります。
+
 ## 中身が自分のものであるとき
 
 ドキュメント自体がコードであることもあります。`<canvas>` のデモ、

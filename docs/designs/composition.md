@@ -7,7 +7,7 @@ decisions. It is one composition, written down in `tsumugu-preset`:
 
 | Stage       | Registered                                                                |
 | ----------- | ------------------------------------------------------------------------- |
-| renderer    | `markdown`, then `html`                                                   |
+| renderer    | `markdown`, `html`, then `openapi`                                        |
 | transformer | `tsumugu:heading-ids`, `tsumugu:mermaid`, then `tsumugu:syntax-highlight` |
 | theme       | `default`                                                                 |
 

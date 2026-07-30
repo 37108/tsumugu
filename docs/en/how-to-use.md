@@ -146,6 +146,48 @@ say.
 The reasoning, and the measurements that ruled out running Mermaid on the
 server, are in [ADR 9](/decisions/0009-diagrams-drawn-at-build-time).
 
+## Serve an API description
+
+An OpenAPI description is the durable source for an HTTP interface, so Tsumugu
+treats it as a document rather than a file to link to. Name it and it becomes a
+page:
+
+```text
+docs/
+├── api.openapi.yaml   →  /api        the description becomes the page
+├── openapi.yaml       →  /openapi    the bare name works too
+├── config.json        →  served as a file, as before
+└── data.yaml          →  served as a file, as before
+```
+
+The name is the opt-in. Only `*.openapi.json`, `*.openapi.yaml`,
+`*.openapi.yml` and the bare `openapi.*` names become pages, so a project's lock
+files, fixtures and configuration stay exactly what they were.
+
+The page takes its structure from the description: `info.title` is the page,
+each tag is a section, and each operation is a subsection headed by its method
+and path. An operation therefore has an anchor to link a colleague to, a place
+in the sidebar, and an entry in search, `documents.json` and `llms.txt`:
+
+```text
+# Pet Store              info.title
+## Pets                  a tag
+### GET /pets            an operation, with an anchor
+#### Parameters          a table: name, in, type, required, description
+#### Responses           a table: status, description, content type
+## Other operations      anything the description left untagged
+```
+
+OpenAPI 3.0 and 3.1 are read. A `$ref` inside the description is resolved where
+it is used, so a shared schema is shown rather than pointed at; a schema that
+refers to itself expands once and then shows the name. A reference into another
+file, a reference that does not exist, and a Swagger 2.0 description each report
+a warning that says what to do, and the page still renders.
+
+Nothing is shipped to the reader for this: no viewer, no scripts, no network
+access. What is deliberately missing is a "try it" console, which needs both.
+[ADR 10](/decisions/0010-api-descriptions-claimed-by-name) has the reasoning.
+
 ## When the content is yours
 
 Some documentation is the code: a `<canvas>` demo, an interactive example, an

@@ -32,7 +32,7 @@ lands.
 
 | RFC                                 | Status   | Proposal                                              |
 | ----------------------------------- | -------- | ----------------------------------------------------- |
-| [1](0001-openapi-renderer.md)       | Draft    | an OpenAPI renderer, as a renderer package            |
+| [1](0001-openapi-renderer.md)       | Accepted | an OpenAPI renderer, as a renderer package            |
 | [2](0002-mermaid-renderer.md)       | Accepted | Mermaid diagrams; ADR 9 records the shape they took   |
 | [3](0003-operator-opt-in-trust.md)  | Accepted | `--trust`: the operator opts the root in to execution |
 | [4](0004-explicit-locale-scopes.md) | Accepted | explicit locale scopes within one documentation root  |

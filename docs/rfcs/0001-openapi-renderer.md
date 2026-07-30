@@ -1,8 +1,21 @@
 # RFC 1: An OpenAPI renderer
 
-- **Status:** Draft (awaiting evidence of demand)
+- **Status:** Accepted — see [ADR 10](../decisions/0010-api-descriptions-claimed-by-name.md)
 - **Date:** 2026-07-28
-- **Related:** issue #57, [`docs/designs/architecture/semantic-ast.md`](../designs/architecture/semantic-ast.md)
+- **Related:** issue #57, [`docs/designs/architecture/semantic-ast.md`](../designs/architecture/semantic-ast.md), [ADR 10](../decisions/0010-api-descriptions-claimed-by-name.md)
+
+## What happened
+
+Accepted, with one claim in this RFC corrected. "Nothing else changes in core"
+was wrong: `SourceFormat` is a closed union and the extension table that
+produces it is fixed, so a `.yaml` file is classified as an asset before any
+renderer is consulted. A renderer cannot claim a format core does not know
+exists.
+
+ADR 10 records what core learned instead — one format name and six extensions,
+with the file name deciding rather than the contents — and why an extension
+registry was rejected for now. The rest of this RFC, including the tag and
+operation mapping and what stays out, landed as proposed.
 
 ## Problem
 

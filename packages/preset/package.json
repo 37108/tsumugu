@@ -1,6 +1,6 @@
 {
   "name": "tsumugu-preset",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "type": "module",
   "description": "The official Tsumugu composition: which renderers, transformers and theme an ordinary project gets.",
   "license": "MIT",

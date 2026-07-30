@@ -1,6 +1,6 @@
 {
   "name": "tsumugu-renderer-openapi",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "type": "module",
   "description": "Renders an OpenAPI description into Tsumugu's Semantic AST: tags become sections, operations become addressable subsections.",
   "license": "MIT",

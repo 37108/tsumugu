@@ -1,6 +1,6 @@
 {
   "name": "tsumugu-renderer-mdx",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "type": "module",
   "description": "Executing MDX renderer for Tsumugu. Compiles and evaluates .mdx to static HTML under the operator's --trust declaration (ADR 7).",
   "license": "MIT",

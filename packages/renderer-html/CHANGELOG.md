@@ -1,5 +1,12 @@
 # tsumugu-renderer-html
 
+## 0.6.0
+
+### Patch Changes
+
+- Updated dependencies [7310ed3]
+  - tsumugu-core@0.6.0
+
 ## 0.5.0
 
 ### Patch Changes

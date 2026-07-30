@@ -1,5 +1,11 @@
 # tsumugu-transformer-highlight
 
+## 0.7.1
+
+### Patch Changes
+
+- tsumugu-core@0.7.1
+
 ## 0.7.0
 
 ### Patch Changes

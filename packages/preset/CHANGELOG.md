@@ -1,5 +1,18 @@
 # tsumugu-preset
 
+## 0.7.1
+
+### Patch Changes
+
+- Updated dependencies [d3f344e]
+  - tsumugu-transformer-mermaid@0.7.1
+  - tsumugu-renderer-openapi@0.7.1
+  - tsumugu-core@0.7.1
+  - tsumugu-renderer-html@0.7.1
+  - tsumugu-renderer-markdown@0.7.1
+  - tsumugu-theme-default@0.7.1
+  - tsumugu-transformer-highlight@0.7.1
+
 ## 0.7.0
 
 ### Minor Changes

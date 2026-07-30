@@ -1,6 +1,6 @@
 {
   "name": "tsumugu-theme-default",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "type": "module",
   "description": "The default Tsumugu theme. Renders Semantic AST nodes as accessible, readable HTML with a stylesheet it owns.",
   "license": "MIT",

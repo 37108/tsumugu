@@ -1,5 +1,12 @@
 # tsumugu-renderer-markdown
 
+## 0.7.0
+
+### Patch Changes
+
+- Updated dependencies [69b26f8]
+  - tsumugu-core@0.7.0
+
 ## 0.6.1
 
 ### Patch Changes

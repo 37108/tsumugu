@@ -61,7 +61,8 @@ describe("createPreset", () => {
     const preset = createPreset({ theme: { id: "mine", renderers: {} } });
 
     expect(preset.theme.id).toBe("mine");
-    expect(preset.renderers).toHaveLength(2);
+    // Markdown, HTML and OpenAPI: replacing the theme replaces the theme.
+    expect(preset.renderers).toHaveLength(3);
   });
 
   it("composes with the defaults rather than replacing them, when spread", () => {

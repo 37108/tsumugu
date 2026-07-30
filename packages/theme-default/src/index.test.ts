@@ -168,7 +168,10 @@ describe("the default theme", () => {
       ],
     });
 
-    expect(html).toContain('role="region"');
+    // A grouping rather than a landmark: two tables on one page would put two
+    // entries called "Table" in a screen reader's landmark list.
+    expect(html).toContain('role="group"');
+    expect(html).not.toContain('role="region"');
     expect(html).toContain('tabindex="0"');
     expect(html).toContain('aria-label="Table"');
   });

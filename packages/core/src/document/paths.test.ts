@@ -127,6 +127,33 @@ describe("documentIdOf", () => {
   });
 });
 
+describe("API descriptions, claimed by name", () => {
+  // A description is claimed by what it is called, so a project's data files
+  // stay data files. ADR 10 records why the name decides rather than the
+  // contents.
+  it.each([
+    "openapi.yaml",
+    "openapi.yml",
+    "openapi.json",
+    "api.openapi.yaml",
+    "docs/reference/orders.openapi.json",
+    "API.OPENAPI.YAML",
+  ])("claims %s", (candidate) => {
+    expect(detectSourceFormat(candidate as SourcePath)).toBe("openapi");
+  });
+
+  it.each([
+    "config.json",
+    "data.yaml",
+    "pnpm-lock.yaml",
+    "openapi.txt",
+    "notopenapi.yaml",
+    "openapi/schema.yaml",
+  ])("leaves %s alone", (candidate) => {
+    expect(detectSourceFormat(candidate as SourcePath)).toBeUndefined();
+  });
+});
+
 describe("detectSourceFormat", () => {
   it.each([
     ["docs/a.md", "markdown"],

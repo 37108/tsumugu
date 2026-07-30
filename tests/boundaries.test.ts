@@ -277,6 +277,7 @@ describe("public export surface", () => {
     "tsumugu-renderer-markdown": ["createMarkdownRenderer", "markdownCodes"],
     "tsumugu-renderer-mdx": ["createMdxRenderer", "mdxCodes"],
     "tsumugu-renderer-html": ["createHtmlRenderer", "isFullDocument"],
+    "tsumugu-renderer-openapi": ["createOpenApiRenderer", "openApiCodes"],
     "tsumugu-preset": ["createPreset", "officialComposition"],
     "tsumugu-theme-default": ["defaultTheme", "defaultThemeStylesheet"],
     "tsumugu-transformer-highlight": [

@@ -68,6 +68,9 @@ importers:
       tsumugu-renderer-mdx:
         specifier: workspace:*
         version: link:packages/renderer-mdx
+      tsumugu-renderer-openapi:
+        specifier: workspace:*
+        version: link:packages/renderer-openapi
       tsumugu-theme-default:
         specifier: workspace:*
         version: link:packages/theme-default
@@ -119,6 +122,9 @@ importers:
       tsumugu-renderer-mdx:
         specifier: workspace:*
         version: link:../renderer-mdx
+      tsumugu-renderer-openapi:
+        specifier: workspace:*
+        version: link:../renderer-openapi
       tsumugu-theme-default:
         specifier: workspace:*
         version: link:../theme-default
@@ -150,6 +156,9 @@ importers:
       tsumugu-renderer-markdown:
         specifier: workspace:*
         version: link:../renderer-markdown
+      tsumugu-renderer-openapi:
+        specifier: workspace:*
+        version: link:../renderer-openapi
       tsumugu-theme-default:
         specifier: workspace:*
         version: link:../theme-default
@@ -246,6 +255,19 @@ importers:
       tsumugu-renderer-markdown:
         specifier: workspace:*
         version: link:../renderer-markdown
+    devDependencies:
+      '@tsumugu/internal-tsconfig':
+        specifier: workspace:*
+        version: link:../../internal/tsconfig
+
+  packages/renderer-openapi:
+    dependencies:
+      tsumugu-core:
+        specifier: workspace:*
+        version: link:../core
+      yaml:
+        specifier: ^2.9.0
+        version: 2.9.0
     devDependencies:
       '@tsumugu/internal-tsconfig':
         specifier: workspace:*

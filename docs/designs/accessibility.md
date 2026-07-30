@@ -34,10 +34,10 @@ intention:
 - `aria-current="page"` announces the current page without relying on colour.
 - The theme renders the heading level declared by the source.
 - Each heading anchor has a useful name, such as "Link to Install the CLI".
-- Code blocks, wide tables and drawn figures scroll inside focusable regions
-  with `tabindex="0"`, while the page itself does not scroll sideways. A
-  figure's region is named after the figure, so several on one page stay
-  distinguishable.
+- Code blocks, wide tables and drawn figures scroll inside focusable groups with
+  `tabindex="0"`, while the page itself does not scroll sideways. They are
+  `role="group"` rather than `role="region"`: a region is a landmark, and a page
+  with two tables would put two entries called "Table" in a landmark list.
 - Table header cells carry `scope`.
 - `:focus-visible` gives focused elements an outline and offset. No rule removes
   an outline without replacing it.

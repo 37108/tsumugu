@@ -38,6 +38,20 @@ function routeOf(value: string): string {
   return result.route;
 }
 
+describe("routes for an API description", () => {
+  // The whole compound extension goes, so api.openapi.yaml is /api rather than
+  // /api.openapi — a reader should not have to know what the file was called.
+  it.each([
+    ["openapi.yaml", "/openapi"],
+    ["api.openapi.yaml", "/api"],
+    ["reference/orders.openapi.json", "/reference/orders"],
+    ["reference/index.openapi.yaml", "/reference"],
+  ])("maps %s to %s", (source, route) => {
+    const result = routeForSource(source as SourcePath);
+    expect(result.ok && result.route).toBe(route);
+  });
+});
+
 describe("routeForSource", () => {
   it.each([
     ["index.md", "/"],

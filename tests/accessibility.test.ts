@@ -427,6 +427,75 @@ describe("accessibility", () => {
     ).not.toBeNull();
   });
 
+  it("finds no violations on a page rendered from an API description", async () => {
+    for (const viewportWidth of [360, 1280]) {
+      const results = await audit(
+        {
+          "index.md": "# Home\n",
+          "api.openapi.yaml": [
+            'openapi: "3.1.0"',
+            'info: { title: Pet Store, version: "1.0" }',
+            "tags: [{ name: Pets }]",
+            "paths:",
+            "  /pets:",
+            "    get:",
+            "      tags: [Pets]",
+            "      summary: List every pet",
+            "      parameters:",
+            "        - name: limit",
+            "          in: query",
+            "          schema: { type: integer }",
+            "      responses:",
+            '        "200": { description: A list of pets. }',
+            "",
+          ].join("\n"),
+        },
+        "api",
+        { viewportWidth },
+      );
+
+      expect(
+        describeViolations(results.violations),
+        `width ${viewportWidth}`,
+      ).toEqual([]);
+    }
+  });
+
+  it("keeps two scroll regions on one page distinguishable", async () => {
+    // A page with two tables, or two diagrams nobody named, gave a screen
+    // reader a landmark list of identical entries. A scroll container exists so
+    // a keyboard can reach it, which is a grouping, not a landmark.
+    const results = await audit(
+      {
+        "index.md": [
+          "# Two of each",
+          "",
+          "| A | B |",
+          "| - | - |",
+          "| 1 | 2 |",
+          "",
+          "| C | D |",
+          "| - | - |",
+          "| 3 | 4 |",
+          "",
+          "```mermaid",
+          "graph LR",
+          "  A --> B",
+          "```",
+          "",
+          "```mermaid",
+          "graph LR",
+          "  C --> D",
+          "```",
+          "",
+        ].join("\n"),
+      },
+      "",
+    );
+
+    expect(describeViolations(results.violations)).toEqual([]);
+  });
+
   it("tells assistive technology which navigation entry is the current page", async () => {
     await audit(project, "guide/setup");
 

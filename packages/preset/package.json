@@ -35,6 +35,7 @@
     "tsumugu-core": "workspace:*",
     "tsumugu-renderer-html": "workspace:*",
     "tsumugu-renderer-markdown": "workspace:*",
+    "tsumugu-renderer-openapi": "workspace:*",
     "tsumugu-theme-default": "workspace:*",
     "tsumugu-transformer-highlight": "workspace:*",
     "tsumugu-transformer-mermaid": "workspace:*"

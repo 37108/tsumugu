@@ -189,6 +189,13 @@ Every code in the implementation appears here.
 The message names the construct and the position points inside the diagram, not
 at the fence, so an author looking for the problem looks in the right place.
 
+### `renderer-openapi/`
+
+| Code                          | Severity | When                                                                                                                                                        |
+| ----------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `renderer-openapi/unparsable` | warning  | the file is not valid YAML or JSON; the page says so and names the parser's message                                                                         |
+| `renderer-openapi/incomplete` | warning  | the description was read but something in it was not: an unresolvable reference, a reference into another file, or a version Tsumugu does not read (ADR 10) |
+
 ### `renderer-mdx/`
 
 Produced only by the opt-in executing MDX renderer, which a composition

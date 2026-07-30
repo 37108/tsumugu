@@ -31,7 +31,7 @@ export type RoutePath = string & { readonly [routePathBrand]: "RoutePath" };
 export type DocumentId = string & { readonly [documentIdBrand]: "DocumentId" };
 
 /** Source formats the pipeline can currently represent. */
-export type SourceFormat = "markdown" | "mdx" | "html";
+export type SourceFormat = "markdown" | "mdx" | "html" | "openapi";
 
 /** Why a candidate path could not become a {@link SourcePath}. */
 export type PathRejection =
@@ -189,6 +189,27 @@ const formatsByExtension = new Map<string, SourceFormat>([
 ]);
 
 /**
+ * Names that make a `.yaml` or `.json` file an API description.
+ *
+ * The name decides, not the contents (ADR 10). Claiming every `.yaml` and
+ * `.json` file would sweep lock files, fixtures and configuration into the
+ * scanner, and would let a data file's contents decide whether a route appears;
+ * naming a file `api.openapi.yaml` is a deliberate act, and renaming it is how
+ * a project opts back out.
+ */
+export const apiDescriptionExtensions = new Set([
+  ".openapi.json",
+  ".openapi.yaml",
+  ".openapi.yml",
+]);
+
+export const apiDescriptionNames = new Set([
+  "openapi.json",
+  "openapi.yaml",
+  "openapi.yml",
+]);
+
+/**
  * Classifies a source path by file extension, or returns `undefined` for a file
  * this build cannot represent.
  *
@@ -201,11 +222,24 @@ const formatsByExtension = new Map<string, SourceFormat>([
  */
 export function detectSourceFormat(path: SourcePath): SourceFormat | undefined {
   const name = path.slice(path.lastIndexOf("/") + 1);
+  const lowered = name.toLowerCase();
+
+  if (apiDescriptionNames.has(lowered)) {
+    return "openapi";
+  }
+  // Checked before the single extension, because the last dot in
+  // `api.openapi.yaml` finds `.yaml`, which is not a format on its own.
+  for (const extension of apiDescriptionExtensions) {
+    if (lowered.endsWith(extension) && lowered.length > extension.length) {
+      return "openapi";
+    }
+  }
+
   const lastDot = name.lastIndexOf(".");
   // `<= 0` also excludes dotfiles: `.md` is a file named ".md", not a Markdown
   // document with an empty name.
   if (lastDot <= 0) {
     return undefined;
   }
-  return formatsByExtension.get(name.slice(lastDot).toLowerCase());
+  return formatsByExtension.get(lastDot === -1 ? "" : lowered.slice(lastDot));
 }

@@ -11,6 +11,7 @@
     { "path": "./packages/renderer-markdown" },
     { "path": "./packages/renderer-html" },
     { "path": "./packages/renderer-mdx" },
+    { "path": "./packages/renderer-openapi" },
     { "path": "./packages/theme-default" },
     { "path": "./packages/transformer-highlight" },
     { "path": "./packages/transformer-mermaid" },

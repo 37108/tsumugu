@@ -233,10 +233,11 @@ describe("a diagram on a page", () => {
     );
 
     // Reachable and scrollable by keyboard: a scroll container nobody can focus
-    // is a region a keyboard user cannot read. Named, like the table's.
+    // is a container a keyboard user cannot read. A grouping, not a landmark,
+    // for the same reason the table's is.
     expect(html).toContain('class="tsumugu-diagram-scroll"');
     expect(html).toMatch(/tabindex="0"/u);
-    expect(html).toContain('role="region"');
+    expect(html).toContain('role="group"');
   });
 
   it("keeps the diagram's words in search and the exports", async () => {

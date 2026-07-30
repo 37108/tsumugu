@@ -1,19 +1,16 @@
 {
-  "name": "tsumugu",
-  "version": "0.6.1",
+  "name": "tsumugu-renderer-openapi",
+  "version": "0.6.0",
   "type": "module",
-  "description": "Tsumugu command-line interface. Composes public packages and is never depended on by them.",
+  "description": "Renders an OpenAPI description into Tsumugu's Semantic AST: tags become sections, operations become addressable subsections.",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/37108/tsumugu.git",
-    "directory": "packages/cli"
+    "directory": "packages/renderer-openapi"
   },
   "engines": {
     "node": ">=24.0.0"
-  },
-  "bin": {
-    "tsumugu": "./dist/bin.js"
   },
   "exports": {
     ".": {
@@ -35,16 +32,8 @@
     "clean": "tsc --build --clean"
   },
   "dependencies": {
-    "tsumugu-build": "workspace:*",
     "tsumugu-core": "workspace:*",
-    "tsumugu-preset": "workspace:*",
-    "tsumugu-renderer-html": "workspace:*",
-    "tsumugu-renderer-markdown": "workspace:*",
-    "tsumugu-renderer-mdx": "workspace:*",
-    "tsumugu-renderer-openapi": "workspace:*",
-    "tsumugu-theme-default": "workspace:*",
-    "tsumugu-transformer-highlight": "workspace:*",
-    "tsumugu-transformer-mermaid": "workspace:*"
+    "yaml": "^2.9.0"
   },
   "devDependencies": {
     "@tsumugu/internal-tsconfig": "workspace:*"

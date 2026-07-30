@@ -1,5 +1,6 @@
 import type { DocumentDiagnostic } from "../document/diagnostics.js";
 import {
+  apiDescriptionNames,
   toRoutePath,
   type RoutePath,
   type SourcePath,
@@ -20,13 +21,22 @@ import {
 /** File names treated as a directory's own page. */
 const indexNames = new Set(["index"]);
 
-/** Extensions removed from a route, matched case-insensitively. */
+/**
+ * Extensions removed from a route, matched case-insensitively.
+ *
+ * The compound ones come off whole: `api.openapi.yaml` is `/api`, not
+ * `/api.openapi`, because a reader following a link should not have to know
+ * what the file behind it was called.
+ */
 const documentExtensions = new Set([
   ".md",
   ".markdown",
   ".mdx",
   ".html",
   ".htm",
+  ".openapi.json",
+  ".openapi.yaml",
+  ".openapi.yml",
 ]);
 
 export const routingCodes = {
@@ -41,6 +51,21 @@ function splitExtension(name: string): {
   readonly stem: string;
   readonly extension: string;
 } {
+  const lowered = name.toLowerCase();
+  // Longest first, so `.openapi.yaml` is not read as `.yaml`.
+  for (const extension of documentExtensions) {
+    if (
+      extension.lastIndexOf(".") > 0 &&
+      lowered.endsWith(extension) &&
+      name.length > extension.length
+    ) {
+      return {
+        stem: name.slice(0, name.length - extension.length),
+        extension,
+      };
+    }
+  }
+
   const lastDot = name.lastIndexOf(".");
   // `<= 0` leaves a dotfile alone: `.md` is a file named ".md".
   if (lastDot <= 0) {
@@ -85,7 +110,12 @@ export function routeForSource(sourcePath: SourcePath): RouteResult {
   const directories = segments.slice(0, -1);
 
   const { stem, extension } = splitExtension(fileName);
-  const isDocument = documentExtensions.has(extension.toLowerCase());
+  // A description named `openapi.yaml` is that name entire, so no compound
+  // extension matches it and `.yaml` alone is not a document extension. It is
+  // still a document, and its route drops the extension like any other.
+  const isDocument =
+    documentExtensions.has(extension.toLowerCase()) ||
+    apiDescriptionNames.has(fileName.toLowerCase());
   const isIndex = isDocument && indexNames.has(stem.toLowerCase());
 
   const routeSegments = isIndex

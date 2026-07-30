@@ -10,6 +10,7 @@
     { "path": "../core" },
     { "path": "../renderer-markdown" },
     { "path": "../renderer-html" },
+    { "path": "../renderer-openapi" },
     { "path": "../theme-default" },
     { "path": "../transformer-highlight" },
     { "path": "../transformer-mermaid" }

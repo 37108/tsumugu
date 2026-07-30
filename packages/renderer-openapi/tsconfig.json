@@ -1,0 +1,14 @@
+{
+  "extends": "@tsumugu/internal-tsconfig/base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist"
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["**/*.test.ts", "**/*.suite.ts"],
+  "references": [
+    {
+      "path": "../core"
+    }
+  ]
+}

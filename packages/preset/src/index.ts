@@ -6,6 +6,7 @@ import {
 } from "tsumugu-core";
 import { createHtmlRenderer } from "tsumugu-renderer-html";
 import { createMarkdownRenderer } from "tsumugu-renderer-markdown";
+import { createOpenApiRenderer } from "tsumugu-renderer-openapi";
 import { defaultTheme } from "tsumugu-theme-default";
 import { createHighlightTransformer } from "tsumugu-transformer-highlight";
 import { createMermaidTransformer } from "tsumugu-transformer-mermaid";
@@ -30,6 +31,7 @@ import { createMermaidTransformer } from "tsumugu-transformer-mermaid";
  * | --- | --- | --- |
  * | renderer | `tsumugu-renderer-markdown` | Markdown is what most documentation is written in |
  * | renderer | `tsumugu-renderer-html` | HTML is a first-class source, not only an output |
+ * | renderer | `tsumugu-renderer-openapi` | an API description is a document, claimed by name |
  * | transformer | heading identifiers | an anchor is a link people share; every page needs them |
  * | transformer | `tsumugu-transformer-mermaid` | a fenced diagram is a diagram, and drawing it costs no dependency |
  * | transformer | syntax highlighting | documentation contains code, and unhighlighted code is harder to read |
@@ -121,7 +123,11 @@ function defaultRenderers(options: PresetOptions): readonly Renderer[] {
   });
   const html = createHtmlRenderer(trust ? { trust } : {});
 
-  return mdx === undefined ? [markdown, html] : [mdx, markdown, html];
+  const openapi = createOpenApiRenderer();
+
+  return mdx === undefined
+    ? [markdown, html, openapi]
+    : [mdx, markdown, html, openapi];
 }
 
 export function createPreset(options: PresetOptions = {}): Preset {
@@ -144,7 +150,7 @@ export function createPreset(options: PresetOptions = {}): Preset {
  * noticing is not a default, it is a surprise waiting to happen.
  */
 export const officialComposition = {
-  renderers: ["markdown", "html"],
+  renderers: ["markdown", "html", "openapi"],
   transformers: [
     "tsumugu:heading-ids",
     "tsumugu:mermaid",

@@ -34,8 +34,10 @@ intention:
 - `aria-current="page"` announces the current page without relying on colour.
 - The theme renders the heading level declared by the source.
 - Each heading anchor has a useful name, such as "Link to Install the CLI".
-- Code blocks and wide tables scroll inside focusable regions with
-  `tabindex="0"`, while the page itself does not scroll sideways.
+- Code blocks, wide tables and drawn figures scroll inside focusable regions
+  with `tabindex="0"`, while the page itself does not scroll sideways. A
+  figure's region is named after the figure, so several on one page stay
+  distinguishable.
 - Table header cells carry `scope`.
 - `:focus-visible` gives focused elements an outline and offset. No rule removes
   an outline without replacing it.
@@ -87,8 +89,8 @@ Run these before a release, and after any change to the shell or the theme:
   should match the document. Read a table: column headers should be announced
   with the cells.
 - **Zoom.** At 200% browser zoom, and at a 320 px viewport, no content is cut
-  off, nothing overlaps, and the page does not scroll sideways. Long code lines
-  and wide tables scroll inside their own boxes.
+  off, nothing overlaps, and the page does not scroll sideways. Long code lines,
+  wide tables and drawn figures scroll inside their own boxes.
 - **Reduced motion and forced colours.** With the system setting on, nothing
   animates. In a forced-colours mode, text and focus indicators remain visible.
 - **Copy a code block by keyboard.** Tab into a code block: the copy control

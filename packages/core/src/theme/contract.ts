@@ -155,6 +155,12 @@ function fallbackContent(
     case "image":
       // Alternative text is what a reader without the image receives.
       return text(node.alt);
+    case "diagram":
+      // The description, for the same reason: it is what the figure says to a
+      // reader who does not get the figure. The drawing is not contributed —
+      // a theme with no renderer for it has made no decision about emitting
+      // markup, and the fallback must not make one for it.
+      return text(node.description);
     default:
       return fragment();
   }

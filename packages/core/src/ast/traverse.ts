@@ -45,6 +45,7 @@ export function childrenOf(node: SemanticNode): readonly SemanticNode[] {
     case "code-block":
     case "image":
     case "thematic-break":
+    case "diagram":
     case "raw-html":
     case "unsupported":
       return [];
@@ -115,6 +116,12 @@ export function textContent(node: SemanticNode): string {
         // is the image's contribution to readable content.
         text += current.alt;
         return "continue";
+      case "diagram":
+        // What the figure says, in the order a reader needs it: its name, what
+        // it shows, then the text it was drawn from. The drawing itself is
+        // markup and contributes nothing readable.
+        text += `${current.title}\n${current.description}\n${current.source}`;
+        return "skip";
       case "raw-html":
         return "skip";
       default:

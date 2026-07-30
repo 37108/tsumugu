@@ -263,6 +263,54 @@ export interface RawHtmlNode extends NodeBase {
 }
 
 /**
+ * A figure Tsumugu drew, from text the author wrote inside the document.
+ *
+ * The node carries the finished figure rather than the shapes it is made of.
+ * Coordinates are how a figure is laid out, and the Semantic AST describes what
+ * a document means — so layout belongs to whatever produced the drawing, and a
+ * theme presents the result without owning a drawing implementation (ADR 9).
+ *
+ * `svg` is Tsumugu's own markup, not the author's. It is produced by a
+ * transformer from the author's *text*, exactly as a theme produces markup from
+ * a tree, which is why it is emitted rather than escaped and why doing so does
+ * not widen what the operator's `--trust` declaration covers (ADR 7).
+ *
+ * `source` stays on the node after the figure exists. A reader who cannot see
+ * the figure, a search index and an AI export all need the diagram as text, and
+ * regenerating it from the drawing would be impossible.
+ */
+export interface DiagramNode extends NodeBase {
+  readonly type: "diagram";
+  /** The syntax the source was written in. */
+  readonly dialect: "mermaid";
+  /**
+   * Identity within its document, assigned by whatever produced the figure.
+   *
+   * A figure's name and description are separate elements that the figure has
+   * to point at, so two figures on one page must be able to tell each other
+   * apart. Only the producer sees the whole document, so only the producer can
+   * number them — the same reason `HeadingNode` carries an id. A theme that
+   * finds none falls back to the figure's contents, which is unique in every
+   * case except two byte-identical diagrams on one page.
+   */
+  readonly id?: string;
+  /** The figure's contents: SVG children, without the `svg` element itself. */
+  readonly svg: string;
+  /** The figure's own coordinate space, so a theme can scale it. */
+  readonly width: number;
+  readonly height: number;
+  /**
+   * Accessible name. Never empty: a figure nothing can name is a figure a
+   * screen-reader user is told nothing about.
+   */
+  readonly title: string;
+  /** What the figure shows, for a reader who cannot see it. */
+  readonly description: string;
+  /** The text the figure was drawn from. */
+  readonly source: string;
+}
+
+/**
  * Source that could not be represented, kept rather than discarded.
  *
  * A construct the AST has no node for is a gap in Tsumugu, not a mistake by the
@@ -288,6 +336,7 @@ export type BlockNode =
   | BlockquoteNode
   | ThematicBreakNode
   | TableNode
+  | DiagramNode
   | RawHtmlNode
   | UnsupportedNode;
 

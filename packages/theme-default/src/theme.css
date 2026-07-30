@@ -289,6 +289,86 @@
   font-size: 0.85rem;
 }
 
+/*
+ * A figure Tsumugu drew.
+ *
+ * Every colour comes from the document's own tokens, so one figure reads
+ * correctly on paper and on ink without the drawing knowing which it is: the
+ * SVG carries geometry and class names, and this decides what they look like.
+ * That is also what keeps a diagram from being the one element on the page that
+ * ignores the reader's colour scheme.
+ */
+.tsumugu-doc .tsumugu-diagram {
+  margin-inline: 0;
+}
+
+/* A wide figure scrolls here rather than shrinking: a diagram scaled to a
+   narrow screen is a diagram whose labels cannot be read. Focus comes from the
+   document's own :focus-visible rule, so the region is reachable by keyboard
+   without a second outline being invented for it. */
+.tsumugu-doc .tsumugu-diagram-scroll {
+  @apply overflow-x-auto;
+}
+
+.tsumugu-doc .tsumugu-diagram svg {
+  /* The one place the ink is named; everything below inherits it. */
+  color: var(--doc-ink);
+  font-family: var(--doc-sans);
+  max-inline-size: none;
+}
+
+/* Boxes, lifelines and notes: outlined in the rule colour, filled with the
+   surface the page already uses for code and quotations. */
+.tsumugu-doc .tsumugu-diagram :is(rect, ellipse, polygon) {
+  fill: var(--doc-surface);
+  stroke: var(--doc-rule);
+  stroke-width: 1;
+}
+
+.tsumugu-doc .tsumugu-diagram text {
+  fill: currentColor;
+  font-size: 13px;
+}
+
+/* Connectors carry meaning, so they take the accent rather than the rule. */
+.tsumugu-doc
+  .tsumugu-diagram
+  :is(.tsumugu-diagram-edge, .tsumugu-diagram-lifeline) {
+  fill: none;
+  stroke: var(--doc-indigo);
+  stroke-width: 1.5;
+}
+
+.tsumugu-doc .tsumugu-diagram .tsumugu-diagram-lifeline {
+  stroke: var(--doc-rule);
+  stroke-dasharray: 4 4;
+}
+
+.tsumugu-doc .tsumugu-diagram .tsumugu-diagram-edge-dashed {
+  stroke-dasharray: 5 4;
+}
+
+.tsumugu-doc .tsumugu-diagram .tsumugu-diagram-arrow {
+  fill: var(--doc-indigo);
+  stroke: none;
+}
+
+/* An edge's own label sits on the connector, so it needs the page behind it. */
+.tsumugu-doc .tsumugu-diagram .tsumugu-diagram-label {
+  fill: var(--doc-ink-muted);
+  font-size: 12px;
+}
+
+.tsumugu-doc .tsumugu-diagram .tsumugu-diagram-label-backdrop {
+  fill: var(--doc-paper);
+  stroke: none;
+}
+
+.tsumugu-doc .tsumugu-diagram .tsumugu-diagram-note :is(rect, polygon) {
+  fill: var(--doc-surface);
+  stroke: var(--doc-ink-muted);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .tsumugu-doc * {
     transition: none;

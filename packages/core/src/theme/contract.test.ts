@@ -292,6 +292,35 @@ describe("missing renderers", () => {
     expect(result.diagnostics[0]?.severity).toBe("warning");
   });
 
+  it("tells a reader what a figure showed when no theme drew it", () => {
+    // A theme with no diagram renderer has made no decision about emitting
+    // markup, so the fallback contributes what the figure says rather than the
+    // drawing — and contributes something, rather than emptying the page.
+    const result = renderWithTheme(
+      { id: "sparse", renderers: {} },
+      {
+        root: {
+          type: "diagram",
+          dialect: "mermaid",
+          svg: '<rect x="0" y="0" width="10" height="10"></rect>',
+          width: 10,
+          height: 10,
+          title: "Pipeline stages",
+          description: "Left to right: Scanner then Renderer.",
+          source: "graph LR\n  A --> B\n",
+        },
+        metadata,
+        sourcePath: path,
+      },
+    );
+
+    expect(serializeToHtml(result.tree)).toBe(
+      "Left to right: Scanner then Renderer.",
+    );
+    expect(serializeToHtml(result.tree)).not.toContain("<rect");
+    expect(result.diagnostics[0]?.code).toBe(themeCodes.missingRenderer);
+  });
+
   it("names both the theme and the node type", () => {
     // "A paragraph looked odd" is not something a user can report usefully.
     const result = renderWithTheme(

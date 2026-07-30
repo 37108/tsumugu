@@ -46,6 +46,8 @@ Do not delete or rewrite a superseded ADR. Change its status to
 | [6](0006-mdx-without-execution.md)             | `.mdx` is a source format; its expressions, components and imports never execute |
 | [7](0007-operator-opt-in-trust.md)             | `--trust` lets the operator opt in to executing the root's scripts and MDX       |
 | [8](0008-explicit-locale-scopes.md)            | explicit locale directories form isolated content scopes                         |
+| [9](0009-diagrams-drawn-at-build-time.md)      | Tsumugu draws a Mermaid subset itself, at build time, with no dependency         |
+| [10](0010-api-descriptions-claimed-by-name.md) | OpenAPI descriptions are documents, claimed by file name                         |
 
 `tests/decisions.test.ts` checks that every record in this directory appears in
 the index and that every index entry resolves to a file.

@@ -218,6 +218,8 @@ describe("exhaustiveness", () => {
         return node.header ? "header row" : "row";
       case "table-cell":
         return "cell";
+      case "diagram":
+        return `diagram ${node.title}`;
       case "raw-html":
         return "raw html";
       case "unsupported":
@@ -238,7 +240,7 @@ describe("exhaustiveness", () => {
     expect(labels).toContain("header row");
   });
 
-  it("covers every node type except the two escape hatches", () => {
+  it("covers every node type except the escape hatches and drawn figures", () => {
     const seen = new Set<SemanticNodeType>();
     visit(guide, (node) => {
       seen.add(node.type);
@@ -270,8 +272,9 @@ describe("exhaustiveness", () => {
     );
 
     // `raw-html` and `unsupported` are deliberately absent from a page that
-    // needs neither; they are covered on their own below.
-    for (const type of ["raw-html", "unsupported"] as const) {
+    // needs neither, and `diagram` from one nothing drew a figure for. Each is
+    // covered where it is produced.
+    for (const type of ["raw-html", "unsupported", "diagram"] as const) {
       expect(seen.has(type)).toBe(false);
     }
   });

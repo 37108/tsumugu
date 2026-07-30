@@ -23,6 +23,7 @@ export type {
   CodeBlockNode,
   CodeLine,
   CodeToken,
+  DiagramNode,
   DocumentNode,
   EmphasisNode,
   HeadingNode,

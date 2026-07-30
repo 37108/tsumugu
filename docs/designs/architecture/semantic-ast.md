@@ -50,32 +50,39 @@ Every node may carry an optional `range` (`{ start, end }` of
 positions, and a node synthesised by a transformer has no source. Diagnostics
 degrade to file-level rather than becoming impossible.
 
-| Node             | Required                       | Optional   | Children     |
-| ---------------- | ------------------------------ | ---------- | ------------ |
-| `document`       | none                           | none       | block        |
-| `heading`        | `depth` (1-6)                  | none       | inline       |
-| `paragraph`      | none                           | none       | inline       |
-| `text`           | `value`                        | none       | leaf         |
-| `emphasis`       | none                           | none       | inline       |
-| `strong`         | none                           | none       | inline       |
-| `inline-code`    | `value`                        | none       | leaf         |
-| `code-block`     | `value`                        | `language` | leaf         |
-| `list`           | `ordered`                      | `start`    | `list-item`  |
-| `list-item`      | none                           | none       | block        |
-| `link`           | `url`                          | `title`    | inline       |
-| `image`          | `url`, `alt`                   | `title`    | leaf         |
-| `blockquote`     | none                           | none       | block        |
-| `thematic-break` | none                           | none       | leaf         |
-| `table`          | `align`                        | none       | `table-row`  |
-| `table-row`      | `header`                       | none       | `table-cell` |
-| `table-cell`     | none                           | none       | inline       |
-| `raw-html`       | `value`, `trust`, `placement`  | none       | leaf         |
-| `unsupported`    | `reason`, `value`, `placement` | none       | leaf         |
+| Node             | Required                                                              | Optional   | Children     |
+| ---------------- | --------------------------------------------------------------------- | ---------- | ------------ |
+| `document`       | none                                                                  | none       | block        |
+| `heading`        | `depth` (1-6)                                                         | none       | inline       |
+| `paragraph`      | none                                                                  | none       | inline       |
+| `text`           | `value`                                                               | none       | leaf         |
+| `emphasis`       | none                                                                  | none       | inline       |
+| `strong`         | none                                                                  | none       | inline       |
+| `inline-code`    | `value`                                                               | none       | leaf         |
+| `code-block`     | `value`                                                               | `language` | leaf         |
+| `list`           | `ordered`                                                             | `start`    | `list-item`  |
+| `list-item`      | none                                                                  | none       | block        |
+| `link`           | `url`                                                                 | `title`    | inline       |
+| `image`          | `url`, `alt`                                                          | `title`    | leaf         |
+| `blockquote`     | none                                                                  | none       | block        |
+| `thematic-break` | none                                                                  | none       | leaf         |
+| `table`          | `align`                                                               | none       | `table-row`  |
+| `table-row`      | `header`                                                              | none       | `table-cell` |
+| `table-cell`     | none                                                                  | none       | inline       |
+| `diagram`        | `dialect`, `svg`, `width`, `height`, `title`, `description`, `source` | `id`       | leaf         |
+| `raw-html`       | `value`, `trust`, `placement`                                         | none       | leaf         |
+| `unsupported`    | `reason`, `value`, `placement`                                        | none       | leaf         |
 
 Several fields are worth the explanation:
 
 **`heading.depth`** is the document's outline level, not a font size. It is what
 navigation, the table of contents and assistive technology depend on.
+
+**`diagram` carries a finished figure, not shapes.** Coordinates describe how a
+figure is laid out, and this tree describes what a document means, so the node
+holds the drawing whoever produced it already did — with `source` kept beside it
+so search and the exports still see the diagram as text, and `title` and
+`description` so a reader who cannot see it is told what it shows (ADR 9).
 
 **`image.alt` is required.** An empty string marks a decorative image. Making
 the field optional would let a renderer omit it by accident,

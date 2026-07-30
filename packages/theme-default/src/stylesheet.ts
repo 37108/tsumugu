@@ -203,6 +203,54 @@ export const stylesheet = `
   color: var(--doc-ink-muted);
   font-size: 0.85rem;
 }
+.tsumugu-doc .tsumugu-diagram {
+  margin-inline: 0;
+}
+.tsumugu-doc .tsumugu-diagram-scroll {
+  overflow-x: auto;
+}
+.tsumugu-doc .tsumugu-diagram svg {
+  color: var(--doc-ink);
+  font-family: var(--doc-sans);
+  max-inline-size: none;
+}
+.tsumugu-doc .tsumugu-diagram :is(rect, ellipse, polygon) {
+  fill: var(--doc-surface);
+  stroke: var(--doc-rule);
+  stroke-width: 1;
+}
+.tsumugu-doc .tsumugu-diagram text {
+  fill: currentColor;
+  font-size: 13px;
+}
+.tsumugu-doc .tsumugu-diagram :is(.tsumugu-diagram-edge, .tsumugu-diagram-lifeline) {
+  fill: none;
+  stroke: var(--doc-indigo);
+  stroke-width: 1.5;
+}
+.tsumugu-doc .tsumugu-diagram .tsumugu-diagram-lifeline {
+  stroke: var(--doc-rule);
+  stroke-dasharray: 4 4;
+}
+.tsumugu-doc .tsumugu-diagram .tsumugu-diagram-edge-dashed {
+  stroke-dasharray: 5 4;
+}
+.tsumugu-doc .tsumugu-diagram .tsumugu-diagram-arrow {
+  fill: var(--doc-indigo);
+  stroke: none;
+}
+.tsumugu-doc .tsumugu-diagram .tsumugu-diagram-label {
+  fill: var(--doc-ink-muted);
+  font-size: 12px;
+}
+.tsumugu-doc .tsumugu-diagram .tsumugu-diagram-label-backdrop {
+  fill: var(--doc-paper);
+  stroke: none;
+}
+.tsumugu-doc .tsumugu-diagram .tsumugu-diagram-note :is(rect, polygon) {
+  fill: var(--doc-surface);
+  stroke: var(--doc-ink-muted);
+}
 @media (prefers-reduced-motion: reduce) {
   .tsumugu-doc * {
     transition: none;

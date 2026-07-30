@@ -91,6 +91,7 @@ const blockTypes = new Set([
   "table-row",
   "blockquote",
   "thematic-break",
+  "diagram",
 ]);
 
 /**

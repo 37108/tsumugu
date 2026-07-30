@@ -58,6 +58,7 @@ jobs:
       # exist: with changesets it opens or updates the version pull request;
       # with none, on a commit that merged that pull request, it publishes.
       - name: Version or publish
+        id: changesets
         uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0
         with:
           version: pnpm run version-packages
@@ -67,3 +68,28 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_CONFIG_PROVENANCE: "true"
+
+      # What the registry received, read back from the registry.
+      #
+      # `workspace:*` means something only inside this repository. pnpm replaces
+      # it while packing and npm does not, so a package published by hand with
+      # the wrong command lands on the registry looking fine and refusing to
+      # install. That happened on 2026-07-30 and cost a second release; nothing
+      # noticed until somebody tried to install it.
+      #
+      # This asks npm what it now serves, so it catches a bad publish however it
+      # was made — including one made from a laptop.
+      - name: Check that every published package can be installed
+        if: steps.changesets.outputs.published == 'true'
+        run: |
+          echo '${{ steps.changesets.outputs.publishedPackages }}' \
+            | jq -r '.[] | "\(.name)@\(.version)"' \
+            | while read -r spec; do
+                echo "checking $spec"
+                unresolved=$(npm view "$spec" dependencies --json --registry https://registry.npmjs.org/ \
+                  | jq -r 'if type == "array" then .[0] else . end | to_entries[]? | select(.value | startswith("workspace:")) | .key')
+                if [ -n "$unresolved" ]; then
+                  echo "::error::$spec was published with unresolved workspace dependencies: $unresolved"
+                  exit 1
+                fi
+              done

@@ -106,7 +106,8 @@ authorization error. Adding a workspace is therefore two acts, and only the
 second is automatic:
 
 1. A maintainer publishes the new package once, by hand, from a machine
-   authenticated to npm. This is what creates the name.
+   authenticated to npm, **with `pnpm publish` rather than `npm publish`**.
+   This is what creates the name.
 2. That package is configured on npmjs.com to trust this repository's release
    workflow, exactly as the others are. Every later version publishes itself.
 
@@ -114,6 +115,18 @@ Do step 1 **before** merging the version pull request that first releases the
 package. Changesets publishes each package independently, so a missing name
 does not stop the rest: the release succeeds for everything else and leaves
 whatever depends on the new package pointing at a version nobody can install.
+
+`pnpm publish` matters more than it looks. Workspace dependencies are written
+`"tsumugu-core": "workspace:*"`, which means something only inside this
+repository. pnpm replaces it with the real version as it packs; npm publishes it
+verbatim, and npm cannot install what it then reads back. The package appears on
+the registry, `npm view` shows it, and every install of it fails.
+
+That is not hypothetical either. On 2026-07-30, `tsumugu-transformer-mermaid`
+and `tsumugu-renderer-openapi` were created by hand with `npm publish`, and both
+shipped `workspace:*` as their dependency on core. `tsumugu@0.7.0` was
+uninstallable a second time, for a different reason than the first, and the fix
+was another release.
 
 That is not hypothetical. On 2026-07-29, `0.4.0` shipped
 `tsumugu-renderer-mdx` for the first time. Eight packages published, that one

@@ -1,5 +1,20 @@
 # tsumugu
 
+## 0.6.1
+
+### Patch Changes
+
+- Updated dependencies [21f878a]
+  - tsumugu-core@0.6.1
+  - tsumugu-build@0.6.1
+  - tsumugu-preset@0.6.1
+  - tsumugu-renderer-html@0.6.1
+  - tsumugu-renderer-markdown@0.6.1
+  - tsumugu-renderer-mdx@0.6.1
+  - tsumugu-theme-default@0.6.1
+  - tsumugu-transformer-highlight@0.6.1
+  - tsumugu-transformer-mermaid@0.6.1
+
 ## 0.6.0
 
 ### Minor Changes

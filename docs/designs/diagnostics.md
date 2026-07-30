@@ -180,6 +180,15 @@ Every code in the implementation appears here.
 | `transformer-highlight/unknown-language` | warning  | no grammar exists for the language on the fence; the code is shown plain |
 | `transformer-highlight/failed`           | warning  | a grammar failed while tokenizing; the code is shown plain               |
 
+### `transformer-mermaid/`
+
+| Code                            | Severity | When                                                                                                    |
+| ------------------------------- | -------- | ------------------------------------------------------------------------------------------------------- |
+| `transformer-mermaid/not-drawn` | warning  | the diagram is outside the subset Tsumugu draws, or does not parse; it is shown as code instead (ADR 9) |
+
+The message names the construct and the position points inside the diagram, not
+at the fence, so an author looking for the problem looks in the right place.
+
 ### `renderer-mdx/`
 
 Produced only by the opt-in executing MDX renderer, which a composition

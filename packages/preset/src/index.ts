@@ -8,6 +8,7 @@ import { createHtmlRenderer } from "tsumugu-renderer-html";
 import { createMarkdownRenderer } from "tsumugu-renderer-markdown";
 import { defaultTheme } from "tsumugu-theme-default";
 import { createHighlightTransformer } from "tsumugu-transformer-highlight";
+import { createMermaidTransformer } from "tsumugu-transformer-mermaid";
 
 /**
  * The official composition.
@@ -30,6 +31,7 @@ import { createHighlightTransformer } from "tsumugu-transformer-highlight";
  * | renderer | `tsumugu-renderer-markdown` | Markdown is what most documentation is written in |
  * | renderer | `tsumugu-renderer-html` | HTML is a first-class source, not only an output |
  * | transformer | heading identifiers | an anchor is a link people share; every page needs them |
+ * | transformer | `tsumugu-transformer-mermaid` | a fenced diagram is a diagram, and drawing it costs no dependency |
  * | transformer | syntax highlighting | documentation contains code, and unhighlighted code is harder to read |
  * | theme | `tsumugu-theme-default` | a zero-config tool has to produce something readable without CSS |
  *
@@ -40,7 +42,9 @@ import { createHighlightTransformer } from "tsumugu-transformer-highlight";
  *
  * Transformers run in registration order, and here the order carries meaning:
  * identifiers are resolved **before** highlighting, so a heading is addressable
- * whatever a later transformer does to the document. A transformer added by a
+ * whatever a later transformer does to the document, and diagrams are drawn
+ * **before** highlighting so the highlighter never colours a block that stopped
+ * being code. A transformer added by a
  * caller runs after both unless the caller says otherwise.
  */
 
@@ -125,6 +129,7 @@ export function createPreset(options: PresetOptions = {}): Preset {
     renderers: options.renderers ?? defaultRenderers(options),
     transformers: options.transformers ?? [
       createHeadingIdTransformer(),
+      createMermaidTransformer(),
       createHighlightTransformer(),
     ],
     theme: options.theme ?? defaultTheme,
@@ -140,6 +145,10 @@ export function createPreset(options: PresetOptions = {}): Preset {
  */
 export const officialComposition = {
   renderers: ["markdown", "html"],
-  transformers: ["tsumugu:heading-ids", "tsumugu:syntax-highlight"],
+  transformers: [
+    "tsumugu:heading-ids",
+    "tsumugu:mermaid",
+    "tsumugu:syntax-highlight",
+  ],
   theme: "default",
 } as const;

@@ -392,6 +392,41 @@ describe("accessibility", () => {
     expect(document.querySelector('svg[role="img"]')).not.toBeNull();
   });
 
+  it("finds no violations on a page with a diagram Tsumugu drew", async () => {
+    for (const viewportWidth of [360, 1280]) {
+      const results = await audit(
+        {
+          "index.md": [
+            "# Pipeline",
+            "",
+            "```mermaid",
+            "graph LR",
+            "  accTitle: Pipeline stages",
+            "  A[Scanner] --> B{Trusted?}",
+            "  B -->|yes| C((Execute))",
+            "```",
+            "",
+          ].join("\n"),
+        },
+        "",
+        { viewportWidth },
+      );
+
+      expect(
+        describeViolations(results.violations),
+        `width ${viewportWidth}`,
+      ).toEqual([]);
+    }
+
+    // Named for assistive technology, and reachable by keyboard so the figure
+    // can be scrolled without a mouse.
+    const figure = document.querySelector('svg[role="img"]');
+    expect(figure?.getAttribute("aria-label")).toBe("Pipeline stages");
+    expect(
+      document.querySelector('.tsumugu-diagram-scroll[tabindex="0"]'),
+    ).not.toBeNull();
+  });
+
   it("tells assistive technology which navigation entry is the current page", async () => {
     await audit(project, "guide/setup");
 

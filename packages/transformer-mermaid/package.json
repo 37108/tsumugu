@@ -1,13 +1,13 @@
 {
-  "name": "tsumugu-preset",
-  "version": "0.5.0",
+  "name": "tsumugu-transformer-mermaid",
+  "version": "0.4.1",
   "type": "module",
-  "description": "The official Tsumugu composition: which renderers, transformers and theme an ordinary project gets.",
+  "description": "Draws Mermaid diagrams for Tsumugu at build time, as a Semantic AST transformer. No browser, no dependencies, no client script.",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/37108/tsumugu.git",
-    "directory": "packages/preset"
+    "directory": "packages/transformer-mermaid"
   },
   "engines": {
     "node": ">=24.0.0"
@@ -32,12 +32,7 @@
     "clean": "tsc --build --clean"
   },
   "dependencies": {
-    "tsumugu-core": "workspace:*",
-    "tsumugu-renderer-html": "workspace:*",
-    "tsumugu-renderer-markdown": "workspace:*",
-    "tsumugu-theme-default": "workspace:*",
-    "tsumugu-transformer-highlight": "workspace:*",
-    "tsumugu-transformer-mermaid": "workspace:*"
+    "tsumugu-core": "workspace:*"
   },
   "devDependencies": {
     "@tsumugu/internal-tsconfig": "workspace:*"

@@ -42,7 +42,8 @@
     "tsumugu-renderer-markdown": "workspace:*",
     "tsumugu-renderer-mdx": "workspace:*",
     "tsumugu-theme-default": "workspace:*",
-    "tsumugu-transformer-highlight": "workspace:*"
+    "tsumugu-transformer-highlight": "workspace:*",
+    "tsumugu-transformer-mermaid": "workspace:*"
   },
   "devDependencies": {
     "@tsumugu/internal-tsconfig": "workspace:*"

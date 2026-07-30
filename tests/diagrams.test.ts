@@ -1,4 +1,7 @@
 // @vitest-environment jsdom
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+
 import axe, { type AxeResults } from "axe-core";
 import { afterEach, describe, expect, it } from "vitest";
 
@@ -11,6 +14,7 @@ import {
   type RunningServer,
   type Transformer,
 } from "tsumugu-core";
+import { buildStatic } from "tsumugu-build";
 import { createPreset } from "tsumugu-preset";
 
 import {
@@ -64,6 +68,15 @@ function diagram(overrides: Partial<DiagramNode> = {}): DiagramNode {
  * This is the shape the real transformer has, minus the parser, so the
  * composition under test is the composition a project gets.
  */
+/**
+ * The fence the stub claims.
+ *
+ * Not `mermaid`: the real transformer is in the default composition now and
+ * would draw that one first. This file's first half is about what happens to a
+ * diagram once something produced one, whoever produced it.
+ */
+const stubFence = "stub-figure";
+
 function stubDiagramTransformer(node: DiagramNode = diagram()): Transformer {
   return {
     id: "test:diagram",
@@ -72,7 +85,7 @@ function stubDiagramTransformer(node: DiagramNode = diagram()): Transformer {
       return {
         ...root,
         children: root.children.map((child: BlockNode) => {
-          if (child.type !== "code-block" || child.language !== "mermaid") {
+          if (child.type !== "code-block" || child.language !== stubFence) {
             return child;
           }
           // The producer numbers the figures it makes, which is what lets two
@@ -86,7 +99,7 @@ function stubDiagramTransformer(node: DiagramNode = diagram()): Transformer {
   };
 }
 
-const pageWithDiagram = "# Pipeline\n\n```mermaid\ngraph LR\n  A --> B\n```\n";
+const pageWithDiagram = `# Pipeline\n\n\`\`\`${stubFence}\ngraph LR\n  A --> B\n\`\`\`\n`;
 
 /** Serves a fixture through the real preset plus the stub transformer. */
 async function serveWithDiagram(
@@ -190,7 +203,7 @@ describe("a diagram on a page", () => {
 
   it("gives two figures on one page separate identifiers", async () => {
     const { html } = await serveWithDiagram({
-      "index.md": `${pageWithDiagram}\n\`\`\`mermaid\ngraph TD\n  C --> D\n\`\`\`\n`,
+      "index.md": `${pageWithDiagram}\n\`\`\`${stubFence}\ngraph TD\n  C --> D\n\`\`\`\n`,
     });
 
     const captionIds = [...html.matchAll(/<figcaption[^>]*id="([^"]+)"/gu)].map(
@@ -288,5 +301,216 @@ describe("a diagram on a page", () => {
         `width ${width}`,
       ).toEqual([]);
     }
+  });
+});
+
+describe("a fenced mermaid block, through the default composition", () => {
+  /** The project's own composition: no flag, no extra registration. */
+  async function serveDrawn(
+    files: Readonly<Record<string, string>>,
+  ): Promise<{ readonly html: string; readonly warnings: readonly string[] }> {
+    let result:
+      | { readonly html: string; readonly warnings: readonly string[] }
+      | undefined;
+
+    await withTemporaryDirectory(async (root) => {
+      await writeFiles(root, files);
+      const site = await createSite({ root, ...createPreset() });
+      server = await serve({
+        site: () => site.result,
+        assetRoot: root,
+        port: 0,
+      });
+
+      const html = await (await fetch(server.url)).text();
+      result = {
+        html,
+        warnings: [...site.result.pages.values()]
+          .flatMap((page) => page.diagnostics)
+          .map((diagnostic) => `${diagnostic.code}: ${diagnostic.message}`),
+      };
+
+      await server.close();
+      server = undefined;
+    });
+
+    if (result === undefined) {
+      throw new Error("the fixture produced no page");
+    }
+    return result;
+  }
+
+  it("becomes a figure, with no flag and no installation", async () => {
+    const { html, warnings } = await serveDrawn({
+      "index.md":
+        "# Pipeline\n\n```mermaid\ngraph LR\n  A[Scanner] --> B[Renderer]\n```\n",
+    });
+
+    expect(html).toContain("<figure");
+    expect(html).toContain("tsumugu-diagram-node");
+    expect(html).toContain("Scanner");
+    expect(html).toContain("Renderer");
+    // Drawn, not shown as code.
+    expect(html).not.toContain("graph LR\n");
+    expect(warnings).toEqual([]);
+  });
+
+  it("draws every shape and every edge in the subset", async () => {
+    const { html } = await serveDrawn({
+      "index.md":
+        "# Shapes\n\n```mermaid\ngraph TD\n  A[Rect] --> B(Round)\n  B -.-> C{Choice}\n  C ==> D((Circle))\n  D --- A\n```\n",
+    });
+
+    expect(html).toContain("<rect");
+    expect(html).toContain('rx="10"');
+    expect(html).toContain("<polygon");
+    expect(html).toContain("<ellipse");
+    expect(html).toContain("tsumugu-diagram-edge-dashed");
+    expect(html).toContain("tsumugu-diagram-arrow");
+  });
+
+  it("makes a box wide enough for its label, in either script", async () => {
+    const { html } = await serveDrawn({
+      "index.md":
+        "# Widths\n\n```mermaid\ngraph LR\n  A[Short] --> B[A considerably longer label here]\n```\n\n```mermaid\ngraph LR\n  C[走査] --> D[日本語のとても長いラベルです]\n```\n",
+    });
+
+    const widths = [...html.matchAll(/<rect[^>]*width="([\d.]+)"/gu)].map(
+      (match) => Number(match[1]),
+    );
+
+    // Four boxes, and in each pair the longer label is the wider box.
+    expect(widths.length).toBeGreaterThanOrEqual(4);
+    expect(widths[1]).toBeGreaterThan(widths[0] ?? 0);
+    // A CJK label measured with Latin widths would come out half the size it
+    // needs, which is the one failure that would put text outside its box.
+    expect(widths[3]).toBeGreaterThan(widths[2] ?? 0);
+    expect(widths[3]).toBeGreaterThan(100);
+  });
+
+  it("uses the author's accessible name and description when they wrote one", async () => {
+    const { html } = await serveDrawn({
+      "index.md":
+        "# Named\n\n```mermaid\ngraph LR\n  accTitle: Pipeline stages\n  accDescr: The scanner feeds the renderer.\n  A[Scanner] --> B[Renderer]\n```\n",
+    });
+
+    expect(html).toContain('aria-label="Pipeline stages"');
+    expect(html).toContain("The scanner feeds the renderer.");
+  });
+
+  it("describes the figure itself when the author wrote none", async () => {
+    const { html } = await serveDrawn({
+      "index.md":
+        "# Generated\n\n```mermaid\ngraph LR\n  A[Scanner] --> B[Renderer]\n```\n",
+    });
+
+    // The edges, not a list of boxes: what leads to what is what a flowchart
+    // is for, and it is what a screen-reader user is otherwise missing.
+    expect(html).toContain("left to right");
+    expect(html).toContain("Scanner leads to Renderer");
+  });
+
+  it("leaves a diagram it cannot draw as code, and says what it was", async () => {
+    const { html, warnings } = await serveDrawn({
+      "index.md":
+        "# Unsupported\n\n```mermaid\nstateDiagram-v2\n  [*] --> Idle\n```\n",
+    });
+
+    expect(html).toContain("<pre");
+    expect(html).toContain("stateDiagram-v2");
+    expect(html).not.toContain("<figure");
+    expect(warnings.join("\n")).toContain("a state diagram");
+  });
+
+  it("leaves a diagram that does not parse as code, and points at the line", async () => {
+    let range: { readonly line: number } | undefined;
+
+    await withTemporaryDirectory(async (root) => {
+      await writeFiles(root, {
+        "index.md":
+          "# Broken\n\nSome prose first.\n\n```mermaid\ngraph LR\n  A --> B\n  B -->|oops C\n```\n",
+      });
+      const site = await createSite({ root, ...createPreset() });
+      range = [...site.result.pages.values()]
+        .flatMap((page) => page.diagnostics)
+        .find(
+          (diagnostic) => diagnostic.code === "transformer-mermaid/not-drawn",
+        )?.range?.start;
+    });
+
+    // The fence opens on line 5, so the bad line inside the diagram is line 8
+    // of the document. A position that pointed at the fence would send an
+    // author looking in the wrong place.
+    expect(range?.line).toBe(8);
+  });
+
+  it("draws the same bytes twice", async () => {
+    const source =
+      "# Same\n\n```mermaid\ngraph TD\n  A[One] --> B{Two}\n  B -->|yes| C((Three))\n```\n";
+    const first = await serveDrawn({ "index.md": source });
+    const second = await serveDrawn({ "index.md": source });
+
+    expect(first.html).toBe(second.html);
+  });
+
+  it("keeps the diagram's source in the exports", async () => {
+    await withTemporaryDirectory(async (root) => {
+      await writeFiles(root, {
+        "index.md":
+          "# Pipeline\n\n```mermaid\ngraph LR\n  A[Scanner] --> B[Renderer]\n```\n",
+      });
+      const site = await createSite({ root, ...createPreset() });
+      server = await serve({
+        site: () => site.result,
+        assetRoot: root,
+        port: 0,
+      });
+
+      const documents = await (
+        await fetch(`${server.url}documents.json`)
+      ).text();
+
+      expect(documents).toContain("graph LR");
+    });
+  });
+});
+
+describe("a diagram in a static build", () => {
+  it("is the same figure the server answered with", async () => {
+    await withTemporaryDirectory(async (root) => {
+      const source =
+        "# Pipeline\n\n```mermaid\ngraph LR\n  A[Scanner] --> B[Renderer]\n```\n";
+      await writeFiles(root, { "index.md": source });
+
+      const site = await createSite({ root, ...createPreset() });
+      server = await serve({
+        site: () => site.result,
+        assetRoot: root,
+        port: 0,
+      });
+      const served = await (await fetch(server.url)).text();
+      await server.close();
+      server = undefined;
+
+      await withTemporaryDirectory(async (out) => {
+        await buildStatic({
+          root,
+          outDir: out,
+          clean: true,
+          ...createPreset(),
+        });
+        const built = await readFile(path.join(out, "index.html"), "utf8");
+
+        // `dev` and `build` compose the same pipeline; a figure that differed
+        // between them would mean the published site is not what was previewed.
+        expect(built).toContain("tsumugu-diagram-node");
+        expect(built).toContain("Scanner");
+        expect(
+          built.slice(built.indexOf("<figure"), built.indexOf("</figure>")),
+        ).toBe(
+          served.slice(served.indexOf("<figure"), served.indexOf("</figure>")),
+        );
+      });
+    });
   });
 });

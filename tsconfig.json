@@ -13,6 +13,7 @@
     { "path": "./packages/renderer-mdx" },
     { "path": "./packages/theme-default" },
     { "path": "./packages/transformer-highlight" },
+    { "path": "./packages/transformer-mermaid" },
     { "path": "./packages/preset" },
     { "path": "./packages/build" }
   ]

@@ -11,6 +11,7 @@
     { "path": "../renderer-markdown" },
     { "path": "../renderer-html" },
     { "path": "../theme-default" },
-    { "path": "../transformer-highlight" }
+    { "path": "../transformer-highlight" },
+    { "path": "../transformer-mermaid" }
   ]
 }

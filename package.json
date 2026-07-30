@@ -56,6 +56,7 @@
     "tsumugu-renderer-mdx": "workspace:*",
     "tsumugu-theme-default": "workspace:*",
     "tsumugu-transformer-highlight": "workspace:*",
+    "tsumugu-transformer-mermaid": "workspace:*",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.63.0",
     "vitest": "^4.1.10"

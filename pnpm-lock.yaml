@@ -74,6 +74,9 @@ importers:
       tsumugu-transformer-highlight:
         specifier: workspace:*
         version: link:packages/transformer-highlight
+      tsumugu-transformer-mermaid:
+        specifier: workspace:*
+        version: link:packages/transformer-mermaid
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
@@ -122,6 +125,9 @@ importers:
       tsumugu-transformer-highlight:
         specifier: workspace:*
         version: link:../transformer-highlight
+      tsumugu-transformer-mermaid:
+        specifier: workspace:*
+        version: link:../transformer-mermaid
     devDependencies:
       '@tsumugu/internal-tsconfig':
         specifier: workspace:*
@@ -150,6 +156,9 @@ importers:
       tsumugu-transformer-highlight:
         specifier: workspace:*
         version: link:../transformer-highlight
+      tsumugu-transformer-mermaid:
+        specifier: workspace:*
+        version: link:../transformer-mermaid
     devDependencies:
       '@tsumugu/internal-tsconfig':
         specifier: workspace:*
@@ -257,6 +266,16 @@ importers:
       shiki:
         specifier: ^4.3.1
         version: 4.3.1
+      tsumugu-core:
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@tsumugu/internal-tsconfig':
+        specifier: workspace:*
+        version: link:../../internal/tsconfig
+
+  packages/transformer-mermaid:
+    dependencies:
       tsumugu-core:
         specifier: workspace:*
         version: link:../core

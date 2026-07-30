@@ -285,6 +285,11 @@ describe("public export surface", () => {
       "highlightTransformerId",
       "resolveLanguage",
     ],
+    "tsumugu-transformer-mermaid": [
+      "createMermaidTransformer",
+      "mermaidCodes",
+      "mermaidTransformerId",
+    ],
   };
 
   /**

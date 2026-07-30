@@ -73,6 +73,7 @@ describe("workspace discovery", () => {
       "packages/renderer-mdx",
       "packages/theme-default",
       "packages/transformer-highlight",
+      "packages/transformer-mermaid",
     ]);
   });
 
@@ -126,6 +127,7 @@ describe("publication safety", () => {
       "packages/renderer-mdx",
       "packages/theme-default",
       "packages/transformer-highlight",
+      "packages/transformer-mermaid",
     ]);
   });
 

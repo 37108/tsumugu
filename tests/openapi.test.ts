@@ -243,7 +243,12 @@ describe("the page a description produces", () => {
       html.indexOf('<code data-language="json">'),
       html.indexOf("</code>", html.indexOf('<code data-language="json">')),
     );
-    const shape = block.replace(/<[^>]+>/gu, "").replaceAll("&quot;", '"');
+    // Read the text through a parser rather than by stripping tags with a
+    // pattern: tag-shaped text is exactly what a schema can contain, and a
+    // pattern that half-removes it would quietly change what is asserted.
+    const shape =
+      new DOMParser().parseFromString(block, "text/html").body.textContent ??
+      "";
     expect(shape).toContain('"properties"');
     expect(shape).toContain('"name"');
   });

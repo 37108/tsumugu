@@ -290,6 +290,45 @@ function parseStatement(text: string, line: number): Statement | ParseRefusal {
   return { nodes, edges };
 }
 
+/**
+ * `accTitle:` と `accDescr:` を読む。
+ *
+ * 正規表現ではなく手で分けているのは、`accTitle` と `:` の間の空白を
+ * `\s*:` で飛ばす書き方が、コロンが来ない行に対して二次時間になるため。
+ * ドキュメントは信頼しない入力なので(ADR 7)、他人の書いた 1 行がビルドを
+ * 止められてはいけない。
+ */
+function readAccessibleLine(
+  text: string,
+):
+  | { readonly which: "title" | "description"; readonly value: string }
+  | undefined {
+  const colon = text.indexOf(":");
+  if (colon === -1) {
+    return undefined;
+  }
+  const key = text.slice(0, colon).trimEnd();
+  if (key !== "accTitle" && key !== "accDescr") {
+    return undefined;
+  }
+  return {
+    which: key === "accTitle" ? "title" : "description",
+    value: text.slice(colon + 1).trim(),
+  };
+}
+
+/** 先頭の語と、その後ろ。空白の連続でバックトラックしない。 */
+function splitFirstWord(text: string): {
+  readonly word: string;
+  readonly rest: string;
+} {
+  const index = text.search(/\s/u);
+  if (index === -1) {
+    return { word: text, rest: "" };
+  }
+  return { word: text.slice(0, index), rest: text.slice(index).trim() };
+}
+
 /** メッセージの矢印。長いものから順に見るので `-->>` が `-->` に化けない。 */
 const messageOperators: readonly {
   readonly operator: string;
@@ -354,56 +393,74 @@ function parseSequence(lines: readonly Line[]): ParseResult {
   };
 
   for (const line of lines) {
-    const accessible = /^acc(?<which>Title|Descr)\s*:\s*(?<value>.*)$/u.exec(
-      line.text,
-    );
-    if (accessible !== null) {
-      const value = (accessible.groups?.["value"] ?? "").trim();
-      if (accessible.groups?.["which"] === "Title") {
-        accessibleTitle = value;
+    const accessible = readAccessibleLine(line.text);
+    if (accessible !== undefined) {
+      if (accessible.which === "title") {
+        accessibleTitle = accessible.value;
       } else {
-        accessibleDescription = value;
+        accessibleDescription = accessible.value;
       }
       continue;
     }
 
-    const declaration =
-      /^(?<keyword>participant|actor)\s+(?<id>[^:]+?)(?:\s+as\s+(?<label>.+))?$/u.exec(
-        line.text,
-      );
-    if (declaration !== null) {
-      const id = (declaration.groups?.["id"] ?? "").trim();
-      participants.set(id, {
-        id,
-        label: (declaration.groups?.["label"] ?? id).trim(),
-        isActor: declaration.groups?.["keyword"] === "actor",
-      });
-      continue;
+    const { word, rest } = splitFirstWord(line.text);
+    const keyword = word.toLowerCase();
+
+    if ((keyword === "participant" || keyword === "actor") && rest !== "") {
+      // `A as Alice`: the alias is whatever follows the last ` as `, and the
+      // identifier is what precedes it. Split rather than matched, so a name
+      // padded with spaces costs one scan instead of one per space.
+      const alias = rest.toLowerCase().lastIndexOf(" as ");
+      const id = (alias === -1 ? rest : rest.slice(0, alias)).trim();
+      const label = alias === -1 ? id : rest.slice(alias + 4).trim();
+      if (id !== "" && !id.includes(":")) {
+        participants.set(id, {
+          id,
+          label: label === "" ? id : label,
+          isActor: keyword === "actor",
+        });
+        continue;
+      }
     }
 
-    const note =
-      /^Note\s+(?<placement>over|left of|right of)\s+(?<targets>[^:]+):\s*(?<text>.*)$/iu.exec(
-        line.text,
-      );
-    if (note !== null) {
-      const targets = (note.groups?.["targets"] ?? "")
-        .split(",")
-        .map((target) => refer(target))
-        .filter((target) => target !== "");
-      const placement = (note.groups?.["placement"] ?? "over")
-        .toLowerCase()
-        .startsWith("left")
-        ? "left"
-        : (note.groups?.["placement"] ?? "").toLowerCase().startsWith("right")
-          ? "right"
-          : "over";
-      steps.push({
-        kind: "note",
-        over: targets,
-        placement,
-        text: (note.groups?.["text"] ?? "").trim(),
-      });
-      continue;
+    if (keyword === "note") {
+      const colon = rest.indexOf(":");
+      const placementWord = splitFirstWord(rest);
+      const placementKey = placementWord.word.toLowerCase();
+      const placement =
+        placementKey === "left"
+          ? "left"
+          : placementKey === "right"
+            ? "right"
+            : placementKey === "over"
+              ? "over"
+              : undefined;
+
+      if (colon !== -1 && placement !== undefined) {
+        // `left of` and `right of` carry a second word; `over` does not.
+        const afterPlacement =
+          placement === "over"
+            ? placementWord.rest
+            : splitFirstWord(placementWord.rest).rest;
+        const targetText = afterPlacement.slice(
+          0,
+          afterPlacement.indexOf(":") === -1
+            ? afterPlacement.length
+            : afterPlacement.indexOf(":"),
+        );
+        const targets = targetText
+          .split(",")
+          .map((target) => refer(target))
+          .filter((target) => target !== "");
+
+        steps.push({
+          kind: "note",
+          over: targets,
+          placement,
+          text: rest.slice(colon + 1).trim(),
+        });
+        continue;
+      }
     }
 
     const operator = messageOperators
@@ -436,11 +493,7 @@ function parseSequence(lines: readonly Line[]): ParseResult {
       continue;
     }
 
-    const keyword = /^(?<word>[A-Za-z]+)/u
-      .exec(line.text)
-      ?.groups?.["word"]?.toLowerCase();
-    const named =
-      keyword === undefined ? undefined : sequenceKeywords.get(keyword);
+    const named = sequenceKeywords.get(keyword);
     return {
       ok: false,
       reason:
@@ -480,8 +533,8 @@ export function parseDiagram(source: string): ParseResult {
     };
   }
 
-  const header = /^(?<kind>[\w-]+)\s*(?<rest>.*)$/u.exec(first.text);
-  const kind = header?.groups?.["kind"]?.toLowerCase();
+  const header = splitFirstWord(first.text);
+  const kind = header.word === "" ? undefined : header.word.toLowerCase();
 
   if (kind === undefined) {
     return {
@@ -507,7 +560,7 @@ export function parseDiagram(source: string): ParseResult {
     };
   }
 
-  const stated = (header?.groups?.["rest"] ?? "").trim().toUpperCase();
+  const stated = header.rest.trim().toUpperCase();
   if (stated !== "" && !directions.has(stated as Direction)) {
     return {
       ok: false,
@@ -523,15 +576,12 @@ export function parseDiagram(source: string): ParseResult {
   let accessibleDescription: string | undefined;
 
   for (const line of lines.slice(1)) {
-    const accessible = /^acc(?<which>Title|Descr)\s*:\s*(?<value>.*)$/u.exec(
-      line.text,
-    );
-    if (accessible !== null) {
-      const value = (accessible.groups?.["value"] ?? "").trim();
-      if (accessible.groups?.["which"] === "Title") {
-        accessibleTitle = value;
+    const accessible = readAccessibleLine(line.text);
+    if (accessible !== undefined) {
+      if (accessible.which === "title") {
+        accessibleTitle = accessible.value;
       } else {
-        accessibleDescription = value;
+        accessibleDescription = accessible.value;
       }
       continue;
     }

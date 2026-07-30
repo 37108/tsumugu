@@ -239,3 +239,41 @@ describe("a sequence diagram", () => {
     expect(parseDiagram("sequenceDiagram\n  A->>B\n").ok).toBe(false);
   });
 });
+
+describe("a diagram written to be slow", () => {
+  /**
+   * Documentation is content, and content is not trusted (ADR 7), so a
+   * diagram somebody else wrote must not be able to stop a build. These inputs
+   * are the shapes a backtracking parser degrades on: a keyword, then padding
+   * that never reaches the character the parser is looking for.
+   *
+   * The budget is loose on purpose. What is being caught is quadratic time,
+   * which turns milliseconds into minutes at this size; a slow machine moving
+   * 30ms to 300ms is not what this test is about.
+   */
+  const budgetMs = 2000;
+  // Trailing whitespace is trimmed off every line, so the padding has to be
+  // followed by something for the parser to still see it.
+  const padded = (prefix: string): string => `${prefix}${" ".repeat(120_000)}x`;
+
+  it.each([
+    [
+      "an accessible title that never reaches its colon",
+      `graph LR\n  ${padded("accTitle")}`,
+    ],
+    [
+      "a participant that is never named",
+      `sequenceDiagram\n  ${padded("actor A")}`,
+    ],
+    [
+      "a note that never reaches its colon",
+      `sequenceDiagram\n  ${padded("Note over A")}`,
+    ],
+    ["a header that is only separators", padded("-".repeat(60_000))],
+    ["a message that never ends", `sequenceDiagram\n  ${padded("A->>B")}`],
+  ])("reads %s without hanging", (_name, source) => {
+    const started = performance.now();
+    parseDiagram(source);
+    expect(performance.now() - started).toBeLessThan(budgetMs);
+  });
+});

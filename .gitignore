@@ -1,4 +1,7 @@
 node_modules/
+# pnpm writes a store here when a command is run with a store path inside the
+# repository. It is a cache, not a lock file: nothing in it belongs to a commit.
+.pnpm-store/
 dist/
 coverage/
 *.tsbuildinfo

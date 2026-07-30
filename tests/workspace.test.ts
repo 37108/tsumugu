@@ -133,6 +133,25 @@ describe("publication safety", () => {
     ]);
   });
 
+  it("releases every publishable package at one version", () => {
+    // Changesets bumps the packages a changeset names, and a package added
+    // since the last release is not one of them: it keeps whatever version its
+    // manifest was created with and ships out of step with the rest. That has
+    // happened twice, and both times it was caught by eye rather than here.
+    const versions = manifests
+      .filter((manifest) => !manifest.isPrivate)
+      .map((manifest) => ({ id: manifest.id, version: manifest.version }));
+
+    const distinct = [...new Set(versions.map((entry) => entry.version))];
+
+    expect(
+      distinct.length,
+      `these packages disagree about the version: ${versions
+        .map((entry) => `${entry.id} ${entry.version}`)
+        .join(", ")}`,
+    ).toBe(1);
+  });
+
   it("keeps internal workspaces private", () => {
     for (const manifest of internalWorkspaces) {
       expect(manifest.isPrivate, manifest.id).toBe(true);

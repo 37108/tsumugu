@@ -46,7 +46,44 @@ export interface Flowchart {
   readonly accessibleDescription?: string;
 }
 
-export type Diagram = Flowchart;
+/** シーケンス図の登場人物。宣言順、なければ初出順に並ぶ。 */
+export interface Participant {
+  readonly id: string;
+  readonly label: string;
+  /** `actor` と書かれたか。描き分けはしないが、記述には使う。 */
+  readonly isActor: boolean;
+}
+
+export type MessageStroke = "solid" | "dashed";
+
+export interface Message {
+  readonly kind: "message";
+  readonly from: string;
+  readonly to: string;
+  readonly stroke: MessageStroke;
+  readonly arrow: boolean;
+  readonly text: string;
+}
+
+export interface Note {
+  readonly kind: "note";
+  /** 対象の参加者。`Note over A,B` なら 2 人。 */
+  readonly over: readonly string[];
+  readonly placement: "over" | "left" | "right";
+  readonly text: string;
+}
+
+export type SequenceStep = Message | Note;
+
+export interface SequenceDiagram {
+  readonly kind: "sequence";
+  readonly participants: readonly Participant[];
+  readonly steps: readonly SequenceStep[];
+  readonly accessibleTitle?: string;
+  readonly accessibleDescription?: string;
+}
+
+export type Diagram = Flowchart | SequenceDiagram;
 
 export interface ParseRefusal {
   readonly ok: false;
@@ -73,6 +110,7 @@ const knownOtherKinds = new Map<string, string>([
   ["mindmap", "a mind map"],
   ["timeline", "a timeline"],
   ["zenuml", "a ZenUML diagram"],
+  ["c4container", "a C4 diagram"],
   ["sankey-beta", "a Sankey diagram"],
   ["xychart-beta", "an XY chart"],
   ["block-beta", "a block diagram"],
@@ -252,6 +290,179 @@ function parseStatement(text: string, line: number): Statement | ParseRefusal {
   return { nodes, edges };
 }
 
+/** メッセージの矢印。長いものから順に見るので `-->>` が `-->` に化けない。 */
+const messageOperators: readonly {
+  readonly operator: string;
+  readonly stroke: MessageStroke;
+  readonly arrow: boolean;
+}[] = [
+  { operator: "-->>", stroke: "dashed", arrow: true },
+  { operator: "--x", stroke: "dashed", arrow: true },
+  { operator: "--)", stroke: "dashed", arrow: true },
+  { operator: "-->", stroke: "dashed", arrow: false },
+  { operator: "->>", stroke: "solid", arrow: true },
+  { operator: "-x", stroke: "solid", arrow: true },
+  { operator: "-)", stroke: "solid", arrow: true },
+  { operator: "->", stroke: "solid", arrow: false },
+];
+
+/**
+ * 部分集合の外にあるシーケンス図の構文。
+ *
+ * 名前を挙げて断るためだけの表。黙って無視すると、読者には「なぜかこの図だけ
+ * 一部が欠けている」ようにしか見えない。
+ */
+const sequenceKeywords = new Map<string, string>([
+  ["loop", "a loop block"],
+  ["alt", "an alt block"],
+  ["else", "an else block"],
+  ["opt", "an opt block"],
+  ["par", "a par block"],
+  ["and", "a par branch"],
+  ["critical", "a critical block"],
+  ["option", "a critical option"],
+  ["break", "a break block"],
+  ["rect", "a rect block"],
+  ["box", "a box"],
+  ["activate", "activation"],
+  ["deactivate", "activation"],
+  ["autonumber", "autonumbering"],
+  ["create", "participant creation"],
+  ["destroy", "participant destruction"],
+  ["link", "a participant link"],
+  ["links", "participant links"],
+  ["end", "a block end"],
+]);
+
+function parseSequence(lines: readonly Line[]): ParseResult {
+  const participants = new Map<string, Participant>();
+  const steps: SequenceStep[] = [];
+  let accessibleTitle: string | undefined;
+  let accessibleDescription: string | undefined;
+
+  /** 初出の参加者を、名前だけで登録する。 */
+  const refer = (id: string): string => {
+    const trimmed = id.trim();
+    if (!participants.has(trimmed)) {
+      participants.set(trimmed, {
+        id: trimmed,
+        label: trimmed,
+        isActor: false,
+      });
+    }
+    return trimmed;
+  };
+
+  for (const line of lines) {
+    const accessible = /^acc(?<which>Title|Descr)\s*:\s*(?<value>.*)$/u.exec(
+      line.text,
+    );
+    if (accessible !== null) {
+      const value = (accessible.groups?.["value"] ?? "").trim();
+      if (accessible.groups?.["which"] === "Title") {
+        accessibleTitle = value;
+      } else {
+        accessibleDescription = value;
+      }
+      continue;
+    }
+
+    const declaration =
+      /^(?<keyword>participant|actor)\s+(?<id>[^:]+?)(?:\s+as\s+(?<label>.+))?$/u.exec(
+        line.text,
+      );
+    if (declaration !== null) {
+      const id = (declaration.groups?.["id"] ?? "").trim();
+      participants.set(id, {
+        id,
+        label: (declaration.groups?.["label"] ?? id).trim(),
+        isActor: declaration.groups?.["keyword"] === "actor",
+      });
+      continue;
+    }
+
+    const note =
+      /^Note\s+(?<placement>over|left of|right of)\s+(?<targets>[^:]+):\s*(?<text>.*)$/iu.exec(
+        line.text,
+      );
+    if (note !== null) {
+      const targets = (note.groups?.["targets"] ?? "")
+        .split(",")
+        .map((target) => refer(target))
+        .filter((target) => target !== "");
+      const placement = (note.groups?.["placement"] ?? "over")
+        .toLowerCase()
+        .startsWith("left")
+        ? "left"
+        : (note.groups?.["placement"] ?? "").toLowerCase().startsWith("right")
+          ? "right"
+          : "over";
+      steps.push({
+        kind: "note",
+        over: targets,
+        placement,
+        text: (note.groups?.["text"] ?? "").trim(),
+      });
+      continue;
+    }
+
+    const operator = messageOperators
+      .map((candidate) => ({
+        ...candidate,
+        index: line.text.indexOf(candidate.operator),
+      }))
+      .filter((candidate) => candidate.index !== -1)
+      .sort((left, right) => left.index - right.index)[0];
+
+    if (operator !== undefined) {
+      const from = line.text.slice(0, operator.index);
+      const rest = line.text.slice(operator.index + operator.operator.length);
+      const colon = rest.indexOf(":");
+      if (colon === -1) {
+        return {
+          ok: false,
+          reason: "a message has no text after its colon",
+          position: { line: line.line, column: 1 },
+        };
+      }
+      steps.push({
+        kind: "message",
+        from: refer(from),
+        to: refer(rest.slice(0, colon)),
+        stroke: operator.stroke,
+        arrow: operator.arrow,
+        text: rest.slice(colon + 1).trim(),
+      });
+      continue;
+    }
+
+    const keyword = /^(?<word>[A-Za-z]+)/u
+      .exec(line.text)
+      ?.groups?.["word"]?.toLowerCase();
+    const named =
+      keyword === undefined ? undefined : sequenceKeywords.get(keyword);
+    return {
+      ok: false,
+      reason:
+        named === undefined
+          ? `"${line.text}" is not a line Tsumugu can read in a sequence diagram`
+          : `${named} is not something Tsumugu draws`,
+      position: { line: line.line, column: 1 },
+    };
+  }
+
+  return {
+    ok: true,
+    diagram: {
+      kind: "sequence",
+      participants: [...participants.values()],
+      steps,
+      ...(accessibleTitle === undefined ? {} : { accessibleTitle }),
+      ...(accessibleDescription === undefined ? {} : { accessibleDescription }),
+    },
+  };
+}
+
 /**
  * Reads a diagram, or refuses it.
  *
@@ -278,6 +489,10 @@ export function parseDiagram(source: string): ParseResult {
       reason: `"${first.text}" does not name a diagram kind`,
       position: { line: first.line, column: 1 },
     };
+  }
+
+  if (kind === "sequencediagram") {
+    return parseSequence(lines.slice(1));
   }
 
   if (kind !== "graph" && kind !== "flowchart") {

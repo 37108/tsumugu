@@ -7,7 +7,12 @@ import type {
   Transformer,
 } from "tsumugu-core";
 
-import { describeFlowchart, drawFlowchart } from "./draw.js";
+import {
+  describeFlowchart,
+  describeSequence,
+  drawFlowchart,
+  drawSequence,
+} from "./draw.js";
 import { parseDiagram } from "./parse.js";
 
 /**
@@ -130,7 +135,10 @@ export function createMermaidTransformer(
           }
 
           drawn += 1;
-          const drawing = drawFlowchart(parsed.diagram);
+          const drawing =
+            parsed.diagram.kind === "sequence"
+              ? drawSequence(parsed.diagram)
+              : drawFlowchart(parsed.diagram);
           const diagram: DiagramNode = {
             type: "diagram",
             dialect: "mermaid",
@@ -138,10 +146,16 @@ export function createMermaidTransformer(
             svg: drawing.svg,
             width: drawing.width,
             height: drawing.height,
-            title: parsed.diagram.accessibleTitle ?? generatedTitle,
+            title:
+              parsed.diagram.accessibleTitle ??
+              (parsed.diagram.kind === "sequence"
+                ? "Sequence diagram"
+                : generatedTitle),
             description:
               parsed.diagram.accessibleDescription ??
-              describeFlowchart(parsed.diagram),
+              (parsed.diagram.kind === "sequence"
+                ? describeSequence(parsed.diagram)
+                : describeFlowchart(parsed.diagram)),
             source: node.value,
             ...(node.range === undefined ? {} : { range: node.range }),
           };

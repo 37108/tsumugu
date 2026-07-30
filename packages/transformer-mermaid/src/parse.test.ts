@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { parseDiagram } from "./parse.js";
+import { parseDiagram, type Flowchart, type SequenceDiagram } from "./parse.js";
 
 /**
  * What the subset is, stated as tests.
@@ -12,10 +12,13 @@ import { parseDiagram } from "./parse.js";
  * ADR 9's negative half.
  */
 
-function flowchart(source: string) {
+function flowchart(source: string): Flowchart {
   const result = parseDiagram(source);
   if (!result.ok) {
     throw new Error(`expected a diagram, got: ${result.reason}`);
+  }
+  if (result.diagram.kind !== "flowchart") {
+    throw new Error(`expected a flowchart, got a ${result.diagram.kind}`);
   }
   return result.diagram;
 }
@@ -144,5 +147,95 @@ describe("what it refuses", () => {
 
   it("refuses an empty diagram", () => {
     expect(parseDiagram("\n\n").ok).toBe(false);
+  });
+});
+
+describe("a sequence diagram", () => {
+  function sequence(source: string): SequenceDiagram {
+    const result = parseDiagram(source);
+    if (!result.ok || result.diagram.kind !== "sequence") {
+      throw new Error(
+        `expected a sequence diagram, got: ${result.ok ? result.diagram.kind : result.reason}`,
+      );
+    }
+    return result.diagram;
+  }
+
+  it("keeps declared participants in declaration order", () => {
+    const diagram = sequence(
+      "sequenceDiagram\n  participant B as Bob\n  participant A as Alice\n  A->>B: Hello\n",
+    );
+
+    expect(
+      diagram.participants.map((participant) => participant.label),
+    ).toEqual(["Bob", "Alice"]);
+  });
+
+  it("takes an undeclared participant from its first message", () => {
+    const diagram = sequence(
+      "sequenceDiagram\n  Reader->>Server: GET /guide\n",
+    );
+
+    expect(diagram.participants.map((participant) => participant.id)).toEqual([
+      "Reader",
+      "Server",
+    ]);
+  });
+
+  it("remembers that a participant was written as an actor", () => {
+    const diagram = sequence(
+      "sequenceDiagram\n  actor R as Reader\n  participant S as Server\n  R->>S: GET\n",
+    );
+
+    expect(diagram.participants[0]?.isActor).toBe(true);
+    expect(diagram.participants[1]?.isActor).toBe(false);
+  });
+
+  it("reads solid and dashed messages, with and without arrowheads", () => {
+    const diagram = sequence(
+      "sequenceDiagram\n  A->>B: one\n  B-->>A: two\n  A->B: three\n  B-->A: four\n",
+    );
+
+    expect(
+      diagram.steps.map((step) =>
+        step.kind === "message" ? `${step.stroke}${step.arrow ? "!" : ""}` : "",
+      ),
+    ).toEqual(["solid!", "dashed!", "solid", "dashed"]);
+  });
+
+  it("reads a note over one participant and over two", () => {
+    const diagram = sequence(
+      "sequenceDiagram\n  A->>B: hi\n  Note over A: thinking\n  Note over A,B: agreed\n",
+    );
+
+    const notes = diagram.steps.filter((step) => step.kind === "note");
+    expect(notes[0]).toMatchObject({ over: ["A"], text: "thinking" });
+    expect(notes[1]).toMatchObject({ over: ["A", "B"], text: "agreed" });
+  });
+
+  it("takes the author's accessible name and description", () => {
+    const diagram = sequence(
+      "sequenceDiagram\n  accTitle: A request\n  accDescr: The reader asks for a page.\n  A->>B: GET\n",
+    );
+
+    expect(diagram.accessibleTitle).toBe("A request");
+    expect(diagram.accessibleDescription).toBe("The reader asks for a page.");
+  });
+
+  it("refuses a block construct by name, at its line", () => {
+    const result = parseDiagram(
+      "sequenceDiagram\n  A->>B: hi\n  loop every minute\n    B->>A: tick\n  end\n",
+    );
+
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      return;
+    }
+    expect(result.reason).toContain("a loop block");
+    expect(result.position.line).toBe(3);
+  });
+
+  it("refuses a message with no text", () => {
+    expect(parseDiagram("sequenceDiagram\n  A->>B\n").ok).toBe(false);
   });
 });

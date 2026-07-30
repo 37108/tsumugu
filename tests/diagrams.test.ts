@@ -475,6 +475,74 @@ describe("a fenced mermaid block, through the default composition", () => {
   });
 });
 
+describe("a sequence diagram, through the default composition", () => {
+  it("becomes a figure with its participants, messages and notes", async () => {
+    await withTemporaryDirectory(async (root) => {
+      await writeFiles(root, {
+        "index.md": [
+          "# Request",
+          "",
+          "```mermaid",
+          "sequenceDiagram",
+          "  actor R as Reader",
+          "  participant S as Server",
+          "  R->>S: GET /guide",
+          "  S-->>R: HTML",
+          "  Note over R,S: nothing runs",
+          "```",
+          "",
+        ].join("\n"),
+      });
+      const site = await createSite({ root, ...createPreset() });
+      server = await serve({
+        site: () => site.result,
+        assetRoot: root,
+        port: 0,
+      });
+      const html = await (await fetch(server.url)).text();
+
+      expect(html).toContain("<figure");
+      expect(html).toContain("Reader");
+      expect(html).toContain("Server");
+      expect(html).toContain("GET /guide");
+      expect(html).toContain("nothing runs");
+      expect(html).toContain("tsumugu-diagram-lifeline");
+      // A reply is dashed, a request is not.
+      expect(html).toContain("tsumugu-diagram-edge-dashed");
+      // Described by its exchanges, in order, for a reader who cannot see it.
+      expect(html).toContain("Reader sends to Server: GET /guide");
+
+      await server.close();
+      server = undefined;
+    });
+  });
+
+  it("leaves a block construct as code, and names it", async () => {
+    await withTemporaryDirectory(async (root) => {
+      await writeFiles(root, {
+        "index.md": [
+          "# Loop",
+          "",
+          "```mermaid",
+          "sequenceDiagram",
+          "  A->>B: tick",
+          "  loop every minute",
+          "    B->>A: tock",
+          "  end",
+          "```",
+          "",
+        ].join("\n"),
+      });
+      const site = await createSite({ root, ...createPreset() });
+      const warnings = [...site.result.pages.values()]
+        .flatMap((page) => page.diagnostics)
+        .map((diagnostic) => diagnostic.message);
+
+      expect(warnings.join("\n")).toContain("a loop block");
+    });
+  });
+});
+
 describe("a diagram in a static build", () => {
   it("is the same figure the server answered with", async () => {
     await withTemporaryDirectory(async (root) => {

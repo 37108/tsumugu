@@ -4,6 +4,8 @@ import type {
   Flowchart,
   FlowchartNode,
   NodeShape,
+  Participant,
+  SequenceDiagram,
 } from "./parse.js";
 
 /**
@@ -374,4 +376,188 @@ export function describeFlowchart(diagram: Flowchart): string {
   });
 
   return `A flowchart, ${directionWords[diagram.direction]}: ${steps.join("; ")}.`;
+}
+
+/* Sequence diagrams ------------------------------------------------------- */
+
+/** ライフラインが縦に伸びる前の、参加者の箱の高さ分の余白。 */
+const sequenceStepGap = 34;
+const noteGap = 12;
+
+function participantWidth(participant: Participant): number {
+  return Math.max(
+    round(textWidth(participant.label, fontSize) + paddingX * 2),
+    72,
+  );
+}
+
+/**
+ * シーケンス図を描く。
+ *
+ * 参加者を上に並べ、その真下にライフラインを落とし、メッセージを上から順に
+ * 積む。参加者の間隔は一番長いラベルに合わせて全ペア共通にしてある——ペアごとに
+ * 詰めるほうが図は締まるが、またぐメッセージの幅を配り直す計算が要るわりに、
+ * 得られるのは数十ピクセルの余白だけだった。
+ */
+export function drawSequence(diagram: SequenceDiagram): Drawing {
+  const boxes = diagram.participants.map((participant) => ({
+    participant,
+    width: participantWidth(participant),
+    height: round(lineHeight(fontSize) + paddingY * 2),
+  }));
+
+  const widestLabel = Math.max(
+    0,
+    ...diagram.steps.map((step) => textWidth(step.text, labelFontSize)),
+  );
+  const columnGap = Math.max(nodeGap * 2, round(widestLabel + 24));
+
+  const centres = new Map<string, number>();
+  let cursor = margin;
+  for (const box of boxes) {
+    centres.set(box.participant.id, round(cursor + box.width / 2));
+    cursor += box.width + columnGap;
+  }
+  const headerHeight = Math.max(...boxes.map((box) => box.height), 0);
+  const parts: string[] = [];
+
+  // 描いたものが図の外に出ないよう、いちばん下といちばん右を追い続ける。
+  // 図からはみ出した図形は誰も見られず、その上のどの層からも気づけない——
+  // ページは正しく、図もあり、ノートだけが黙って消える。
+  let bottom = margin + headerHeight;
+  let rightmost = round(cursor - columnGap);
+
+  // 手順を先に積んで高さを決める。ライフラインは図の下端まで引くので、
+  // 高さが決まるまで描けない。
+  const drawn: string[] = [];
+  let y = margin + headerHeight + sequenceStepGap;
+
+  for (const step of diagram.steps) {
+    if (step.kind === "note") {
+      const targets = step.over
+        .map((id) => centres.get(id))
+        .filter((centre): centre is number => centre !== undefined);
+      const left = Math.min(...targets);
+      const right = Math.max(...targets);
+      const noteWidth = round(
+        Math.max(textWidth(step.text, labelFontSize) + paddingX * 2, 90),
+      );
+      const noteHeight = round(lineHeight(labelFontSize) + paddingY * 2);
+      const centre =
+        step.placement === "left"
+          ? left - noteWidth / 2 - noteGap
+          : step.placement === "right"
+            ? right + noteWidth / 2 + noteGap
+            : (left + right) / 2;
+
+      drawn.push(
+        `<g class="tsumugu-diagram-note"><rect x="${round(centre - noteWidth / 2)}" y="${round(y)}" width="${noteWidth}" height="${noteHeight}" rx="3" ry="3"/><text class="tsumugu-diagram-label" x="${round(centre)}" y="${round(y + noteHeight / 2 + labelFontSize * 0.36)}" text-anchor="middle">${escape(step.text)}</text></g>`,
+      );
+      bottom = Math.max(bottom, y + noteHeight);
+      rightmost = Math.max(rightmost, centre + noteWidth / 2);
+      y = round(y + noteHeight + noteGap);
+      continue;
+    }
+
+    const from = centres.get(step.from);
+    const to = centres.get(step.to);
+    if (from === undefined || to === undefined) {
+      continue;
+    }
+
+    const classes = [
+      "tsumugu-diagram-edge",
+      step.stroke === "dashed" ? "tsumugu-diagram-edge-dashed" : "",
+    ]
+      .filter((name) => name !== "")
+      .join(" ");
+
+    if (from === to) {
+      // 自分宛のメッセージ: 右に出て、下がって、戻る。
+      const loop = 34;
+      const drop = round(lineHeight(fontSize));
+      drawn.push(
+        `<path class="${classes}" d="M${round(from)} ${round(y)} L${round(from + loop)} ${round(y)} L${round(from + loop)} ${round(y + drop)} L${round(from + 2)} ${round(y + drop)}"/>`,
+        arrowMarkup({ x: from, y: y + drop }, { x: from + loop, y: y + drop }),
+        `<text class="tsumugu-diagram-label" x="${round(from + loop + 8)}" y="${round(y + drop / 2)}">${escape(step.text)}</text>`,
+      );
+      bottom = Math.max(bottom, y + drop);
+      rightmost = Math.max(
+        rightmost,
+        from + loop + 8 + textWidth(step.text, labelFontSize),
+      );
+      y = round(y + drop + sequenceStepGap);
+      continue;
+    }
+
+    const direction = to > from ? 1 : -1;
+    const end = round(to - direction * (step.arrow ? arrowLength - 1 : 0));
+
+    if (step.text !== "") {
+      drawn.push(
+        `<text class="tsumugu-diagram-label" x="${round((from + to) / 2)}" y="${round(y - 7)}" text-anchor="middle">${escape(step.text)}</text>`,
+      );
+    }
+    drawn.push(
+      `<path class="${classes}" d="M${round(from)} ${round(y)} L${end} ${round(y)}"/>`,
+    );
+    if (step.arrow) {
+      drawn.push(arrowMarkup({ x: to, y }, { x: from, y }));
+    }
+    bottom = Math.max(bottom, y);
+    y = round(y + sequenceStepGap);
+  }
+
+  const width = round(rightmost + margin);
+  const height = round(bottom + margin + paddingY);
+
+  for (const box of boxes) {
+    const centre = centres.get(box.participant.id) ?? 0;
+    parts.push(
+      `<path class="tsumugu-diagram-lifeline" d="M${round(centre)} ${round(margin + box.height)} L${round(centre)} ${round(height - margin)}"/>`,
+    );
+  }
+
+  for (const box of boxes) {
+    const centre = centres.get(box.participant.id) ?? 0;
+    parts.push(
+      `<g class="tsumugu-diagram-node"><rect x="${round(centre - box.width / 2)}" y="${round(margin)}" width="${box.width}" height="${box.height}" rx="3" ry="3"/><text x="${round(centre)}" y="${round(margin + box.height / 2 + fontSize * 0.36)}" text-anchor="middle">${escape(box.participant.label)}</text></g>`,
+    );
+  }
+
+  return { svg: [...parts, ...drawn].join(""), width, height };
+}
+
+/**
+ * シーケンス図が何を示しているかを、一文で。
+ *
+ * 参加者を並べてからやり取りを順に述べる。図を見られない読者にとって、
+ * 順序こそがシーケンス図の中身だからで、参加者の一覧だけでは何も伝わらない。
+ */
+export function describeSequence(diagram: SequenceDiagram): string {
+  const labels = new Map(
+    diagram.participants.map((participant) => [
+      participant.id,
+      participant.label,
+    ]),
+  );
+  const named = (id: string): string => labels.get(id) ?? id;
+
+  if (diagram.steps.length === 0) {
+    return diagram.participants.length === 0
+      ? "An empty sequence diagram."
+      : `A sequence diagram of ${diagram.participants.map((participant) => participant.label).join(", ")}, with nothing between them.`;
+  }
+
+  const told = diagram.steps.map((step) => {
+    if (step.kind === "note") {
+      return `a note on ${step.over.map(named).join(" and ")}: ${step.text}`;
+    }
+    const verb = step.stroke === "dashed" ? "replies to" : "sends to";
+    return `${named(step.from)} ${verb} ${named(step.to)}: ${step.text}`;
+  });
+
+  return `A sequence diagram between ${diagram.participants
+    .map((participant) => participant.label)
+    .join(", ")}. ${told.join("; ")}.`;
 }

@@ -127,8 +127,9 @@ over and what a reader sees in view-source.
 
 ### Follow-up required
 
-- The static build (issue #48) must serve `/search.json` for this to work
-  outside the development server.
+- ~~The static build (issue #48) must serve `/search.json` for this to work
+  outside the development server.~~ Done: `tsumugu build` writes it, per scope,
+  and `packages/build/src/index.test.ts` checks that it is there.
 - If another script is proposed, review whether the client code should remain
   split and update the content security policy explicitly.
 

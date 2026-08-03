@@ -78,8 +78,13 @@ and the policy is checked against the manifests by `tests/compatibility.test.ts`
 
 ### Follow-up required
 
-- Issue #5 must implement a CI matrix matching the operating-system section.
-- Issue #72 must harden Windows path, process, and watching behaviour.
+- ~~Issue #5 must implement a CI matrix matching the operating-system section.~~
+  Done: `.github/workflows/ci.yml` runs the build and tests on Linux, macOS and
+  Windows, and every other gate on Linux.
+- ~~Issue #72 must harden Windows path, process, and watching behaviour.~~ Done.
+
+Both are closed, so the Windows caveat in the consequences above describes the
+state when this was decided rather than the state now.
 
 ## Alternatives considered
 

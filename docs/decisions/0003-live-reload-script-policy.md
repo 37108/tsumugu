@@ -95,8 +95,11 @@ documentation path implausible.
 
 ### Follow-up required
 
-- When the RFC process exists (issue #60), this decision is the kind that
-  belongs in one: it changes what the trust model permits, even narrowly.
+- ~~When the RFC process exists (issue #60), this decision is the kind that
+  belongs in one: it changes what the trust model permits, even narrowly.~~
+  Done: the process is in [`docs/rfcs/index.md`](../rfcs/index.md), and the next
+  change to what may execute went through it
+  ([RFC 3](../rfcs/0003-operator-opt-in-trust.md)).
 - A future production or static-build path must not grow a reason to reuse this
   channel.
 

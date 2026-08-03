@@ -72,10 +72,12 @@ may extend their own trust to the root's authors, explicitly, per invocation.
 
 - The security model's release review gains a question: did anything widen
   what `--trust` covers without widening the declaration's wording?
-- The decision lands in phases — the flag with verbatim markup first, then
+- ~~The decision lands in phases — the flag with verbatim markup first, then
   author scripts with the CSP widening, then MDX execution (issues #114–#116).
   Until a phase lands, the terminal notice and help text describe only what
-  the flag does so far, and they widen with each phase.
+  the flag does so far, and they widen with each phase.~~ Done: all three
+  landed, so `--trust` now covers everything this record describes, and the
+  notice says so.
 
 ## Alternatives considered
 

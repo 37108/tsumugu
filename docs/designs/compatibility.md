@@ -94,7 +94,8 @@ different answer per platform, so running them three times would buy nothing.
 The suites that can differ across platforms cover temporary directories, path
 separators, and child processes. They run on all three operating systems.
 
-Windows-specific hardening beyond this baseline is issue #72.
+Windows path, process and file-watching behaviour was hardened under issue #72,
+which is closed. Anything found beyond that baseline is a new issue.
 
 Behaviour is **not** guaranteed on network file systems, mobile environments, or
 embedded runtimes.

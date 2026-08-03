@@ -48,10 +48,13 @@ opposite of what `hidden` asks for.
 ## Search
 
 `/search.json` is the same corpus split by heading: one entry per section, each
-addressing `route#fragment`, carrying that section's text. It is text rather
-than tokens, because tokenizing here would fix a matching strategy into a file
-that the browser, a build and any future server-side search would all have to
-agree with.
+addressing `route#fragment`, carrying that section's text **whole**. It is text
+rather than tokens, because tokenizing here would fix a matching strategy into a
+file that the browser, a build and any future server-side search would all have
+to agree with. It is whole because
+[RFC 5](../rfcs/0005-search-index-pipeline.md) measured the alternative:
+bounding each section at 300 characters saved 38% of the file and removed 32% of
+the corpus's distinct words from the index.
 
 Hidden, generated and unrenderable documents are excluded. What consumes it,
 and how results are ranked, is described in
@@ -62,10 +65,15 @@ and how results are ranked, is described in
 Records are ordered by route, compared by code unit rather than by locale, so
 the same project produces the same bytes on every machine. `documents.json` is
 indented with two spaces and ends with a newline, because it is a file people
-read in a browser and review in a diff.
+read in a browser and review in a diff. `search.json` is not: a script fetches
+it, and the indentation cost 15 KB here to align a file nobody opens. It is
+written one entry per line instead, which is the part of the indentation that
+was doing the work — a diff still names the section that changed.
 
-`schemaVersion` is `1`. While Tsumugu is pre-alpha the schema may change; the
-version is what lets a consumer notice rather than guess.
+`documents.json` is at `schemaVersion` `1`; `search.json` is at `2`, since its
+entries dropped the `id` field, which repeated `url` and which nothing read.
+While Tsumugu is pre-alpha the schema may change; the version is what lets a
+consumer notice rather than guess.
 
 ## Origins
 

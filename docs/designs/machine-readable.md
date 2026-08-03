@@ -56,6 +56,11 @@ to agree with. It is whole because
 bounding each section at 300 characters saved 38% of the file and removed 32% of
 the corpus's distinct words from the index.
 
+Each entry also carries `trail`, the headings enclosing its section, so that a
+heading like `Negative` is searchable as the drawback of the decision it sits
+under ([RFC 6](../rfcs/0006-ranking-against-a-query-set.md)). The document's own
+title is not repeated there; it is already its own field.
+
 Hidden, generated and unrenderable documents are excluded. What consumes it,
 and how results are ranked, is described in
 [ADR 4](../decisions/0004-client-side-search.md).

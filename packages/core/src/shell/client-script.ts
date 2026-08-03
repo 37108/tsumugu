@@ -27,6 +27,10 @@ import { createHash } from "node:crypto";
  *   section called Install before a page that mentions installing.
  * - A match at the start of a word outweighs one inside it, so "con" finds
  *   "Configure" before "second".
+ * - An English plural falls back to its singular, below every exact match, so
+ *   "diagrams" finds a section about a diagram. Substring matching already
+ *   made "diagram" find "diagrams"; this is the other direction, which is the
+ *   asymmetry RFC 5 named. Only the query is reduced, so the index stays text.
  * - Ties keep document order, and no document contributes more than three
  *   results, so one long page cannot fill the whole list.
  */
@@ -60,25 +64,49 @@ export function scoreEntry(
   const document = normalize(entry.document);
   const text = normalize(entry.text);
 
-  let total = 0;
+  // The singular of an English plural, or "" when there is nothing to strip.
+  // Only the query is reduced, never the index: "diagram" already finds
+  // "diagrams" by substring, so reducing the query is the whole of the fix.
+  const singular = (term: string): string => {
+    if (term.length > 4 && term.endsWith("ies")) return `${term.slice(0, -3)}y`;
+    // "boxes" is a plural of "box"; "notes" is not a plural of "not".
+    if (term.length > 3 && /(?:s|x|z|ch|sh)es$/.test(term))
+      return term.slice(0, -2);
+    if (term.length > 2 && term.endsWith("s") && !term.endsWith("ss"))
+      return term.slice(0, -1);
+    return "";
+  };
 
-  for (const term of terms) {
-    let score = 0;
-
-    // A match at the start of a word says the reader is typing this word; one
-    // in the middle is often an accident of spelling.
-    const wordStart = new RegExp(
-      `(?:^|[^\\p{L}\\p{N}])${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`,
+  // A match at the start of a word says the reader is typing this word; one
+  // in the middle is often an accident of spelling.
+  const wordStart = (needle: string): RegExp =>
+    new RegExp(
+      `(?:^|[^\\p{L}\\p{N}])${needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`,
       "u",
     );
 
-    if (section.includes(term)) {
-      score = wordStart.test(section) ? 6 : 4;
-    } else if (document.includes(term)) {
-      score = wordStart.test(document) ? 5 : 3;
-    } else if (text.includes(term)) {
-      score = wordStart.test(text) ? 2 : 1;
-    }
+  let total = 0;
+
+  for (const term of terms) {
+    const stem = singular(term);
+    const exact = wordStart(term);
+    // Built only when there is a stem, which most query terms do not have.
+    const relaxed = stem === "" ? undefined : wordStart(stem);
+
+    // Every tier is what it was, doubled, so a stemmed match can sit below its
+    // exact counterpart in the same field without reordering anything else.
+    const inField = (value: string, start: number, inside: number): number => {
+      if (value.includes(term)) {
+        return exact.test(value) ? start * 2 : inside * 2;
+      }
+      if (relaxed !== undefined && value.includes(stem)) {
+        return relaxed.test(value) ? start : inside;
+      }
+      return 0;
+    };
+
+    const score =
+      inField(section, 6, 4) || inField(document, 5, 3) || inField(text, 2, 1);
 
     if (score === 0) {
       // Every term must match somewhere. Two words narrow a search.

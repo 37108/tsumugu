@@ -73,6 +73,40 @@ describe("scoreEntry", () => {
     ).toBeGreaterThan(0);
   });
 
+  it("finds the singular when the reader types the plural", () => {
+    // Substring matching already made "diagram" find "diagrams". This is the
+    // direction that used to return nothing at all. RFC 5.
+    expect(
+      scoreEntry({ document: "D", text: "draws a diagram" }, ["diagrams"]),
+    ).toBeGreaterThan(0);
+    expect(
+      scoreEntry({ document: "D", text: "open the box" }, ["boxes"]),
+    ).toBeGreaterThan(0);
+    expect(
+      scoreEntry({ document: "D", text: "the policy applies" }, ["policies"]),
+    ).toBeGreaterThan(0);
+  });
+
+  it("ranks an exact match above the plural that reached it", () => {
+    const exact = scoreEntry({ document: "D", text: "many diagrams" }, [
+      "diagrams",
+    ]);
+    const stemmed = scoreEntry({ document: "D", text: "one diagram" }, [
+      "diagrams",
+    ]);
+
+    expect(exact).toBeGreaterThan(stemmed);
+  });
+
+  it("does not strip a suffix that is not a plural", () => {
+    // "css" must not become "cs", and "notes" must not become "not" — which
+    // would match "nothing", "notation" and "cannot".
+    expect(scoreEntry({ document: "D", text: "a cs degree" }, ["css"])).toBe(0);
+    expect(
+      scoreEntry({ document: "D", text: "it is not here" }, ["notes"]),
+    ).toBe(0);
+  });
+
   it("treats a term that is regex syntax as text", () => {
     // A reader searching documentation for "c++" or "a.b" is quoting code,
     // not writing a pattern.

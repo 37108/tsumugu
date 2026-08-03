@@ -3,6 +3,12 @@
 > **Amended:** the second script is now the _page client_: it carries search
 > and the copy control on code blocks, under one hash. The policy still names
 > exactly two scripts. Ranking, added for issue #54, is defined below.
+>
+> **Amended again by [RFC 5](../rfcs/0005-search-index-pipeline.md):** the index
+> is at `schemaVersion` 2 — entries dropped `id` and the file is no longer
+> indented — and ranking falls back from an English plural to its singular. The
+> decision that the index is text rather than tokens is unchanged, and RFC 5
+> records the measurement that kept it that way.
 
 - **Status:** Accepted
 - **Date:** 2026-07-28
@@ -75,6 +81,9 @@ Ranking, added later for issue #54:
   narrow a search, they do not widen it;
 - a match in the section heading outweighs the document title, which outweighs
   the body text, and a match at the start of a word outweighs one inside it;
+- an English plural in the query falls back to its singular, scoring below
+  every exact match, so "diagrams" finds a section about a diagram — added by
+  RFC 5, and only the query is reduced, which is what keeps the index text;
 - ties keep document order, and no document contributes more than three of the
   twelve results, so one long page cannot fill the list.
 
@@ -84,9 +93,11 @@ tests saw.
 
 ### The script is small enough to read
 
-About 2.6 KB and 46 lines, with no framework, no bundler and no build step. What is served is what
-is written in `packages/core/src/shell/search-script.ts`, which is also what the
-hash is taken over and what a reader sees in view-source.
+About 8 KB, with no framework, no bundler and no build step — it was 2.6 KB when
+it only did search, and it has since taken on the copy control and the table of
+contents. What is served is what is written in
+`packages/core/src/shell/client-script.ts`, which is also what the hash is taken
+over and what a reader sees in view-source.
 
 ## Consequences
 
@@ -104,13 +115,15 @@ hash is taken over and what a reader sees in view-source.
   can no longer be a development-only problem.
 - A reader with JavaScript disabled gets the fallback page rather than instant
   results.
-- Substring matching will not find a word by its stem, and there is no ranking
-  beyond document order. Both are visible limitations rather than hidden ones,
-  and issue #54 is where they get addressed.
+- Substring matching still stems nothing but English plurals. "Ran" will not
+  find "run", and no query is corrected for a typo. Both are visible
+  limitations rather than hidden ones.
 - The index grows with the documentation. This repository's own documentation
-  produces about 145 KB, fetched once on first use and cached; a project an
-  order of magnitude larger will need a trimmed index or a different strategy,
-  and that is the point at which this decision should be revisited.
+  produced about 145 KB when this was written and 202 KB after RFC 5 removed
+  13% of the encoding, fetched once on first use and cached; a project an order
+  of magnitude larger will need a different strategy, because RFC 5 measured
+  trimming the text and it does not pay. That is the point at which this
+  decision should be revisited.
 
 ### Follow-up required
 

@@ -62,9 +62,35 @@ describe("scoreEntry", () => {
     expect(wordStart).toBeGreaterThan(midWord);
   });
 
-  it("requires every term to match somewhere", () => {
-    expect(scoreEntry(entries[0], ["install", "nowhere-at-all"])).toBe(0);
-    expect(scoreEntry(entries[0], ["install", "run"])).toBeGreaterThan(0);
+  it("ranks a whole match above a partial one, and both above nothing", () => {
+    // ADR 4 used to return 0 unless every term matched. RFC 6 measured that
+    // rule and it returned nothing at all for one query in seven, so a term
+    // that misses now costs coverage instead of the entry.
+    const whole = scoreEntry(entries[0], ["install", "run"]);
+    const partial = scoreEntry(entries[0], ["install", "nowhere-at-all"]);
+
+    expect(whole).toBeGreaterThan(partial);
+    expect(partial).toBeGreaterThan(0);
+    expect(scoreEntry(entries[0], ["nowhere-at-all"])).toBe(0);
+  });
+
+  it("leaves a single-term query exactly where it was", () => {
+    // The coverage fraction is 1, so nothing about one word changed.
+    expect(scoreEntry(entries[0], ["install"])).toBe(12);
+  });
+
+  it("starts a word where the script changes, for Japanese", () => {
+    // 「を設定する」 begins a word at 設. Without this the bonus could only
+    // fire at the very start of a field, and Japanese ranking collapsed to two
+    // values across the whole corpus. RFC 6.
+    const atChange = scoreEntry({ document: "D", text: "ルートを設定します" }, [
+      "設定",
+    ]);
+    const insideRun = scoreEntry({ document: "D", text: "測定設備の話" }, [
+      "定設",
+    ]);
+
+    expect(atChange).toBeGreaterThan(insideRun);
   });
 
   it("matches regardless of case and accents", () => {

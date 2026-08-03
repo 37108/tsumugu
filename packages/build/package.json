@@ -1,6 +1,6 @@
 {
   "name": "tsumugu-build",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "type": "module",
   "description": "Static build adapter for Tsumugu. Writes the pages, assets and generated files a server would have served.",
   "license": "MIT",

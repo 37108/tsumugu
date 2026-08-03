@@ -67,8 +67,10 @@ deliberately the whole of it.
 Renderer options belong to the renderer, theme options to the theme,
 transformer options to the transformer. `createHighlightTransformer({ lightTheme })`
 is the highlighter's business and core never learns that the option exists.
-Build output, search and AI exports are separate packages and will own their own
-surfaces when they exist.
+Build output owns its own surface in `tsumugu-build`, and an AI package would
+own its own if one existed. Search is the exception, and an honest one: its
+index and its ranking live in core, because both are generated from the same
+export records as `documents.json` and neither has an option to own yet.
 
 This is what stops a single configuration object from growing a field per
 feature in the ecosystem.

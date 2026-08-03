@@ -161,7 +161,7 @@ Dependency direction is one-way: official packages may depend on core contracts,
 
 ## Server first, build second
 
-Tsumugu is a documentation server first. Static generation is a future adapter consuming pipeline output. Build-specific concerns must not shape the core configuration or runtime model.
+Tsumugu is a documentation server first. Static generation ships as `tsumugu-build`, an adapter consuming pipeline output, and that is the point: it was built second, so build-specific concerns did not shape the core configuration or runtime model. They still must not.
 
 ## Public API maturity
 

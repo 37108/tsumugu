@@ -178,14 +178,15 @@ even type-only. Its declarations do not exist for consumers at all.
 
 ## Publication policy
 
-Every workspace, including the two under `packages/`, is currently marked
-`"private": true`. Nothing is published to npm during pre-alpha. Release and
-versioning configuration is tracked in issue #49.
+Every workspace under `packages/` is published to npm, on one version for all of
+them; every workspace under `internal/` is `"private": true` and never is. The
+current release is `0.8.0`, and `docs/designs/releasing.md` describes how one is
+made.
 
-The packages under `packages/` still carry full publication metadata:
-`exports`, `files`, `license`, `repository`, `engines`, and `"type": "module"`.
-This keeps the public surface explicit and testable before the first release
-rather than assembled at release time.
+Each published package carries full publication metadata: `exports`, `files`,
+`license`, `repository`, `engines`, and `"type": "module"`. That was true before
+anything was published, which is what kept the public surface explicit and
+testable rather than assembled at release time.
 
 The `internal/` naming convention is doubly encoded: the directory and the
 `@tsumugu/internal-` package-name prefix. Both are asserted by the workspace
@@ -198,7 +199,7 @@ test, so an internal workspace cannot quietly become publishable.
 | Node.js    | `>=24.0.0` | Node.js 24 "Krypton" is the Active LTS line       |
 | pnpm       | `11.10.0`  | pinned through `packageManager`                   |
 | TypeScript | `^6.0.3`   | ESM-only, strict, project references              |
-| Vitest     | `^4.1.9`   | `vitest.config.ts`; see `docs/designs/testing.md` |
+| Vitest     | `^4.1.10`  | `vitest.config.ts`; see `docs/designs/testing.md` |
 
 These are the versions the repository requires today. The supported operating
 systems, module format, upgrade policy, and position on Bun and Deno are in

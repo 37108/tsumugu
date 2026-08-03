@@ -4,7 +4,7 @@ description: What Tsumugu generates for tools and language models, and where it 
 
 # Machine-readable outputs
 
-Tsumugu serves three generated files alongside the pages:
+Tsumugu serves four generated files alongside the pages:
 
 | Path              | Format     | For                                                    |
 | ----------------- | ---------- | ------------------------------------------------------ |
@@ -13,7 +13,7 @@ Tsumugu serves three generated files alongside the pages:
 | `/search.json`    | JSON       | the search client in the page, and anything else       |
 | `/sitemap.xml`    | XML        | search engines                                         |
 
-All three come from the same documents, routes and metadata the pages come
+All four come from the same documents, routes and metadata the pages come
 from. There is no second content tree, no AI-specific source, and nothing to
 keep in step by hand: that is what "human and AI from one source" has to mean to
 be worth saying.

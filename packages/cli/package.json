@@ -1,6 +1,6 @@
 {
   "name": "tsumugu",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "type": "module",
   "description": "Tsumugu command-line interface. Composes public packages and is never depended on by them.",
   "license": "MIT",

@@ -1,6 +1,6 @@
 {
   "name": "tsumugu-transformer-mermaid",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "type": "module",
   "description": "Draws Mermaid diagrams for Tsumugu at build time, as a Semantic AST transformer. No browser, no dependencies, no client script.",
   "license": "MIT",

@@ -42,6 +42,17 @@ export interface SearchEntry {
   readonly document: string;
   /** The section's heading, absent for text before the first heading. */
   readonly section?: string;
+  /**
+   * The headings above this one, outermost first, absent at the top level.
+   *
+   * A heading alone is often not what the section is about: `Negative` says
+   * nothing, and `Consequences › Negative` says a little more. RFC 6 added it
+   * because the index is split by heading, so a query whose words are spread
+   * down a document's outline used to match no single entry.
+   *
+   * The document's title is not in here. It is already its own field.
+   */
+  readonly trail?: string;
   /** The document's description, on the entry that represents the page. */
   readonly description?: string;
   /** The section's readable text. */
@@ -64,6 +75,10 @@ function sectionsOf(record: DocumentRecord): readonly SearchEntry[] {
   const entries: SearchEntry[] = [];
   let current: { readonly heading?: string; readonly id?: string } = {};
   let buffer: string[] = [];
+  // The headings still open, outermost first, including the one being read. A
+  // heading closes every heading at its depth or deeper, which is what makes
+  // this an outline rather than a list.
+  let open: readonly { readonly depth: number; readonly text: string }[] = [];
 
   const flush = (): void => {
     const text = buffer.join("\n").trim();
@@ -74,11 +89,20 @@ function sectionsOf(record: DocumentRecord): readonly SearchEntry[] {
     }
 
     const fragment = current.id === undefined ? "" : `#${current.id}`;
+    // Everything open above this section. The document's own title is dropped:
+    // a page whose first heading repeats its title would otherwise pay for it
+    // in every entry, and `document` already carries it.
+    const trail = open
+      .slice(0, -1)
+      .map((heading) => heading.text)
+      .filter((heading) => heading !== record.title)
+      .join(" ");
 
     entries.push({
       url: `${record.url}${fragment}`,
       document: record.title,
       ...(current.heading === undefined ? {} : { section: current.heading }),
+      ...(trail === "" ? {} : { trail }),
       ...(current.heading === undefined && record.description !== undefined
         ? { description: record.description }
         : {}),
@@ -90,6 +114,10 @@ function sectionsOf(record: DocumentRecord): readonly SearchEntry[] {
     const heading = headings.get(line);
     if (heading !== undefined) {
       flush();
+      open = [
+        ...open.filter((above) => above.depth < heading.depth),
+        { depth: heading.depth, text: heading.text },
+      ];
       current = {
         heading: heading.text,
         ...(heading.id === undefined ? {} : { id: heading.id }),

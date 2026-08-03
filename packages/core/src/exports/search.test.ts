@@ -11,24 +11,29 @@ function record(
   body: string,
   overrides: Partial<RecordInput> = {},
 ) {
-  // The AST a renderer would produce for `body`, where a line starting with
-  // "## " is a heading and everything else is a paragraph.
+  // The AST a renderer would produce for `body`, where a line of leading "#"
+  // is a heading at that depth and everything else is a paragraph.
   const children = body
     .split("\n")
     .filter((line) => line.trim() !== "")
-    .map((line) =>
-      line.startsWith("## ")
-        ? {
-            type: "heading" as const,
-            depth: 2 as const,
-            id: line.slice(3).toLowerCase().replace(/\s+/gu, "-"),
-            children: [{ type: "text" as const, value: line.slice(3) }],
-          }
-        : {
-            type: "paragraph" as const,
-            children: [{ type: "text" as const, value: line }],
-          },
-    );
+    .map((line) => {
+      const hashes = /^(#{1,6}) /u.exec(line);
+      if (hashes === null) {
+        return {
+          type: "paragraph" as const,
+          children: [{ type: "text" as const, value: line }],
+        };
+      }
+
+      const depth = hashes[1]?.length as 1 | 2 | 3 | 4 | 5 | 6;
+      const value = line.slice(depth + 1);
+      return {
+        type: "heading" as const,
+        depth,
+        id: value.toLowerCase().replace(/\s+/gu, "-"),
+        children: [{ type: "text" as const, value }],
+      };
+    });
 
   return toRecord({
     route: route as RoutePath,
@@ -109,6 +114,56 @@ describe("searchEntries", () => {
 
     expect(entries).toHaveLength(1);
     expect(entries[0]).toMatchObject({ url: "/stub", document: "Stub" });
+  });
+
+  it("gives a subsection the headings above it", () => {
+    // "Negative" says nothing on its own. RFC 6.
+    const nested = searchEntries([
+      record(
+        "/adr",
+        "A decision",
+        [
+          "## Consequences",
+          "It has some.",
+          "### Negative",
+          "It costs a thing.",
+        ].join("\n"),
+      ),
+    ]);
+    const negative = nested.find((entry) => entry.section === "Negative");
+
+    expect(negative?.trail).toBe("Consequences");
+    expect(
+      nested.find((entry) => entry.section === "Consequences")?.trail,
+    ).toBeUndefined();
+  });
+
+  it("closes a trail when a heading of the same depth arrives", () => {
+    const entries = searchEntries([
+      record(
+        "/adr",
+        "A decision",
+        ["## First", "a", "### Inner", "b", "## Second", "c"].join("\n"),
+      ),
+    ]);
+
+    // "Second" is a sibling of "First", not a child of "Inner".
+    expect(entries.find((e) => e.section === "Second")?.trail).toBeUndefined();
+    expect(entries.find((e) => e.section === "Inner")?.trail).toBe("First");
+  });
+
+  it("keeps the document's own title out of the trail", () => {
+    // A page whose first heading repeats its title would otherwise pay for it
+    // in every entry, and `document` already carries it.
+    const entries = searchEntries([
+      record(
+        "/page",
+        "Guide",
+        ["# Guide", "intro", "## Install", "x"].join("\n"),
+      ),
+    ]);
+
+    expect(entries.find((e) => e.section === "Install")?.trail).toBeUndefined();
   });
 
   it("carries no identity beside the URL", () => {

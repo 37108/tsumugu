@@ -30,7 +30,7 @@
     "styles": "node scripts/build-styles.mjs",
     "sbom": "pnpm sbom --sbom-format cyclonedx --sbom-spec-version 1.7 --prod --sbom-type application --out sbom.cyclonedx.json",
     "docs": "pnpm run build && node packages/cli/dist/bin.js dev docs --locales en,ja --trust",
-    "docs:build": "pnpm run build && node packages/cli/dist/bin.js build docs --out dist-docs --origin https://tsumugu.dev --locales en,ja --trust",
+    "docs:build": "pnpm run build && node packages/cli/dist/bin.js build docs --out dist-docs --base /tsumugu --origin https://37108.github.io --locales en,ja --trust",
     "check:boundaries": "pnpm run build && vitest run tests/boundaries.test.ts tests/workspace.test.ts",
     "check": "pnpm run build && pnpm run format:check && pnpm run lint && pnpm run typecheck && vitest run"
   },

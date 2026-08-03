@@ -63,7 +63,7 @@ describe("searchEntries", () => {
   it("splits a document into one entry per section", () => {
     const entries = searchEntries(records);
 
-    expect(entries.map((entry) => entry.id)).toEqual([
+    expect(entries.map((entry) => entry.url)).toEqual([
       "/guide",
       "/guide#install",
       "/guide#configure",
@@ -108,7 +108,15 @@ describe("searchEntries", () => {
     const entries = searchEntries([record("/stub", "Stub", "")]);
 
     expect(entries).toHaveLength(1);
-    expect(entries[0]).toMatchObject({ id: "/stub", document: "Stub" });
+    expect(entries[0]).toMatchObject({ url: "/stub", document: "Stub" });
+  });
+
+  it("carries no identity beside the URL", () => {
+    // `id` was the route before percent-encoding and before the base path, so
+    // it repeated `url` for 13% of the file and nothing read it. RFC 5.
+    for (const entry of searchEntries(records)) {
+      expect(entry).not.toHaveProperty("id");
+    }
   });
 
   it("indexes text outside ASCII unchanged", () => {
@@ -137,5 +145,23 @@ describe("searchJson", () => {
     // a build and a future server-side search would all have to agree with.
     expect(searchJson(records)).not.toContain('"tokens"');
     expect(searchJson(records)).toContain("Run the installer.");
+  });
+
+  it("carries each section's text whole, never truncated", () => {
+    // RFC 5 measured truncation: bounding the text at 300 characters saved 38%
+    // of the file and removed 32% of the corpus's distinct words from the
+    // index. A reader cannot find what is not there.
+    const long = "unmistakable ".repeat(200) + "needle";
+    const entries = searchEntries([record("/long", "Long", long)]);
+
+    expect(entries[0]?.text).toContain("needle");
+  });
+
+  it("writes one entry per line, so a diff names the section that changed", () => {
+    const lines = searchJson(records).trim().split("\n");
+
+    // Header, one line per entry, and the closing bracket.
+    expect(lines).toHaveLength(searchEntries(records).length + 2);
+    expect(searchJson(records)).not.toContain("\n  ");
   });
 });

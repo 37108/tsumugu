@@ -13,19 +13,29 @@ import type { DocumentRecord } from "./records.js";
  * Records are **text, not tokens**. Tokenizing here would fix a matching
  * strategy into a file that a browser, a build tool and a future server-side
  * search would all have to agree with; leaving the text in place lets each
- * decide. The file is a corpus, not an inverted index, and it is small enough
- * to be one: this repository's own documentation produces about 145 KB, fetched
- * once on first use rather than with the page.
+ * decide. The file is a corpus, not an inverted index.
  *
  * Hidden documents are excluded. A page an author kept out of the navigation is
  * a page they did not want found by browsing, and search is browsing.
+ *
+ * ## What the file costs, and what was done about it
+ *
+ * RFC 5 measured this repository's own documentation at 233 KB across 298
+ * entries, and measured what truncating each section's text would buy: bounding
+ * it at 300 characters saved 38% of the file and removed 32% of the corpus's
+ * distinct words from the index entirely. Truncation is a bad trade at every
+ * bound, so the text is whole and the savings come from the encoding instead.
+ *
+ * Two things went. Entries no longer carry an `id`: it was the route before
+ * percent-encoding and before the base path, which made it byte-identical to
+ * `url` in all 298 entries of a real site, and nothing read it. And the file is
+ * no longer indented, but written one entry per line, which keeps it
+ * reviewable in a diff without paying for the alignment. Together, 13%.
  */
 
-export const searchSchemaVersion = 1;
+export const searchSchemaVersion = 2;
 
 export interface SearchEntry {
-  /** Stable identity: the route, plus the heading fragment when there is one. */
-  readonly id: string;
   /** Where following this result goes. */
   readonly url: string;
   /** The document's title, for grouping results. */
@@ -66,7 +76,6 @@ function sectionsOf(record: DocumentRecord): readonly SearchEntry[] {
     const fragment = current.id === undefined ? "" : `#${current.id}`;
 
     entries.push({
-      id: `${record.route}${fragment}`,
       url: `${record.url}${fragment}`,
       document: record.title,
       ...(current.heading === undefined ? {} : { section: current.heading }),
@@ -96,7 +105,6 @@ function sectionsOf(record: DocumentRecord): readonly SearchEntry[] {
   return entries.length === 0
     ? [
         {
-          id: record.route,
           url: record.url,
           document: record.title,
           ...(record.description === undefined
@@ -124,15 +132,19 @@ export function searchEntries(
     .flatMap((record) => sectionsOf(record));
 }
 
-/** The served file: a schema version and the entries. */
+/**
+ * The served file: a schema version and the entries, one entry per line.
+ *
+ * Written by hand rather than by `JSON.stringify(value, null, 2)`, because
+ * indenting every field of every entry cost 15 KB here to align a file that a
+ * script fetches. One entry per line keeps the property that indentation was
+ * really buying — a diff that names the section that changed — and `documents.json`
+ * remains the indented one, because that is the file people open in a browser.
+ */
 export function searchJson(records: readonly DocumentRecord[]): string {
-  return `${JSON.stringify(
-    {
-      schemaVersion: searchSchemaVersion,
-      generator: "tsumugu",
-      entries: searchEntries(records),
-    },
-    null,
-    2,
-  )}\n`;
+  const entries = searchEntries(records)
+    .map((entry) => JSON.stringify(entry))
+    .join(",\n");
+
+  return `{"schemaVersion":${JSON.stringify(searchSchemaVersion)},"generator":"tsumugu","entries":[\n${entries}\n]}\n`;
 }

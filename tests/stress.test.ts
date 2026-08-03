@@ -86,9 +86,9 @@ describe("a three-hundred-document site", () => {
         // one for the index page.
         const search = JSON.parse(
           site.result.exports.get("/search.json")?.render("http://x") ?? "{}",
-        ) as { entries: readonly { id: string }[] };
+        ) as { entries: readonly { url: string }[] };
         expect(search.entries).toHaveLength(DOCUMENTS * 2 + 1);
-        expect(new Set(search.entries.map((entry) => entry.id)).size).toBe(
+        expect(new Set(search.entries.map((entry) => entry.url)).size).toBe(
           search.entries.length,
         );
 

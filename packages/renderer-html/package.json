@@ -37,6 +37,6 @@
   },
   "devDependencies": {
     "@tsumugu/internal-tsconfig": "workspace:*",
-    "@types/hast": "^3.0.4"
+    "@types/hast": "^3.0.5"
   }
 }

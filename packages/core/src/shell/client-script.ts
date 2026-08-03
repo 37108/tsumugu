@@ -20,13 +20,19 @@ import { createHash } from "node:crypto";
  * browser runs, so the ranking cannot drift from its tests.
  *
  * - The query is normalized (lowercase, Unicode NFKD, combining marks removed)
- *   and split on whitespace. Every term must match somewhere: two words narrow
- *   a search, they do not widen it.
+ *   and split on whitespace. A term that matches nothing costs coverage rather
+ *   than the entry: an entry matching every term outranks one matching half,
+ *   but half an answer beats a blank page. RFC 6 measured the alternative —
+ *   ADR 4's original rule that every term must match — and it returned nothing
+ *   at all for one query in seven.
  * - A match in the section heading outweighs one in the document title, which
  *   outweighs one in the body text — a reader typing "install" wants the
- *   section called Install before a page that mentions installing.
+ *   section called Install before a page that mentions installing. The headings
+ *   above a section rank with it, so "Negative" is searchable as the drawback
+ *   of the decision it sits under.
  * - A match at the start of a word outweighs one inside it, so "con" finds
- *   "Configure" before "second".
+ *   "Configure" before "second". In Japanese, which has no spaces, a word
+ *   starts where the script changes.
  * - An English plural falls back to its singular, below every exact match, so
  *   "diagrams" finds a section about a diagram. Substring matching already
  *   made "diagram" find "diagrams"; this is the other direction, which is the
@@ -44,6 +50,8 @@ export function normalizeForSearch(value: string): string {
 export interface ScoredEntry {
   readonly document: string;
   readonly section?: string;
+  /** The headings above this section, which rank with it. */
+  readonly trail?: string;
   readonly text: string;
 }
 
@@ -60,7 +68,13 @@ export function scoreEntry(
   const normalize = (value: string): string =>
     value.toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g, "");
 
-  const section = normalize(entry.section ?? "");
+  // The heading and the headings above it rank together: "Negative" alone says
+  // nothing about which document's drawbacks these are.
+  const section = normalize(
+    entry.trail === undefined
+      ? (entry.section ?? "")
+      : `${entry.trail} ${entry.section ?? ""}`,
+  );
   const document = normalize(entry.document);
   const text = normalize(entry.text);
 
@@ -77,30 +91,48 @@ export function scoreEntry(
     return "";
   };
 
-  // A match at the start of a word says the reader is typing this word; one
-  // in the middle is often an accident of spelling.
-  const wordStart = (needle: string): RegExp =>
-    new RegExp(
-      `(?:^|[^\\p{L}\\p{N}])${needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`,
-      "u",
-    );
+  // Which writing system a character belongs to. "" means it is not a letter
+  // at all, so it always ends a word.
+  const script = (character: string): string => {
+    if (character >= "぀" && character <= "ゟ") return "kana";
+    if (character >= "゠" && character <= "ヿ") return "katakana";
+    if (character >= "㐀" && character <= "鿿") return "han";
+    return /[\p{L}\p{N}]/u.test(character) ? "letter" : "";
+  };
+
+  // Where a word begins. In a language written with spaces that is a space; in
+  // Japanese, which has none, it is the change from one script to another —
+  // 「を設定する」 starts a word at 設. Without this the bonus can only fire at
+  // the very start of a field, which is why Japanese ranking used to collapse
+  // to two values. Scanning for the position also means a term made of regex
+  // syntax, like "c++", needs no escaping: there is no pattern to escape into.
+  const atWordStart = (value: string, needle: string): boolean => {
+    for (
+      let at = value.indexOf(needle);
+      at >= 0;
+      at = value.indexOf(needle, at + 1)
+    ) {
+      if (at === 0) return true;
+      const before = script(value[at - 1] ?? "");
+      if (before === "" || before !== script(needle[0] ?? "")) return true;
+    }
+    return false;
+  };
 
   let total = 0;
+  let matched = 0;
 
   for (const term of terms) {
     const stem = singular(term);
-    const exact = wordStart(term);
-    // Built only when there is a stem, which most query terms do not have.
-    const relaxed = stem === "" ? undefined : wordStart(stem);
 
     // Every tier is what it was, doubled, so a stemmed match can sit below its
     // exact counterpart in the same field without reordering anything else.
     const inField = (value: string, start: number, inside: number): number => {
       if (value.includes(term)) {
-        return exact.test(value) ? start * 2 : inside * 2;
+        return atWordStart(value, term) ? start * 2 : inside * 2;
       }
-      if (relaxed !== undefined && value.includes(stem)) {
-        return relaxed.test(value) ? start : inside;
+      if (stem !== "" && value.includes(stem)) {
+        return atWordStart(value, stem) ? start : inside;
       }
       return 0;
     };
@@ -108,14 +140,19 @@ export function scoreEntry(
     const score =
       inField(section, 6, 4) || inField(document, 5, 3) || inField(text, 2, 1);
 
-    if (score === 0) {
-      // Every term must match somewhere. Two words narrow a search.
-      return 0;
+    if (score > 0) {
+      matched += 1;
+      total += score;
     }
-    total += score;
   }
 
-  return total;
+  if (matched === 0) return 0;
+
+  // A term that misses costs coverage rather than the whole entry. Matching
+  // every term still wins — squaring the fraction keeps a full match ahead of
+  // any partial one — but a reader who adds a word gets a worse answer, not a
+  // blank page. A single-term query is untouched, since the fraction is 1.
+  return total * (matched / terms.length) ** 2;
 }
 
 /**

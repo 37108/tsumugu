@@ -9,6 +9,12 @@
 > indented — and ranking falls back from an English plural to its singular. The
 > decision that the index is text rather than tokens is unchanged, and RFC 5
 > records the measurement that kept it that way.
+>
+> **And by [RFC 6](../rfcs/0006-ranking-against-a-query-set.md):** "every term
+> must match", below, is reversed. RFC 6 built a query set, measured the rule,
+> and found it returning nothing for four of 28 queries; it also measured BM25
+> against the same set and BM25 lost. Entries gained a `trail`, and the ranking
+> reads it.
 
 - **Status:** Accepted
 - **Date:** 2026-07-28
@@ -78,9 +84,16 @@ that guesses hides the exact page somebody asked for.
 Ranking, added later for issue #54:
 
 - the query splits on whitespace and **every term must match**, so two words
-  narrow a search, they do not widen it;
+  narrow a search, they do not widen it — reversed by RFC 6, which measured it
+  returning nothing at all for one query in seven; a term that misses now costs
+  coverage, and an entry matching every term still outranks one matching half;
 - a match in the section heading outweighs the document title, which outweighs
   the body text, and a match at the start of a word outweighs one inside it;
+- the headings above a section rank with it (RFC 6), because `Negative` alone
+  does not say whose drawback it is;
+- a word starts where the writing system changes as well as at a non-letter
+  (RFC 6), since the older test could only find a boundary in Japanese at the
+  start of a field or after `。`;
 - an English plural in the query falls back to its singular, scoring below
   every exact match, so "diagrams" finds a section about a diagram — added by
   RFC 5, and only the query is reduced, which is what keeps the index text;

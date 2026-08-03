@@ -30,9 +30,11 @@ changed the design rather than confirming it
 against the code showed that a renderer cannot claim a format core does not
 know, which is what core learned
 ([ADR 10](../decisions/0010-api-descriptions-claimed-by-name.md)). Search went
-the same way: a proposal to trim the index was built, measured, and dropped
-because the measurement said trimming costs more vocabulary than it saves bytes
-([RFC 5](../rfcs/0005-search-index-pipeline.md)).
+the same way twice: trimming the index was built, measured, and dropped because
+it costs more vocabulary than it saves bytes
+([RFC 5](../rfcs/0005-search-index-pipeline.md)), and BM25 was built, measured
+against a query set, and dropped because it lost to ten lines
+([RFC 6](../rfcs/0006-ranking-against-a-query-set.md)).
 
 The issue tracker is the backlog. Work outside these milestones belongs in the
 later list until usage or a prototype supplies evidence.

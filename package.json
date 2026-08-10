@@ -35,9 +35,9 @@
     "check": "pnpm run build && pnpm run format:check && pnpm run lint && pnpm run typecheck && vitest run"
   },
   "devDependencies": {
-    "@changesets/cli": "^2.31.0",
+    "@changesets/cli": "^2.31.1",
     "@eslint/js": "^10.0.1",
-    "@tailwindcss/cli": "^4.3.2",
+    "@tailwindcss/cli": "^4.3.3",
     "@tsumugu/internal-tsconfig": "workspace:*",
     "@types/jsdom": "^28.0.3",
     "@types/node": "^26.1.1",
@@ -46,7 +46,7 @@
     "eslint": "^10.7.0",
     "jsdom": "^29.1.1",
     "prettier": "^3.9.5",
-    "tailwindcss": "^4.3.2",
+    "tailwindcss": "^4.3.3",
     "tsumugu": "workspace:*",
     "tsumugu-build": "workspace:*",
     "tsumugu-core": "workspace:*",
@@ -59,7 +59,7 @@
     "tsumugu-transformer-highlight": "workspace:*",
     "tsumugu-transformer-mermaid": "workspace:*",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.63.0",
+    "typescript-eslint": "^8.64.0",
     "vitest": "^4.1.10"
   }
 }

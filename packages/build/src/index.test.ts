@@ -19,6 +19,7 @@ import {
   type Renderer,
   type SemanticNode,
   type Theme,
+  type Transformer,
 } from "tsumugu-core";
 
 import { buildCodes, buildStatic, fileForRoute } from "./index.js";
@@ -102,6 +103,19 @@ const theme: Theme = {
     heading: wrap("h1"),
     paragraph: wrap("p"),
     text: (node) => (node.type === "text" ? text(node.value) : fragment()),
+  },
+};
+
+const warningTransformer: Transformer = {
+  id: "test-warning",
+  transform: (document, context) => {
+    context.report({
+      code: "test/page-warning",
+      severity: "warning",
+      stage: "transformer",
+      message: "The test transformer reported a warning.",
+    });
+    return document;
   },
 };
 
@@ -200,6 +214,29 @@ describe("buildStatic", () => {
     expect(await readFile(path.join(outDir, "sitemap.xml"), "utf8")).toContain(
       "example.invalid",
     );
+  });
+
+  it("returns page diagnostics in the build report", async () => {
+    const report = await build({
+      origin: "https://example.com",
+      transformers: [warningTransformer],
+    });
+
+    expect(
+      report.diagnostics.filter((entry) => entry.code === "test/page-warning"),
+    ).toHaveLength(1);
+  });
+
+  it("orders aggregated diagnostics by severity", async () => {
+    await writeFile(path.join(root, "llms.txt"), "by hand\n");
+
+    const report = await build({ transformers: [warningTransformer] });
+
+    expect(report.diagnostics.map((entry) => entry.severity)).toEqual([
+      "error",
+      "warning",
+      "warning",
+    ]);
   });
 
   it("refuses to write into a directory it did not create", async () => {

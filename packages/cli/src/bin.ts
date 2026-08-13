@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { describeBuild, parseBuildOptions, runBuild } from "./build.js";
+import { describeBuild, parseBuildCommand, runBuild } from "./build.js";
 import {
   describeStartup,
   describeUpdate,
@@ -26,8 +26,11 @@ const argv = process.argv.slice(2);
 // Colour is decided once, from the stream it will be written to.
 const style = styleFor({ isTty: process.stdout.isTTY === true });
 
+/** A completed build whose diagnostics cross the CLI threshold. */
+const diagnosticFailureExitCode = 3;
+
 if (argv[0] === "build") {
-  const parsed = parseBuildOptions(argv.slice(1));
+  const parsed = parseBuildCommand(argv.slice(1));
 
   if (!parsed.ok) {
     process.stderr.write(`${parsed.message}\n`);
@@ -49,6 +52,12 @@ if (argv[0] === "build") {
             ...(parsed.options.trust === true ? { trust: true } : {}),
           })}\n`,
         );
+        process.exitCode = report.diagnostics.some(
+          (diagnostic) =>
+            diagnostic.severity !== "warning" || parsed.failOnWarnings,
+        )
+          ? diagnosticFailureExitCode
+          : exitCodes.ok;
       } catch (cause) {
         process.stderr.write(
           `${cause instanceof Error ? cause.message : String(cause)}\n`,

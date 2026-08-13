@@ -24,7 +24,7 @@ export const exitCodes = {
   ok: 0,
   /** The command line could not be understood. */
   usage: 1,
-  /** The command was valid, but the server could not start. */
+  /** The command was valid, but could not start or complete. */
   startup: 2,
 } as const;
 
@@ -64,9 +64,13 @@ Options for build
   --lang <tag>         language for documents outside locale directories
                        (default: en)
   --clean              remove the output directory even if tsumugu did not write it
+  --fail-on-warnings   exit non-zero when the completed build reports a warning
   --trust              declare this root's content yours: markup is emitted as
                        written, its scripts run, and .mdx is executed while the
                        page is built (ADR 7)
+
+A completed build exits 3 for error or fatal diagnostics, or for warnings when
+--fail-on-warnings is set. It still writes output and prints every diagnostic.
 
 Without a directory, tsumugu serves ./docs, or the current directory when it
 contains an index document. Files are watched while dev runs: save a document

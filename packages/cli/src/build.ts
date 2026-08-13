@@ -40,11 +40,13 @@ export interface BuildCommandOptions {
 /** Where output goes when nobody said. */
 const defaultOutDir = "dist";
 
-/** Parses `tsumugu build` arguments. Unknown flags are an error, not a guess. */
-export function parseBuildOptions(
-  argv: readonly string[],
-):
-  | { readonly ok: true; readonly options: BuildCommandOptions }
+/** Parses the emitted command, including policy that never reaches the API. */
+export function parseBuildCommand(argv: readonly string[]):
+  | {
+      readonly ok: true;
+      readonly options: BuildCommandOptions;
+      readonly failOnWarnings: boolean;
+    }
   | { readonly ok: false; readonly message: string } {
   const options: {
     root?: string;
@@ -56,6 +58,7 @@ export function parseBuildOptions(
     locales?: readonly string[];
     lang?: string;
   } = {};
+  let failOnWarnings = false;
 
   for (let index = 0; index < argv.length; index += 1) {
     const argument = argv[index];
@@ -87,6 +90,11 @@ export function parseBuildOptions(
 
     if (argument === "--clean") {
       options.clean = true;
+      continue;
+    }
+
+    if (argument === "--fail-on-warnings") {
+      failOnWarnings = true;
       continue;
     }
 
@@ -133,11 +141,21 @@ export function parseBuildOptions(
 
     return {
       ok: false,
-      message: `Unknown option "${argument ?? ""}". Supported: --root, --out, --origin, --base, --locales, --lang, --clean, --trust.`,
+      message: `Unknown option "${argument ?? ""}". Supported: --root, --out, --origin, --base, --locales, --lang, --clean, --fail-on-warnings, --trust.`,
     };
   }
 
-  return { ok: true, options };
+  return { ok: true, options, failOnWarnings };
+}
+
+/** Parses public build options. Unknown flags are an error, not a guess. */
+export function parseBuildOptions(
+  argv: readonly string[],
+):
+  | { readonly ok: true; readonly options: BuildCommandOptions }
+  | { readonly ok: false; readonly message: string } {
+  const parsed = parseBuildCommand(argv);
+  return parsed.ok ? { ok: true, options: parsed.options } : parsed;
 }
 
 /** Runs the build with the official composition. */

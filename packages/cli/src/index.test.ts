@@ -79,6 +79,12 @@ describe("run", () => {
     expect(usage).toContain("ja,en-US");
   });
 
+  it("documents the build diagnostic threshold", () => {
+    expect(usage).toContain("--fail-on-warnings");
+    expect(usage).toContain("exits 3");
+    expect(usage).toContain("prints every diagnostic");
+  });
+
   it.each([
     ["an unknown command", ["serve"]],
     ["an unknown flag", ["--port", "3000"]],
@@ -308,6 +314,13 @@ describe("parseBuildOptions", () => {
     const parsed = parseBuildOptions(["docs", "--trust"]);
 
     expect(parsed.ok && parsed.options.trust).toBe(true);
+  });
+
+  it("reads the warning failure threshold", () => {
+    expect(parseBuildOptions(["docs", "--fail-on-warnings"])).toEqual({
+      ok: true,
+      options: { root: "docs" },
+    });
   });
 });
 

@@ -94,6 +94,55 @@ export const buildCodes = {
 /** The placeholder used when no origin was given. */
 const placeholderOrigin = "https://example.invalid";
 
+const severityOrder: Record<DocumentDiagnostic["severity"], number> = {
+  fatal: 0,
+  error: 1,
+  warning: 2,
+};
+
+function compare(a: string, b: string): number {
+  return a < b ? -1 : a > b ? 1 : 0;
+}
+
+function positionOf(diagnostic: DocumentDiagnostic): number {
+  return diagnostic.range?.start.offset ?? -1;
+}
+
+function diagnosticIdentity(diagnostic: DocumentDiagnostic): string {
+  return [
+    diagnostic.severity,
+    diagnostic.sourcePath ?? "",
+    String(positionOf(diagnostic)),
+    diagnostic.code,
+    diagnostic.message,
+  ].join(" ");
+}
+
+/** Keeps an aggregated build report deterministic and free of repeats. */
+function normalizeDiagnostics(
+  diagnostics: readonly DocumentDiagnostic[],
+): DocumentDiagnostic[] {
+  const seen = new Set<string>();
+
+  return [...diagnostics]
+    .sort(
+      (a, b) =>
+        severityOrder[a.severity] - severityOrder[b.severity] ||
+        compare(a.sourcePath ?? "", b.sourcePath ?? "") ||
+        positionOf(a) - positionOf(b) ||
+        compare(a.code, b.code) ||
+        compare(a.message, b.message),
+    )
+    .filter((diagnostic) => {
+      const identity = diagnosticIdentity(diagnostic);
+      if (seen.has(identity)) {
+        return false;
+      }
+      seen.add(identity);
+      return true;
+    });
+}
+
 /** Where a route's HTML file goes: clean URLs, so `/guide` is `guide/index.html`. */
 export function fileForRoute(route: string): string {
   const segments = route.split("/").filter((segment) => segment !== "");
@@ -169,7 +218,10 @@ export async function buildStatic(
   });
 
   const result = site.result;
-  diagnostics.push(...result.diagnostics);
+  diagnostics.push(
+    ...result.diagnostics,
+    ...[...result.pages.values()].flatMap((page) => page.diagnostics),
+  );
 
   if (origin === undefined) {
     diagnostics.push({
@@ -249,6 +301,6 @@ export async function buildStatic(
     pageCount: result.pages.size,
     assetCount: result.assets.length,
     totalBytes,
-    diagnostics,
+    diagnostics: normalizeDiagnostics(diagnostics),
   };
 }

@@ -1,5 +1,13 @@
 # tsumugu-renderer-mdx
 
+## 0.10.0
+
+### Patch Changes
+
+- tsumugu-core@0.10.0
+- tsumugu-renderer-html@0.10.0
+- tsumugu-renderer-markdown@0.10.0
+
 ## 0.9.0
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "tsumugu-renderer-markdown",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "type": "module",
   "description": "Markdown renderer for Tsumugu. Converts Markdown into the Semantic Document AST and keeps parser-specific types from escaping.",
   "license": "MIT",

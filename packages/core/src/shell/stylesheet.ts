@@ -260,17 +260,18 @@ body {
   font-family: var(--ts-sans);
   font-size: 0.95rem;
 }
-.tsumugu-diagnostics ul {
+.tsumugu-diagnostics > ul {
   margin: 0;
   display: grid;
   list-style-type: none;
   gap: calc(0.25rem * 3.5);
   padding: 0;
 }
-.tsumugu-diagnostics li {
+.tsumugu-diagnostics > ul > li {
   display: grid;
   gap: 0.25rem;
   font-size: 0.875rem;
+  min-width: 0;
 }
 .tsumugu-severity {
   --tw-font-weight: 700;
@@ -286,6 +287,27 @@ li[data-severity="error"] .tsumugu-severity, li[data-severity="fatal"] .tsumugu-
   color: var(--ts-error);
 }
 .tsumugu-hint {
+  color: var(--ts-ink-muted);
+}
+.tsumugu-location {
+  overflow-wrap: anywhere;
+}
+.tsumugu-related {
+  margin: 0;
+  display: grid;
+  list-style-type: none;
+  gap: 0.25rem;
+  padding: 0;
+  border-inline-start: 1px solid var(--ts-rule);
+  padding-inline-start: 0.75rem;
+}
+.tsumugu-related li {
+  display: grid;
+  gap: calc(0.25rem * 0.5);
+  font-size: 0.8rem;
+  min-width: 0;
+}
+.tsumugu-related-message {
   color: var(--ts-ink-muted);
 }
 .tsumugu-diagnostics code {

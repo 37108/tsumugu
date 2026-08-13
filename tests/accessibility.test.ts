@@ -4,6 +4,13 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { startDev, type DevResult } from "tsumugu";
 
+import type {
+  RoutePath,
+  SourcePath,
+} from "../packages/core/src/document/paths.js";
+import { renderShell } from "../packages/core/src/shell/shell.js";
+import { serializeDocument } from "../packages/core/src/theme/serialize.js";
+import { element, text } from "../packages/core/src/theme/virtual-tree.js";
 import {
   withTemporaryDirectory,
   writeFiles,
@@ -34,6 +41,32 @@ afterEach(async () => {
   running = undefined;
 });
 
+async function auditHtml(
+  html: string,
+  viewportWidth?: number,
+): Promise<AxeResults> {
+  if (viewportWidth !== undefined) {
+    Object.defineProperty(window, "innerWidth", {
+      configurable: true,
+      value: viewportWidth,
+    });
+  }
+
+  const parsed = new DOMParser().parseFromString(html, "text/html");
+  for (const attribute of parsed.documentElement.attributes) {
+    document.documentElement.setAttribute(attribute.name, attribute.value);
+  }
+  document.documentElement.innerHTML = parsed.documentElement.innerHTML;
+
+  return axe.run(document, {
+    // Colour contrast needs layout, which jsdom does not do. It is checked
+    // against the stated palette in the theme's own tests and by eye in the
+    // manual review; claiming it here would be claiming a check that did not
+    // run.
+    rules: { "color-contrast": { enabled: false } },
+  });
+}
+
 /** Builds a project, fetches one page, and runs axe over it. */
 async function audit(
   files: Readonly<Record<string, string>>,
@@ -59,29 +92,10 @@ async function audit(
     });
 
     const html = await (await fetch(`${running.server.url}${path}`)).text();
-    if (options.viewportWidth !== undefined) {
-      Object.defineProperty(window, "innerWidth", {
-        configurable: true,
-        value: options.viewportWidth,
-      });
-    }
-
     // Parsed as a whole document and transplanted, attributes and all: a
     // harness that dropped `lang` would report a failure the server does not
     // have, and one that added it would hide a failure it might.
-    const parsed = new DOMParser().parseFromString(html, "text/html");
-    for (const attribute of parsed.documentElement.attributes) {
-      document.documentElement.setAttribute(attribute.name, attribute.value);
-    }
-    document.documentElement.innerHTML = parsed.documentElement.innerHTML;
-
-    results = await axe.run(document, {
-      // Colour contrast needs layout, which jsdom does not do. It is checked
-      // against the stated palette in the theme's own tests and by eye in the
-      // manual review; claiming it here would be claiming a check that did not
-      // run.
-      rules: { "color-contrast": { enabled: false } },
-    });
+    results = await auditHtml(html, options.viewportWidth);
   });
 
   if (results === undefined) {
@@ -235,11 +249,81 @@ describe("accessibility", () => {
     },
   );
 
-  it("finds no violations on a page reporting problems", async () => {
-    const results = await audit({
-      "index.md": "# Home\n\n[Nowhere](/gone)\n",
-    });
+  it.each([
+    ["narrow", 320],
+    ["wide", 1440],
+  ] as const)(
+    "finds no violations on a page reporting problems at a %s viewport",
+    async (_name, viewportWidth) => {
+      const results = await audit(
+        { "index.md": "# Home\n\n[Nowhere](/gone)\n" },
+        "",
+        { viewportWidth },
+      );
 
+      expect(document.querySelector(".tsumugu-location")?.textContent).toBe(
+        "index.md:3:1",
+      );
+      expect(describeViolations(results.violations)).toEqual([]);
+    },
+  );
+
+  it("associates several diagnostics and related locations at a narrow viewport", async () => {
+    const rendered = renderShell({
+      siteName: "Docs",
+      title: "診断",
+      currentRoute: "/" as RoutePath,
+      navigation: [],
+      tableOfContents: [],
+      content: element("h1", {}, text("診断")),
+      uiLang: "en",
+      diagnostics: [
+        {
+          code: "routing/collision",
+          severity: "error",
+          message: "Two documents use one route.",
+          sourcePath: "guide.md" as SourcePath,
+          related: [
+            {
+              message: 'Also maps to "/guide".',
+              sourcePath: "guide/index.md" as SourcePath,
+            },
+            {
+              message: "Also uses that route.",
+              sourcePath: "reference/guide.md" as SourcePath,
+            },
+          ],
+        },
+        {
+          code: "metadata/unknown-key-typo",
+          severity: "warning",
+          message: 'Did you mean "hidden"?',
+          sourcePath: "index.md" as SourcePath,
+        },
+        {
+          code: "build/missing-origin",
+          severity: "warning",
+          message: "No origin was given.",
+        },
+      ],
+    });
+    const results = await auditHtml(
+      serializeDocument(rendered.body, {
+        lang: "ja",
+        title: rendered.documentTitle,
+        head: rendered.head,
+      }).html,
+      320,
+    );
+
+    const panel = document.querySelector(".tsumugu-diagnostics");
+    const related = panel?.querySelector(".tsumugu-related");
+    expect(panel?.getAttribute("lang")).toBe("en");
+    expect(panel?.querySelectorAll(":scope > ul > li")).toHaveLength(3);
+    expect(related?.querySelectorAll("li")).toHaveLength(2);
+    expect(related?.closest("[data-severity]")?.textContent).toContain(
+      "Two documents use one route.",
+    );
     expect(describeViolations(results.violations)).toEqual([]);
   });
 

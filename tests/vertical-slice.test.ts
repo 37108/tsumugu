@@ -394,6 +394,9 @@ describe("problems a user will actually hit", () => {
         // in the terminal they may have scrolled past.
         expect(html).toContain("link/unknown-document");
         expect(html).toContain("/gone");
+        expect(html).toContain(
+          '<code class="tsumugu-location">index.md:3:1</code>',
+        );
         expect(
           diagnostics.filter((entry) => entry.code === "link/unknown-document"),
         ).toHaveLength(1);
@@ -410,6 +413,20 @@ describe("problems a user will actually hit", () => {
       async ({ server }) => {
         expect(await (await fetch(server.url)).text()).toContain(
           "link/unknown-fragment",
+        );
+      },
+    );
+  });
+
+  it("shows a file-level location for a front-matter typo", async () => {
+    await serveFixture(
+      { "index.md": "---\nhiden: true\n---\n\n# Home\n" },
+      async ({ server }) => {
+        const html = await (await fetch(server.url)).text();
+
+        expect(html).toContain("metadata/unknown-key-typo");
+        expect(html).toContain(
+          '<code class="tsumugu-location">index.md</code>',
         );
       },
     );

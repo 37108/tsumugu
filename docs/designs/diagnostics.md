@@ -28,6 +28,11 @@ Severity is measured by **blast radius**, not by how annoying the problem is.
 There is exactly one fatal condition today: the documentation root cannot be
 read. Everything else is scoped to a document or narrower.
 
+For a static build, diagnostics remain values: the build API writes the output
+and returns its report without throwing solely because of severity. The CLI
+prints that report, then exits with code `3` for any `error` or `fatal`.
+Warnings remain successful unless the operator passes `--fail-on-warnings`.
+
 ## Shape
 
 | Field        | Required | Purpose                                               |

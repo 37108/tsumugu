@@ -43,19 +43,24 @@ and a static build never contains it
 
 ## `build`
 
-| Option             | What it does                                                 | Default  |
-| ------------------ | ------------------------------------------------------------ | -------- |
-| `--root <dir>`     | Directory to build.                                          | `./docs` |
-| `--out <dir>`      | Where to write the site.                                     | `./dist` |
-| `--origin <url>`   | Origin the site is published under, for `sitemap.xml`.       | none     |
-| `--base <path>`    | Path prefix the site is served under, e.g. `/my-repo`.       | `/`      |
-| `--locales <tags>` | Comma-separated locale directories, each built as own scope. | none     |
-| `--lang <tag>`     | Language of documents outside the locale directories.        | `en`     |
-| `--clean`          | Delete `--out` even when Tsumugu did not write it.           | off      |
-| `--trust`          | Let this root's content run as code.                         | off      |
+| Option               | What it does                                                 | Default  |
+| -------------------- | ------------------------------------------------------------ | -------- |
+| `--root <dir>`       | Directory to build.                                          | `./docs` |
+| `--out <dir>`        | Where to write the site.                                     | `./dist` |
+| `--origin <url>`     | Origin the site is published under, for `sitemap.xml`.       | none     |
+| `--base <path>`      | Path prefix the site is served under, e.g. `/my-repo`.       | `/`      |
+| `--locales <tags>`   | Comma-separated locale directories, each built as own scope. | none     |
+| `--lang <tag>`       | Language of documents outside the locale directories.        | `en`     |
+| `--clean`            | Delete `--out` even when Tsumugu did not write it.           | off      |
+| `--fail-on-warnings` | Exit non-zero when the completed build reports a warning.    | off      |
+| `--trust`            | Let this root's content run as code.                         | off      |
 
 Without `--clean`, Tsumugu refuses to erase a directory that is not its own
 output, so a mistyped `--out` costs nothing.
+
+The build still writes its output and prints every diagnostic. An `error` or
+`fatal` diagnostic then exits with code `3`; warnings are informational unless
+`--fail-on-warnings` is set.
 
 ## `--locales` and `--lang`
 
@@ -116,4 +121,5 @@ page stays readable. `hiden` gets a warning naming the key you probably meant.
 | ---- | ------------------------------------------------------- |
 | `0`  | Done.                                                   |
 | `1`  | The command line made no sense. Retrying will not help. |
-| `2`  | The command was fine; the server could not start.       |
+| `2`  | The command was valid, but could not start or complete. |
+| `3`  | The build completed, but diagnostics made it fail.      |

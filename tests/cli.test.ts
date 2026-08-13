@@ -200,6 +200,64 @@ describe("tsumugu binary", () => {
     });
   });
 
+  it("succeeds with warnings by default", async () => {
+    await withTemporaryDirectory(async (directory) => {
+      await writeFiles(directory, { "docs/index.md": "# Built\n" });
+
+      const outcome = await runCli(
+        ["build", "docs", "--out", "out"],
+        directory,
+      );
+
+      expect(outcome.exitCode).toBe(0);
+      expect(outcome.stdout).toContain("1 warning");
+      expect(outcome.stdout).toContain("build/missing-origin");
+    });
+  });
+
+  it("fails when a completed build reports an error", async () => {
+    await withTemporaryDirectory(async (directory) => {
+      await writeFiles(directory, {
+        "docs/index.md": "# Built\n",
+        "docs/llms.txt": "authored\n",
+      });
+
+      const outcome = await runCli(
+        ["build", "docs", "--out", "out", "--origin", "https://example.com"],
+        directory,
+      );
+
+      expect(outcome.exitCode).toBe(3);
+      expect(outcome.stdout).toContain("1 error");
+      expect(outcome.stdout).toContain("build/collision");
+    });
+  });
+
+  it("fails on document warnings when asked", async () => {
+    await withTemporaryDirectory(async (directory) => {
+      await writeFiles(directory, {
+        "docs/index.md": "# Built\n\n[Missing](./missing)\n",
+      });
+
+      const outcome = await runCli(
+        [
+          "build",
+          "docs",
+          "--out",
+          "out",
+          "--origin",
+          "https://example.com",
+          "--fail-on-warnings",
+        ],
+        directory,
+      );
+
+      expect(outcome.exitCode).toBe(3);
+      expect(outcome.stdout).toContain("1 warning");
+      expect(outcome.stdout).toContain("link/unknown-document");
+    });
+  });
+
   it("builds isolated locale scopes through the emitted binary", async () => {
     await withTemporaryDirectory(async (directory) => {
       await writeFiles(directory, {

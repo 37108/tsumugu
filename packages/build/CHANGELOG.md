@@ -1,5 +1,20 @@
 # tsumugu-build
 
+## 0.10.0
+
+### Minor Changes
+
+- 34d2a8a: Fail static builds when diagnostics cross the configured severity threshold.
+
+  `tsumugu build` now exits with code 3 after printing a completed report that
+  contains an error or fatal diagnostic. Pass `--fail-on-warnings` to apply the
+  same policy to warnings. Static build reports now include page diagnostics so
+  programmatic callers can apply their own policy without the build API throwing.
+
+### Patch Changes
+
+- tsumugu-core@0.10.0
+
 ## 0.9.0
 
 ### Patch Changes

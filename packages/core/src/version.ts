@@ -7,4 +7,4 @@
  * same commit as the manifest bump, and `tests/cli.test.ts` fails whenever the
  * two disagree.
  */
-export const version = "0.10.0";
+export const version = "0.11.0";

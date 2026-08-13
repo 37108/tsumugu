@@ -1,5 +1,12 @@
 # tsumugu-core
 
+## 0.11.0
+
+### Minor Changes
+
+- 05bb3a8: Show project-relative source locations and related locations in the on-page
+  diagnostics panel.
+
 ## 0.10.0
 
 ## 0.9.0

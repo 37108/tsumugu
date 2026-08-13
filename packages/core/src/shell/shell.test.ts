@@ -160,6 +160,7 @@ describe("renderShell", () => {
           severity: "warning",
           message: "Something was not rendered.",
           hint: "Its content is still shown.",
+          cause: new Error("/Users/someone/private/project.ts failed"),
         },
       ],
     });
@@ -169,6 +170,66 @@ describe("renderShell", () => {
     expect(html).toContain("Its content is still shown.");
     // Severity as text, because a colour alone is not a message.
     expect(html).toContain(">warning<");
+    expect(html).not.toContain("tsumugu-location");
+    expect(html).not.toContain("/Users/someone/private");
+  });
+
+  it("shows the exact source location of a problem", () => {
+    const html = shell({
+      diagnostics: [
+        {
+          code: "link/unknown-document",
+          severity: "warning",
+          message: "The linked document does not exist.",
+          sourcePath: "guide/setup.md" as SourcePath,
+          range: {
+            start: { line: 12, column: 3, offset: 120 },
+            end: { line: 12, column: 20, offset: 137 },
+          },
+        },
+      ],
+    });
+
+    expect(html).toContain(
+      '<code class="tsumugu-location">guide/setup.md:12:3</code>',
+    );
+  });
+
+  it("keeps related source locations with their diagnostic", () => {
+    const html = shell({
+      diagnostics: [
+        {
+          code: "routing/collision",
+          severity: "error",
+          message: "Two documents use one route.",
+          sourcePath: "guide.md" as SourcePath,
+          related: [
+            {
+              message: 'Also maps to "/guide".',
+              sourcePath: "guide/index.md" as SourcePath,
+              range: {
+                start: { line: 5, column: 7, offset: 42 },
+                end: { line: 5, column: 12, offset: 47 },
+              },
+            },
+            {
+              message: "Also uses that route.",
+              sourcePath: "other.md" as SourcePath,
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(html).toContain(
+      '<ul aria-label="Related locations" class="tsumugu-related">',
+    );
+    expect(html).toContain('<code class="tsumugu-location">guide.md</code>');
+    expect(html).toContain(
+      '<code class="tsumugu-location">guide/index.md:5:7</code>',
+    );
+    expect(html).toContain('<code class="tsumugu-location">other.md</code>');
+    expect(html).toContain("Also maps to &quot;/guide&quot;.");
   });
 
   it("says nothing about problems when there are none", () => {

@@ -81,6 +81,24 @@ const mainId = "tsumugu-content";
 const sidebarLabelId = "tsumugu-sidebar-label";
 const contentsLabelId = "tsumugu-contents-label";
 
+function sourceLocation(
+  diagnostic: Pick<DocumentDiagnostic, "sourcePath" | "range">,
+): VirtualNode | undefined {
+  if (diagnostic.sourcePath === undefined) {
+    return undefined;
+  }
+  const start = diagnostic.range?.start;
+  return element(
+    "code",
+    { class: "tsumugu-location" },
+    text(
+      start === undefined
+        ? diagnostic.sourcePath
+        : `${diagnostic.sourcePath}:${String(start.line)}:${String(start.column)}`,
+    ),
+  );
+}
+
 /**
  * The default tab icon, inline.
  *
@@ -267,6 +285,7 @@ function diagnosticsPanel(
             { class: "tsumugu-severity" },
             text(diagnostic.severity),
           ),
+          sourceLocation(diagnostic),
           element(
             "span",
             { class: "tsumugu-message" },
@@ -279,6 +298,30 @@ function diagnosticsPanel(
                   "span",
                   { class: "tsumugu-hint" },
                   text(diagnostic.hint),
+                ),
+              ]),
+          ...(diagnostic.related === undefined ||
+          diagnostic.related.length === 0
+            ? []
+            : [
+                element(
+                  "ul",
+                  {
+                    class: "tsumugu-related",
+                    "aria-label": "Related locations",
+                  },
+                  ...diagnostic.related.map((related) =>
+                    element(
+                      "li",
+                      {},
+                      sourceLocation(related),
+                      element(
+                        "span",
+                        { class: "tsumugu-related-message" },
+                        text(related.message),
+                      ),
+                    ),
+                  ),
                 ),
               ]),
           element("code", {}, text(diagnostic.code)),

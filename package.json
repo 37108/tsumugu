@@ -44,7 +44,7 @@
     "@vitest/coverage-v8": "^4.1.10",
     "axe-core": "^4.12.1",
     "eslint": "^10.7.0",
-    "jsdom": "^29.1.1",
+    "jsdom": "^30.0.0",
     "prettier": "^3.9.5",
     "tailwindcss": "^4.3.3",
     "tsumugu": "workspace:*",

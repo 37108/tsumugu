@@ -1,5 +1,16 @@
 # tsumugu-core
 
+## 0.12.0
+
+### Minor Changes
+
+- 250f1a1: Show project-relative source locations and related locations in the on-page
+  diagnostics panel.
+
+### Patch Changes
+
+- 250f1a1: Rewrite valid document links to their served routes in generated pages.
+
 ## 0.11.0
 
 ### Minor Changes

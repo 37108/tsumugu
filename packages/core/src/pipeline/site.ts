@@ -14,7 +14,11 @@ import { resolveMetadata, type ResolvedMetadata } from "../metadata/resolve.js";
 import { buildTableOfContents } from "../navigation/table-of-contents.js";
 import { buildNavigation, type NavigationItem } from "../navigation/tree.js";
 import { renderDocument, type Renderer } from "../renderer/contract.js";
-import { findRouteCollisions, routeForSource } from "../routing/routes.js";
+import {
+  encodeRoutePath,
+  findRouteCollisions,
+  routeForSource,
+} from "../routing/routes.js";
 import { diffSnapshots, type DocumentSnapshot } from "../scanner/events.js";
 import { createFileReader, reconcile } from "../scanner/reconcile.js";
 import { scan } from "../scanner/scan.js";
@@ -26,7 +30,11 @@ import {
 } from "../exports/records.js";
 import { searchEntries, searchJson } from "../exports/search.js";
 import { collectReferences } from "../links/collect.js";
-import { validateDocumentLinks } from "../links/validate.js";
+import {
+  classifyLink,
+  resolveLinkPath,
+  validateDocumentLinks,
+} from "../links/validate.js";
 import { renderShell } from "../shell/shell.js";
 import { renderWithTheme, type Theme } from "../theme/contract.js";
 import { serializeDocument } from "../theme/serialize.js";
@@ -280,6 +288,56 @@ const unrenderable: DocumentNode = {
  * read, a document no renderer claims, a theme that fails on one node: each
  * becomes a diagnostic, and every other page is still produced.
  */
+/** Rewrites valid document links to the routes the site actually serves. */
+function withDocumentRoutes<T extends SemanticNode>(
+  node: T,
+  sourcePath: SourcePath,
+  routes: ReadonlyMap<string, RoutePath>,
+): T {
+  if (node.type === "link") {
+    const classified = classifyLink(node.url);
+    if (classified.kind === "internal") {
+      const resolved = resolveLinkPath(sourcePath, classified.path);
+      const mapped = resolved === undefined ? undefined : routes.get(resolved);
+      const candidate =
+        mapped === undefined && resolved !== undefined
+          ? routeForSource(resolved as SourcePath)
+          : undefined;
+      const route =
+        mapped ?? (candidate?.ok === true ? candidate.route : undefined);
+      if (route !== undefined && routesHasRoute(routes, route)) {
+        const suffixStart = [node.url.indexOf("?"), node.url.indexOf("#")]
+          .filter((index) => index >= 0)
+          .sort((a, b) => a - b)[0];
+        const suffix =
+          suffixStart === undefined ? "" : node.url.slice(suffixStart);
+        return { ...node, url: `${encodeRoutePath(route)}${suffix}` };
+      }
+    }
+  }
+  if (!("children" in node)) {
+    return node;
+  }
+
+  const children = node.children.map((child: SemanticNode) =>
+    withDocumentRoutes(child, sourcePath, routes),
+  );
+  const changed = children.some(
+    (child: SemanticNode, index: number) => child !== node.children[index],
+  );
+  return changed ? { ...node, children } : node;
+}
+
+function routesHasRoute(
+  routes: ReadonlyMap<string, RoutePath>,
+  route: RoutePath,
+): boolean {
+  for (const candidate of routes.values()) {
+    if (candidate === route) return true;
+  }
+  return false;
+}
+
 /** Rewrites root-relative link and image URLs under the base path. */
 function withBasePath<T extends SemanticNode>(node: T, basePath: string): T {
   if (
@@ -337,6 +395,7 @@ export async function createSite(options: BuildOptions): Promise<Site> {
   let documents: ReadonlyMap<DocumentId, LoadedDocument> = new Map();
   const prepared = new Map<DocumentId, PreparedDocument>();
   let snapshot: DocumentSnapshot = new Map();
+  let routeSignature = "";
 
   let result: BuildResult = {
     pages: new Map(),
@@ -351,6 +410,7 @@ export async function createSite(options: BuildOptions): Promise<Site> {
   /** Parses, transforms, resolves metadata and themes one document. */
   async function prepareDocument(
     document: LoadedDocument,
+    routeMap: ReadonlyMap<string, RoutePath>,
   ): Promise<PreparedDocument> {
     const rendered = await renderDocument(options.renderers, document);
     const diagnostics: DocumentDiagnostic[] = [...rendered.diagnostics];
@@ -378,10 +438,10 @@ export async function createSite(options: BuildOptions): Promise<Site> {
     diagnostics.push(...metadata.diagnostics);
 
     const root = transformed?.root ?? unrenderable;
-    // Presentation sees the base-prefixed URLs; validation and the exports
-    // keep the unprefixed tree, because a link is checked against routes and
-    // routes never carry the prefix.
-    const presented = basePath === "" ? root : withBasePath(root, basePath);
+    // Presentation sees canonical routes and base-prefixed URLs; validation
+    // and exports keep the authored, unprefixed tree.
+    const routed = withDocumentRoutes(root, document.sourcePath, routeMap);
+    const presented = basePath === "" ? routed : withBasePath(routed, basePath);
     // The declaration is applied here, after rendering and transforming, so
     // no renderer or transformer ever decides trust — they only ever see or
     // produce untrusted markup, whatever the operator said.
@@ -549,6 +609,12 @@ export async function createSite(options: BuildOptions): Promise<Site> {
       }
     }
 
+    const nextRouteSignature = JSON.stringify([...routes.entries()].sort());
+    if (nextRouteSignature !== routeSignature) {
+      prepared.clear();
+      routeSignature = nextRouteSignature;
+    }
+
     // Collisions are a property of the set, so they are found once rather than
     // per document. Serving whichever page happened to be scanned first is the
     // failure this prevents.
@@ -585,7 +651,7 @@ export async function createSite(options: BuildOptions): Promise<Site> {
         continue;
       }
 
-      prepared.set(document.id, await prepareDocument(document));
+      prepared.set(document.id, await prepareDocument(document, routes));
       rendered += 1;
     }
 

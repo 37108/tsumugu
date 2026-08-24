@@ -355,6 +355,24 @@ describe("problems a user will actually hit", () => {
     });
   });
 
+  it("rewrites accepted relative document links to served routes", async () => {
+    await serveFixture(
+      {
+        "index.md": "# Home\n\n[Guide](./guide.md)\n",
+        "guide/index.md": "# Guide\n\n[Home](../index.md)\n",
+      },
+      async ({ server }) => {
+        const home = await (await fetch(server.url)).text();
+        const guide = await (await fetch(`${server.url}guide`)).text();
+
+        expect(home).toContain('href="/guide"');
+        expect(home).not.toContain('href="./guide.md"');
+        expect(guide).toContain('href="/"');
+        expect(guide).not.toContain('href="../index.md"');
+      },
+    );
+  });
+
   it("serves an image next to the document that references it", async () => {
     await serveFixture(
       {
